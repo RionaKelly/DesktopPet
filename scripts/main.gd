@@ -4,6 +4,7 @@
 
 extends Node2D
 
+@onready var sprite : AnimatedSprite2D = $AnimatedSprite2D
 # Set which Screen the game should use
 # var screen_choice = 1 # 0 = primary, 1 = secondary
 
@@ -60,6 +61,26 @@ func _ready() -> void:
 	# Start the timer for pet decision
 	$Timer.start()
 	
+	# Decide the player's random starting pet
+	var pet = ""
+	match randi_range(1, 2):
+		1:
+			pet = "bird"
+		2:
+			pet = "bunny"
+		_: # default for emergencies
+			pet = "bird"
+	
+	# $AnimatedSprite2D.texture = preload("res://filepath/to/my_texture.png") # something??
+	
+	match pet:
+		"bird":
+			sprite.set_sprite_frames(load("res://sprite_frames/bird.tres"))
+			print("Bird")
+		"bunny":
+			sprite.set_sprite_frames(load("res://sprite_frames/bunny.tres"))
+			print("Bunny")
+
 func _process(_delta):
 	# Vector2i used to tell Windows to move to an exact pixel coordinate (integer) 
 	# Calculate the move
@@ -95,13 +116,13 @@ func _process(_delta):
 		
 	# Makes pet face the right direction and play the right animation after moving/stopping
 	if direction.x == 1:
-		$AnimatedSprite2D.set_animation("walk")
-		$AnimatedSprite2D.flip_h = false
+		sprite.play("walk")
+		sprite.flip_h = false
 	elif direction.x == -1:
-		$AnimatedSprite2D.set_animation("walk")
-		$AnimatedSprite2D.flip_h = true
+		sprite.play("walk")
+		sprite.flip_h = true
 	elif direction.x == 0:
-		$AnimatedSprite2D.set_animation("idle")
+		sprite.play("idle")
 
 	# Apply movement to OS Window
 	window.position += move_vector
@@ -109,12 +130,12 @@ func _process(_delta):
 	# Check edges to flip in case touching
 	if window.position.x + window.size.x > usable_rect.size.x or window.position.x < usable_rect.position.x:
 		direction.x = direction.x * -1 # Change Direction
-		if $AnimatedSprite2D.flip_h == true:
-			$AnimatedSprite2D.flip_h = false
+		if sprite.flip_h == true:
+			sprite.flip_h = false
 			if debugMovement:
 				print("Bounce off left")
 		else:
-			$AnimatedSprite2D.flip_h = true
+			sprite.flip_h = true
 			if debugMovement:
 				print("Bounce off right")
 

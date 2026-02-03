@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d1fafp8k2y87r"
-path="res://.godot/imported/bird_walk.png-ca8b09d470fc1de440f6bd5f98a9d98f.ctex"
+uid="uid://ogy6ik8xduor"
+path="res://.godot/imported/bunny_walk.png-e58c08677d422c844e2f0260fbb980ef.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/bird_walk.png"
-dest_files=["res://.godot/imported/bird_walk.png-ca8b09d470fc1de440f6bd5f98a9d98f.ctex"]
+source_file="res://sprites/bunny/bunny_walk.png"
+dest_files=["res://.godot/imported/bunny_walk.png-e58c08677d422c844e2f0260fbb980ef.ctex"]
 
 [params]
 
