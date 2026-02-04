@@ -19,8 +19,8 @@ var decision_time: bool = false # Pet must wait Timer wait time before making th
 var pet_type = "" # What species the pet is
 
 # Bug-Testing 
-var debugMovement = true
-var debugScreen = false
+var debugMovement = false
+var debugScreen = true
 
 func _ready() -> void:
 	# prints to test issues with getting screen data
@@ -32,7 +32,7 @@ func _ready() -> void:
 		print("Screen Size: ", usable_rect.size)
 	
 	# Calculates pet (window and sprite) size based on monitor size 
-	var pet_size : int = (usable_rect.size.x * usable_rect.size.y) * 0.00002 # size of the window in pixels
+	var pet_size : int = (usable_rect.size.y / 12) # size of the window in pixels
 	var pet_scale = (pet_size/16.0) # scale for the sprite to fit in the window
 	window.size = Vector2i(pet_size, pet_size)
 	$AnimatedSprite2D.scale = Vector2(pet_scale, pet_scale)
@@ -55,7 +55,8 @@ func _ready() -> void:
 	
 	# Move the sprite to centre of the screen at above the taskbar
 	window.position.x = (usable_rect.size.x / 2) - (window.size.x / 2)
-	window.position.y = (usable_rect.size.y - window.size.y)
+	window.position.y = (usable_rect.end.y - window.size.y)
+	print("Starting Pet Position: ", window.position)
 	
 	# Start the timer for pet decision
 	$Timer.start()
@@ -68,16 +69,43 @@ func _process(_delta):
 	# Calculate the move
 	var move_vector = Vector2i(direction * move_speed)
 	
+	brain() # tells the brain to make a decision
+
+	# Apply movement to OS Window
+	window.position += move_vector
+	
+	# Check edges to flip in case touching
+	if window.position.x + window.size.x > usable_rect.size.x or window.position.x < 0:
+		direction.x = direction.x * -1 # Change Direction
+		if sprite.flip_h == true:
+			sprite.flip_h = false
+			if debugMovement:
+				print("Bounce off left")
+		else:
+			sprite.flip_h = true
+			if debugMovement:
+				print("Bounce off right")
+
+# Resets the decision timer after random amount of seconds
+func _on_timer_timeout():
+	decision_time = true
+	if debugMovement:
+		print("Decide")
+		print("Current Position: ", window.position)
+
+# Handles all of the decision making for the Pet
+func brain():
 	# Randomise decision & time
 	var rand_choice = randf()
-	var rand_wait = 1.2 # Temporary wait time that is compatable
+	var rand_wait = 1.2 # Temporary wait time
+	
 	# rand multiple of 1.2 or 0.6 depending on species to play animations most cleanly
 	if pet_type == "bird":
 		rand_wait = randi_range(1, 6) * 0.6
 	else: 
 		rand_wait = randi_range(1, 3) * 1.2
 	
-	# Make decision about movement every second
+	# Make decision about movement every timer end
 	if decision_time == true:
 		if rand_choice < 0.4 and direction.x != 0:
 			direction.x = 0
@@ -110,28 +138,6 @@ func _process(_delta):
 		sprite.flip_h = true
 	elif direction.x == 0:
 		sprite.play("idle")
-
-	# Apply movement to OS Window
-	window.position += move_vector
-	
-	# Check edges to flip in case touching
-	if window.position.x + window.size.x > usable_rect.size.x or window.position.x < 0:
-		direction.x = direction.x * -1 # Change Direction
-		if sprite.flip_h == true:
-			sprite.flip_h = false
-			if debugMovement:
-				print("Bounce off left")
-		else:
-			sprite.flip_h = true
-			if debugMovement:
-				print("Bounce off right")
-
-# Resets the decision timer after random amount of seconds
-func _on_timer_timeout():
-	decision_time = true
-	if debugMovement:
-		print("Decide")
-		print("Current Position: ", window.position)
 
 # Changes sprite when called, takes sprite name or rand for random choice
 func change_sprite(choice):
