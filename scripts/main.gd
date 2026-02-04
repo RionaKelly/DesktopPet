@@ -8,37 +8,37 @@ extends Node2D
 
 #get access to the OS Window (not just the game node)
 @onready var window = get_window()
-
-# Set which Screen the game should use
-# var screen_choice = -1 # 0 = primary, 1 = secondary
-
+@onready var main_screen : int = window.current_screen
 # The 'Safe Area' that the window shouldn't leave --- usable_rect() = screen area minus taskbar/docks
-var usable_rect = DisplayServer.screen_get_usable_rect()
+var usable_rect = DisplayServer.screen_get_usable_rect(main_screen)
 
 # Game Stats
 var move_speed = usable_rect.size.x * 0.001 # Pet speed based on the size of the screen
 var direction = Vector2(0, 0) # Not Moving
 var decision_time: bool = false # Pet must wait Timer wait time before making their first decision
+var pet_type = "" # What species the pet is
 
 # Bug-Testing 
 var debugMovement = true
+var debugScreen = false
 
 func _ready() -> void:
-	# DisplayServer.window_set_current_screen.call_deferred()
-	print("Screen: ", DisplayServer.window_get_current_screen())
+	# prints to test issues with getting screen data
+	if debugScreen:
+		print("Window: ", window)
+		print("Screen: ", DisplayServer.window_get_current_screen())
+		print("Screen End: ", usable_rect.end)
+		print("Screen Position: ", usable_rect.position)
+		print("Screen Size: ", usable_rect.size)
 	
-	# Prints for bugtesting
-	print("Screen End: ", usable_rect.end)
-	print("Screen Position: ", usable_rect.position)
-	print("Screen Size: ", usable_rect.size)
-	
-	# Calculates pet (window and sprite) size based on monitor size
-	var pet_size = (usable_rect.size.x * usable_rect.size.y) * 0.00002
-	var pet_scale = (pet_size/160.0)
-	print("Pet Size: ", pet_size)
-	print("Pet Scale ", pet_scale)
+	# Calculates pet (window and sprite) size based on monitor size 
+	var pet_size : int = (usable_rect.size.x * usable_rect.size.y) * 0.00002 # size of the window in pixels
+	var pet_scale = (pet_size/16.0) # scale for the sprite to fit in the window
 	window.size = Vector2i(pet_size, pet_size)
 	$AnimatedSprite2D.scale = Vector2(pet_scale, pet_scale)
+	if debugScreen:
+		print("Pet Size: ", pet_size)
+		print("Pet Scale: ", pet_scale)
 	
 	# We enable transparency for both the Godot Viewport and OS Window
 	get_viewport().transparent_bg = true
@@ -54,13 +54,14 @@ func _ready() -> void:
 	window.unresizable = false
 	
 	# Move the sprite to centre of the screen at above the taskbar
-	window.position = Vector2i((usable_rect.size.x / 2) - (window.size.x / 2), usable_rect.size.y - window.size.y)
+	window.position.x = (usable_rect.size.x / 2) - (window.size.x / 2)
+	window.position.y = (usable_rect.size.y - window.size.y)
 	
 	# Start the timer for pet decision
 	$Timer.start()
 	
 	# Call the function to decide random starting pet, and prints the result
-	print (change_sprite("random"))
+	change_sprite("random")
 
 func _process(_delta):
 	# Vector2i used to tell Windows to move to an exact pixel coordinate (integer) 
@@ -69,7 +70,12 @@ func _process(_delta):
 	
 	# Randomise decision & time
 	var rand_choice = randf()
-	var rand_wait = snappedf(randf_range(0.8, 3.9), 0.01) # rand num between 0.8 and 3.9 (3 digits max)
+	var rand_wait = 1.2 # Temporary wait time that is compatable
+	# rand multiple of 1.2 or 0.6 depending on species to play animations most cleanly
+	if pet_type == "bird":
+		rand_wait = randi_range(1, 6) * 0.6
+	else: 
+		rand_wait = randi_range(1, 3) * 1.2
 	
 	# Make decision about movement every second
 	if decision_time == true:
@@ -130,30 +136,29 @@ func _on_timer_timeout():
 # Changes sprite when called, takes sprite name or rand for random choice
 func change_sprite(choice):
 	# establish pet variable to return with chosen pet, we set this here in case it is random
-	var pet = ""
 	var random = false
 	
 	match choice:
 		"bird":
-			pet = "Bird"
+			pet_type = "Bird"
 			sprite.set_sprite_frames(load("res://sprite_frames/bird.tres"))
 		"bunny":
-			pet = "Bunny"
+			pet_type = "Bunny"
 			sprite.set_sprite_frames(load("res://sprite_frames/bunny.tres"))
 		"random": # chooses a random pet using a random integer from a range
 			random = true
 			match randi_range(1, 2):
 				1:
-					pet = "Bird"
+					pet_type = "Bird"
 					sprite.set_sprite_frames(load("res://sprite_frames/bird.tres"))
 				2:
-					pet = "Bunny"
+					pet_type = "Bunny"
 					sprite.set_sprite_frames(load("res://sprite_frames/bunny.tres"))
 		
 	
 	# Modifies the string to tell me whether the returned pet was random or chosen, for testing
 	if random:
-		pet = ("Random Pet: " + pet)
+		pet_type = ("Random Pet: " + pet_type)
 	else:
-		pet = ("Chosen Pet: " + pet)
-	return pet
+		pet_type = ("Chosen Pet: " + pet_type)
+	print (pet_type)
