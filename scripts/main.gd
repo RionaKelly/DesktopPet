@@ -5,11 +5,12 @@
 extends Node2D
 
 @onready var sprite : AnimatedSprite2D = $AnimatedSprite2D
-# Set which Screen the game should use
-# var screen_choice = 1 # 0 = primary, 1 = secondary
 
 #get access to the OS Window (not just the game node)
 @onready var window = get_window()
+
+# Set which Screen the game should use
+# var screen_choice = -1 # 0 = primary, 1 = secondary
 
 # The 'Safe Area' that the window shouldn't leave --- usable_rect() = screen area minus taskbar/docks
 var usable_rect = DisplayServer.screen_get_usable_rect()
@@ -19,11 +20,11 @@ var move_speed = usable_rect.size.x * 0.001 # Pet speed based on the size of the
 var direction = Vector2(0, 0) # Not Moving
 var decision_time: bool = false # Pet must wait Timer wait time before making their first decision
 
-# Bug-Testing
-var debugMovement = false
+# Bug-Testing 
+var debugMovement = true
 
 func _ready() -> void:
-	# DisplayServer.window_set_current_screen.call_deferred(screen_choice)
+	# DisplayServer.window_set_current_screen.call_deferred()
 	print("Screen: ", DisplayServer.window_get_current_screen())
 	
 	# Prints for bugtesting
@@ -52,34 +53,14 @@ func _ready() -> void:
 	# Force borderless
 	window.unresizable = false
 	
-	# Find the floor
-	# Calculate the floor position --- end.y is pixel coordinate where the taskbar starts
-	var target_y = usable_rect.size.y - window.size.y
-	# Move the sprite there --- x = center of screen, y = the floor
-	window.position = Vector2i((usable_rect.size.x / 2) - (window.size.x / 2), target_y)
+	# Move the sprite to centre of the screen at above the taskbar
+	window.position = Vector2i((usable_rect.size.x / 2) - (window.size.x / 2), usable_rect.size.y - window.size.y)
 	
 	# Start the timer for pet decision
 	$Timer.start()
 	
-	# Decide the player's random starting pet
-	var pet = ""
-	match randi_range(1, 2):
-		1:
-			pet = "bird"
-		2:
-			pet = "bunny"
-		_: # default for emergencies
-			pet = "bird"
-	
-	# $AnimatedSprite2D.texture = preload("res://filepath/to/my_texture.png") # something??
-	
-	match pet:
-		"bird":
-			sprite.set_sprite_frames(load("res://sprite_frames/bird.tres"))
-			print("Bird")
-		"bunny":
-			sprite.set_sprite_frames(load("res://sprite_frames/bunny.tres"))
-			print("Bunny")
+	# Call the function to decide random starting pet, and prints the result
+	print (change_sprite("random"))
 
 func _process(_delta):
 	# Vector2i used to tell Windows to move to an exact pixel coordinate (integer) 
@@ -128,7 +109,7 @@ func _process(_delta):
 	window.position += move_vector
 	
 	# Check edges to flip in case touching
-	if window.position.x + window.size.x > usable_rect.size.x or window.position.x < usable_rect.position.x:
+	if window.position.x + window.size.x > usable_rect.size.x or window.position.x < 0:
 		direction.x = direction.x * -1 # Change Direction
 		if sprite.flip_h == true:
 			sprite.flip_h = false
@@ -144,7 +125,35 @@ func _on_timer_timeout():
 	decision_time = true
 	if debugMovement:
 		print("Decide")
+		print("Current Position: ", window.position)
 
-# Waits for click to change sprite
-# func change_sprite(event):
+# Changes sprite when called, takes sprite name or rand for random choice
+func change_sprite(choice):
+	# establish pet variable to return with chosen pet, we set this here in case it is random
+	var pet = ""
+	var random = false
 	
+	match choice:
+		"bird":
+			pet = "Bird"
+			sprite.set_sprite_frames(load("res://sprite_frames/bird.tres"))
+		"bunny":
+			pet = "Bunny"
+			sprite.set_sprite_frames(load("res://sprite_frames/bunny.tres"))
+		"random": # chooses a random pet using a random integer from a range
+			random = true
+			match randi_range(1, 2):
+				1:
+					pet = "Bird"
+					sprite.set_sprite_frames(load("res://sprite_frames/bird.tres"))
+				2:
+					pet = "Bunny"
+					sprite.set_sprite_frames(load("res://sprite_frames/bunny.tres"))
+		
+	
+	# Modifies the string to tell me whether the returned pet was random or chosen, for testing
+	if random:
+		pet = ("Random Pet: " + pet)
+	else:
+		pet = ("Chosen Pet: " + pet)
+	return pet
