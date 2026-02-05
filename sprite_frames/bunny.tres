@@ -1,7 +1,8 @@
-[gd_resource type="SpriteFrames" load_steps=11 format=3 uid="uid://dnrxibm8ldbms"]
+[gd_resource type="SpriteFrames" load_steps=12 format=3 uid="uid://dnrxibm8ldbms"]
 
-[ext_resource type="Texture2D" uid="uid://dinhqekkksbln" path="res://sprites/bunny/bunny.png" id="1_cklqd"]
+[ext_resource type="Texture2D" uid="uid://c1j0ojtyulc8b" path="res://sprites/bunny/bunny.png" id="1_cklqd"]
 [ext_resource type="Texture2D" uid="uid://ogy6ik8xduor" path="res://sprites/bunny/bunny_walk.png" id="2_47aln"]
+[ext_resource type="Texture2D" uid="uid://dinhqekkksbln" path="res://sprites/bunny/bunny_sit.png" id="2_hicxq"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_cklqd"]
 atlas = ExtResource("2_47aln")
@@ -45,6 +46,14 @@ animations = [{
 }],
 "loop": true,
 "name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_hicxq")
+}],
+"loop": true,
+"name": &"sit",
 "speed": 5.0
 }, {
 "frames": [{

@@ -1,7 +1,8 @@
-[gd_resource type="SpriteFrames" load_steps=11 format=3 uid="uid://dsnpgrv06xm2m"]
+[gd_resource type="SpriteFrames" load_steps=12 format=3 uid="uid://dsnpgrv06xm2m"]
 
 [ext_resource type="Texture2D" uid="uid://dlyyy56xvm2m" path="res://sprites/bird/bird.png" id="1_66iqc"]
 [ext_resource type="Texture2D" uid="uid://d1fafp8k2y87r" path="res://sprites/bird/bird_walk.png" id="2_806ye"]
+[ext_resource type="Texture2D" uid="uid://c1e6c612nenuv" path="res://sprites/bird/bird_sit.png" id="2_bghfo"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_66iqc"]
 atlas = ExtResource("2_806ye")
@@ -45,6 +46,14 @@ animations = [{
 }],
 "loop": true,
 "name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_bghfo")
+}],
+"loop": true,
+"name": &"sit",
 "speed": 5.0
 }, {
 "frames": [{

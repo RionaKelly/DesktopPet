@@ -15,12 +15,18 @@ var usable_rect = DisplayServer.screen_get_usable_rect(main_screen)
 # Game Stats
 var move_speed = usable_rect.size.x * 0.001 # Pet speed based on the size of the screen
 var direction = Vector2(0, 0) # Not Moving
+enum Types {BIRD, BUNNY} # Possible species that the pet can be
+var type:Types = Types.BIRD # What species the pet is (bird set as default)
+enum Activities {IDLE, WALKING, SITTING} # Possible states for Pet
+var activity:Activities = Activities.IDLE # Current state of Pet (idle set as default)
+
+# Global Booleans
 var decision_time: bool = false # Pet must wait Timer wait time before making their first decision
-var pet_type = "" # What species the pet is
+var move_time: bool = false # Specific pets only move during set intervals to make animations seem clean
 
 # Bug-Testing 
-var debugMovement = false
-var debugScreen = true
+var debugMovement = true
+var debugScreen = false
 
 func _ready() -> void:
 	# prints to test issues with getting screen data
@@ -59,20 +65,21 @@ func _ready() -> void:
 	print("Starting Pet Position: ", window.position)
 	
 	# Start the timer for pet decision
-	$Timer.start()
+	$DecisionTimer.start()
 	
-	# Call the function to decide random starting pet, and prints the result
-	change_sprite("random")
+	# Call the function to decide random or specific starting pet, and prints the result
+	change_type("random")
 
 func _process(_delta):
-	# Vector2i used to tell Windows to move to an exact pixel coordinate (integer) 
-	# Calculate the move
-	var move_vector = Vector2i(direction * move_speed)
 	
-	brain() # tells the brain to make a decision
-
-	# Apply movement to OS Window
-	window.position += move_vector
+	# Make decision about movement every timer end
+	if decision_time == true:
+		brain() # tells the brain to make a decision
+	
+	sprite_set() # changes the Pet's sprite to match what they're doing
+	
+	if activity == Activities.WALKING: # only if pet is moving
+		move() # moves the pet depending on the activity and type of the pet
 	
 	# Check edges to flip in case touching
 	if window.position.x + window.size.x > usable_rect.size.x or window.position.x < 0:
@@ -86,85 +93,149 @@ func _process(_delta):
 			if debugMovement:
 				print("Bounce off right")
 
-# Resets the decision timer after random amount of seconds
-func _on_timer_timeout():
-	decision_time = true
-	if debugMovement:
-		print("Decide")
-		print("Current Position: ", window.position)
+# Moves the window around the screen depending on state and type
+func move():
+	# Vector2i used to tell Windows to move to an exact pixel coordinate (integer)
+	var move_vector = Vector2i(direction * move_speed) # how Pet will move around screen
+	
+	## In-progress code to make the Bunny move differently to make the animation look smoother
+	# Apply movement to OS Window depending on type
+	#if pet_type == "bunny":
+		#if move_time:
+			#window.position += move_vector
+			#$BunnyTimer.start() # starts the timer to count down till change
+		#else:
+			#$BunnyTimer.start() # starts the timer to count down till change
+	#else:
+	
+	window.position += move_vector
+
+# Sets the Pet's sprite/animation to match state
+func sprite_set():
+	# Makes pet face the right direction and play the right animation after moving/stopping
+	match activity:
+		Activities.IDLE:
+			sprite.play("idle")
+			if direction.x != 0: # This should happen anyway but I check here just in case
+				direction.x = 0 
+		Activities.SITTING:
+			sprite.play("sit")
+		Activities.WALKING:
+			sprite.play("walk")
+			if direction.x == 1:
+				sprite.flip_h = false
+			elif direction.x == -1:
+				sprite.flip_h = true
+			else: # extra check just in case direction variable is doing something weird
+				print("Direction [", direction.x, "] outside of given rage")
+		_:
+			print("Activity [", activity, "] not recognised")
 
 # Handles all of the decision making for the Pet
 func brain():
 	# Randomise decision & time
 	var rand_choice = randf()
-	var rand_wait = 1.2 # Temporary wait time
+	var rand_wait = 1.2 # Temporary wait time to establish variable
 	
-	# rand multiple of 1.2 or 0.6 depending on species to play animations most cleanly
-	if pet_type == "bird":
-		rand_wait = randi_range(1, 6) * 0.6
-	else: 
-		rand_wait = randi_range(1, 3) * 1.2
+	match activity:
+		Activities.SITTING:
+			if rand_choice < 0.7:
+				activity = Activities.IDLE
+				direction.x = 0
+				if debugMovement:
+					print("Get Up")
+			else:
+				if debugMovement:
+					print("No Change")
+		_:
+			if rand_choice < 0.4:
+				if activity == Activities.WALKING : # Sets Pet to stop
+					activity = Activities.IDLE
+					direction.x = 0
+					if debugMovement:
+						print("Stop")
+				elif activity == Activities.IDLE: # Sets Pet to sit if already stopped
+					activity = Activities.SITTING
+					if debugMovement:
+						print("Sit")
+			elif rand_choice < 0.65 and window.position.x + window.size.x < ((usable_rect.size.x)*0.9):
+				activity = Activities.WALKING
+				direction.x = 1
+				if debugMovement:
+					print("Turn Right")
+			elif rand_choice < 0.9 and window.position.x > (usable_rect.size.x * 0.1):
+				activity = Activities.WALKING
+				direction.x = -1
+				if debugMovement:
+					print("Turn Left")
+			else:
+				if debugMovement:
+					print("No Change")
 	
-	# Make decision about movement every timer end
-	if decision_time == true:
-		if rand_choice < 0.4 and direction.x != 0:
-			direction.x = 0
-			if debugMovement:
-				print("Stop")
-		elif rand_choice < 0.65 and window.position.x + window.size.x < ((usable_rect.size.x)*0.9):
-			direction.x = 1
-			decision_time = false
-			if debugMovement:
-				print("Turn Right")
-		elif rand_choice < 0.9 and window.position.x > (usable_rect.size.x * 0.1):
-			direction.x = -1
-			if debugMovement:
-				print("Turn Left")
-		else:
-			if debugMovement:
-				print("No Change")
-		decision_time = false
-		$Timer.wait_time = rand_wait
-		if debugMovement:
-			print("Wait ", rand_wait)
-		$Timer.start()
-		
-	# Makes pet face the right direction and play the right animation after moving/stopping
-	if direction.x == 1:
-		sprite.play("walk")
-		sprite.flip_h = false
-	elif direction.x == -1:
-		sprite.play("walk")
-		sprite.flip_h = true
-	elif direction.x == 0:
-		sprite.play("idle")
+	match activity:
+		Activities.IDLE: # wait time doesn't matter because no animation
+			rand_wait = snappedf(randf_range(0.8, 3.9), 0.1) # rand num between 0.8 and 3.9 to 1 decimal place
+		Activities.SITTING:
+			rand_wait = snappedf(randf_range(2.0, 4.5), 0.1) # higher floor because sit for 1 second feels wrong
+		_: # multiple of 1.2 or 0.6 depending on species to play animations most cleanly
+			if type == Types.BIRD: # Pets with animations that can stop halfway
+				rand_wait = randi_range(1, 6) * 0.8
+			else: 
+				rand_wait = randi_range(1, 3) * 1.6
+	
+	decision_time = false
+	
+	if debugMovement:
+		print("Wait ", rand_wait)
+	$DecisionTimer.wait_time = rand_wait
+	$DecisionTimer.start()
 
-# Changes sprite when called, takes sprite name or rand for random choice
-func change_sprite(choice):
+# Changes Pet's type and sprite set to given species or random
+func change_type(choice):
 	# establish pet variable to return with chosen pet, we set this here in case it is random
 	var random = false
+	var chosen_type:String = ""
 	
 	match choice:
 		"bird":
-			pet_type = "Bird"
+			type = Types.BIRD
+			chosen_type = "Bird"
 			sprite.set_sprite_frames(load("res://sprite_frames/bird.tres"))
 		"bunny":
-			pet_type = "Bunny"
+			type = Types.BUNNY
+			chosen_type = "Bunny"
 			sprite.set_sprite_frames(load("res://sprite_frames/bunny.tres"))
+			$BunnyTimer.wait_time = 0.8
 		"random": # chooses a random pet using a random integer from a range
 			random = true
 			match randi_range(1, 2):
 				1:
-					pet_type = "Bird"
+					type = Types.BIRD
+					chosen_type = "Bird"
 					sprite.set_sprite_frames(load("res://sprite_frames/bird.tres"))
 				2:
-					pet_type = "Bunny"
+					type = Types.BUNNY
+					chosen_type = "Bunny"
 					sprite.set_sprite_frames(load("res://sprite_frames/bunny.tres"))
 		
 	
 	# Modifies the string to tell me whether the returned pet was random or chosen, for testing
 	if random:
-		pet_type = ("Random Pet: " + pet_type)
+		print ("Random Pet: ", chosen_type)
 	else:
-		pet_type = ("Chosen Pet: " + pet_type)
-	print (pet_type)
+		print ("Chosen Pet: ", chosen_type)
+
+# Resets the Decision timer after random amount of seconds
+func _on_timer_timeout() -> void:
+	decision_time = true
+	if debugMovement:
+		print("Decide")
+		print("Current Position: ", window.position)
+
+# Resets the Bunny movement timer after random amount of seconds
+func _on_bunny_timer_timeout() -> void:
+	if move_time:
+		move_time = false
+	else:
+		move_time = true
+	print("Bunny Timer Over, Move Time: ", move_time)

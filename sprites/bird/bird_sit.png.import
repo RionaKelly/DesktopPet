@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dinhqekkksbln"
-path="res://.godot/imported/bunny_sit.png-d2378c4e99e7571f20b440cfe0c95b0f.ctex"
+uid="uid://c1e6c612nenuv"
+path="res://.godot/imported/bird_sit.png-aa78309f561c4566a438ed7ff4c48eaf.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/bunny/bunny_sit.png"
-dest_files=["res://.godot/imported/bunny_sit.png-d2378c4e99e7571f20b440cfe0c95b0f.ctex"]
+source_file="res://sprites/bird/bird_sit.png"
+dest_files=["res://.godot/imported/bird_sit.png-aa78309f561c4566a438ed7ff4c48eaf.ctex"]
 
 [params]
 
