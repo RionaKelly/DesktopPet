@@ -137,8 +137,25 @@ func brain():
 	var rand_choice = randf()
 	var rand_wait = 1.2 # Temporary wait time to establish variable
 	
+	# Decides the Pet's next action based on what they are currently doing and a random number
 	match activity:
-		Activities.SITTING:
+		Activities.IDLE: # 3 : 3.5 : 3.5
+			if rand_choice < 0.3:
+				activity = Activities.SITTING
+				direction.x = 0
+				if debugMovement:
+					print("Get Up")
+			elif rand_choice < 0.65 and window.position.x + window.size.x < ((usable_rect.size.x)*0.9):
+				activity = Activities.WALKING
+				direction.x = 1
+				if debugMovement:
+					print("Turn Right")
+			elif window.position.x > (usable_rect.size.x * 0.1):
+				activity = Activities.WALKING
+				direction.x = -1
+				if debugMovement:
+					print("Turn Left")
+		Activities.SITTING: # 7 : 3
 			if rand_choice < 0.7:
 				activity = Activities.IDLE
 				direction.x = 0
@@ -146,30 +163,18 @@ func brain():
 					print("Get Up")
 			else:
 				if debugMovement:
-					print("No Change")
-		_:
-			if rand_choice < 0.4:
-				if activity == Activities.WALKING : # Sets Pet to stop
-					activity = Activities.IDLE
-					direction.x = 0
-					if debugMovement:
-						print("Stop")
-				elif activity == Activities.IDLE: # Sets Pet to sit if already stopped
-					activity = Activities.SITTING
-					if debugMovement:
-						print("Sit")
-			elif rand_choice < 0.65 and window.position.x + window.size.x < ((usable_rect.size.x)*0.9):
-				activity = Activities.WALKING
-				direction.x = 1
+					print("Continue Sitting")
+		Activities.WALKING: # 5 : 5
+			if rand_choice < 0.5:
+				activity = Activities.IDLE
+				direction.x = 0
 				if debugMovement:
-					print("Turn Right")
-			elif rand_choice < 0.9 and window.position.x > (usable_rect.size.x * 0.1):
-				activity = Activities.WALKING
-				direction.x = -1
-				if debugMovement:
-					print("Turn Left")
+					print("Stop")
 			else:
 				if debugMovement:
+					print("Continue Walking")
+		_:
+			if debugMovement:
 					print("No Change")
 	
 	match activity:
