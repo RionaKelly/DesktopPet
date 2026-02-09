@@ -1,23 +1,23 @@
-[gd_scene load_steps=3 format=3 uid="uid://26egn3lye1b7"]
+[gd_scene format=3 uid="uid://26egn3lye1b7"]
 
 [ext_resource type="Script" uid="uid://dcb64ynuvn13l" path="res://scripts/main.gd" id="1_sugp2"]
 [ext_resource type="SpriteFrames" uid="uid://dsnpgrv06xm2m" path="res://sprite_frames/bird.tres" id="2_0wfyh"]
 
-[node name="Main" type="Node2D"]
+[node name="Main" type="Node2D" unique_id=200465852]
 script = ExtResource("1_sugp2")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1476839180]
 texture_filter = 1
 sprite_frames = ExtResource("2_0wfyh")
-animation = &"walk"
+animation = &"sit"
 centered = false
 
-[node name="DecisionTimer" type="Timer" parent="."]
+[node name="DecisionTimer" type="Timer" parent="." unique_id=739945663]
 wait_time = 1.2
 one_shot = true
 autostart = true
 
-[node name="BunnyTimer" type="Timer" parent="."]
+[node name="BunnyTimer" type="Timer" parent="." unique_id=1989953947]
 wait_time = 0.8
 one_shot = true
 

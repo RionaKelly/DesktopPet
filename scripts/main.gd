@@ -68,7 +68,7 @@ func _ready() -> void:
 	$DecisionTimer.start()
 	
 	# Call the function to decide random or specific starting pet, and prints the result
-	change_type("random")
+	change_type("bunny")
 
 func _process(_delta):
 	
@@ -97,18 +97,19 @@ func _process(_delta):
 func move():
 	# Vector2i used to tell Windows to move to an exact pixel coordinate (integer)
 	var move_vector = Vector2i(direction * move_speed) # how Pet will move around screen
+	var current_frame = $AnimatedSprite2D.get_frame()
 	
-	## In-progress code to make the Bunny move differently to make the animation look smoother
+	# In-progress code to make the Bunny move differently to make the animation look smoother
 	# Apply movement to OS Window depending on type
-	#if pet_type == "bunny":
-		#if move_time:
-			#window.position += move_vector
-			#$BunnyTimer.start() # starts the timer to count down till change
-		#else:
-			#$BunnyTimer.start() # starts the timer to count down till change
-	#else:
-	
-	window.position += move_vector
+	if type == Types.BUNNY:
+		if current_frame == 3 or current_frame == 4 or current_frame == 5:
+			window.position += move_vector
+			# $BunnyTimer.start() # starts the timer to count down till change
+		else:
+			pass
+			# $BunnyTimer.start() # starts the timer to count down till change
+	else:
+		window.position += move_vector
 
 # Sets the Pet's sprite/animation to match state
 func sprite_set():
@@ -164,8 +165,8 @@ func brain():
 			else:
 				if debugMovement:
 					print("Continue Sitting")
-		Activities.WALKING: # 5 : 5
-			if rand_choice < 0.5:
+		Activities.WALKING: # 6 : 4
+			if rand_choice < 0.6:
 				activity = Activities.IDLE
 				direction.x = 0
 				if debugMovement:
