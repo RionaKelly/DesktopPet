@@ -15,9 +15,9 @@ var usable_rect = DisplayServer.screen_get_usable_rect(main_screen)
 # Game Stats
 var move_speed = usable_rect.size.x * 0.001 # Pet speed based on the size of the screen
 var direction = Vector2(0, 0) # Not Moving
-enum Types {BIRD, BUNNY} # Possible species that the pet can be
+enum Types {BIRD, BUNNY, OCTOPUS} # Possible species that the pet can be
 var type:Types = Types.BIRD # What species the pet is (bird set as default)
-enum Activities {IDLE, WALKING, SITTING} # Possible states for Pet
+enum Activities {IDLE, SITTING, WALKING, WATCHING} # Possible states for Pet
 var activity:Activities = Activities.IDLE # Current state of Pet (idle set as default)
 
 # Global Booleans
@@ -182,7 +182,7 @@ func brain():
 		Activities.SITTING:
 			rand_wait = snappedf(randf_range(2.0, 4.5), 0.1) # higher floor because sit for 1 second feels wrong
 		_: # multiple of 1.2 or 0.6 depending on species to play animations most cleanly
-			if type == Types.BIRD: # Pets with animations that can stop halfway
+			if type == Types.BIRD or type == Types.OCTOPUS: # Pets with animations that can stop halfway
 				rand_wait = randi_range(1, 6) * 0.8
 			else: 
 				rand_wait = randi_range(1, 3) * 1.6
@@ -209,10 +209,13 @@ func change_type(choice):
 			type = Types.BUNNY
 			chosen_type = "Bunny"
 			sprite.set_sprite_frames(load("res://sprite_frames/bunny.tres"))
-			$BunnyTimer.wait_time = 0.8
+		"octopus":
+			type = Types.OCTOPUS
+			chosen_type = "Octopus"
+			sprite.set_sprite_frames(load("res://sprite_frames/octopus.tres"))
 		"random": # chooses a random pet using a random integer from a range
 			random = true
-			match randi_range(1, 2):
+			match randi_range(1, 3):
 				1:
 					type = Types.BIRD
 					chosen_type = "Bird"
@@ -221,17 +224,14 @@ func change_type(choice):
 					type = Types.BUNNY
 					chosen_type = "Bunny"
 					sprite.set_sprite_frames(load("res://sprite_frames/bunny.tres"))
-		_: # defaults to random if nothing given anyway
-			random = true
-			match randi_range(1, 2):
-				1:
-					type = Types.BIRD
-					chosen_type = "Bird"
-					sprite.set_sprite_frames(load("res://sprite_frames/bird.tres"))
-				2:
-					type = Types.BUNNY
-					chosen_type = "Bunny"
-					sprite.set_sprite_frames(load("res://sprite_frames/bunny.tres"))
+				3:
+					type = Types.OCTOPUS
+					chosen_type = "Octopus"
+					sprite.set_sprite_frames(load("res://sprite_frames/octopus.tres"))
+		_: # defaults to bird
+			type = Types.BIRD
+			chosen_type = "Bird"
+			sprite.set_sprite_frames(load("res://sprite_frames/bird.tres"))
 	
 	# Modifies the string to tell me whether the returned pet was random or chosen, for testing
 	if random:

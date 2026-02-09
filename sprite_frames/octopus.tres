@@ -1,0 +1,59 @@
+[gd_resource type="SpriteFrames" format=3 uid="uid://brlr3apmdhssq"]
+
+[ext_resource type="Texture2D" uid="uid://bcqnw5eaas1o5" path="res://sprites/octopus/octopus.png" id="1_rnogp"]
+[ext_resource type="Texture2D" uid="uid://bx4io7fyj08k0" path="res://sprites/octopus/octopus_sit.png" id="2_pnssu"]
+[ext_resource type="Texture2D" uid="uid://cbh2mrx86vywg" path="res://sprites/octopus/octopus_walk.png" id="3_frb1v"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_70mwa"]
+atlas = ExtResource("3_frb1v")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_a51gp"]
+atlas = ExtResource("3_frb1v")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j6th4"]
+atlas = ExtResource("3_frb1v")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xy4pf"]
+atlas = ExtResource("3_frb1v")
+region = Rect2(48, 0, 16, 16)
+
+[resource]
+resource_local_to_scene = true
+resource_name = "bunny"
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_rnogp")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_pnssu")
+}],
+"loop": true,
+"name": &"sit",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_70mwa")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_a51gp")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j6th4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xy4pf")
+}],
+"loop": true,
+"name": &"walk",
+"speed": 5.0
+}]
