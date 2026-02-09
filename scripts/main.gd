@@ -68,7 +68,7 @@ func _ready() -> void:
 	$DecisionTimer.start()
 	
 	# Call the function to decide random or specific starting pet, and prints the result
-	change_type("bunny")
+	change_type("random")
 
 func _process(_delta):
 	
@@ -104,10 +104,8 @@ func move():
 	if type == Types.BUNNY:
 		if current_frame == 3 or current_frame == 4 or current_frame == 5:
 			window.position += move_vector
-			# $BunnyTimer.start() # starts the timer to count down till change
 		else:
 			pass
-			# $BunnyTimer.start() # starts the timer to count down till change
 	else:
 		window.position += move_vector
 
@@ -223,7 +221,17 @@ func change_type(choice):
 					type = Types.BUNNY
 					chosen_type = "Bunny"
 					sprite.set_sprite_frames(load("res://sprite_frames/bunny.tres"))
-		
+		_: # defaults to random if nothing given anyway
+			random = true
+			match randi_range(1, 2):
+				1:
+					type = Types.BIRD
+					chosen_type = "Bird"
+					sprite.set_sprite_frames(load("res://sprite_frames/bird.tres"))
+				2:
+					type = Types.BUNNY
+					chosen_type = "Bunny"
+					sprite.set_sprite_frames(load("res://sprite_frames/bunny.tres"))
 	
 	# Modifies the string to tell me whether the returned pet was random or chosen, for testing
 	if random:
@@ -237,11 +245,3 @@ func _on_timer_timeout() -> void:
 	if debugMovement:
 		print("Decide")
 		print("Current Position: ", window.position)
-
-# Resets the Bunny movement timer after random amount of seconds
-func _on_bunny_timer_timeout() -> void:
-	if move_time:
-		move_time = false
-	else:
-		move_time = true
-	print("Bunny Timer Over, Move Time: ", move_time)
