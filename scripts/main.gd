@@ -17,7 +17,7 @@ var move_speed = usable_rect.size.x * 0.001 # Pet speed based on the size of the
 var direction = Vector2(0, 0) # Not Moving
 enum Types {BIRD, BUNNY, OCTOPUS} # Possible species that the pet can be
 var type:Types = Types.BIRD # What species the pet is (bird set as default)
-enum Activities {IDLE, SITTING, WALKING, WATCHING} # Possible states for Pet
+enum Activities {GREETING, IDLE, SITTING, WALKING, STARING} # Possible states for Pet
 var activity:Activities = Activities.IDLE # Current state of Pet (idle set as default)
 
 # Global Booleans
@@ -81,16 +81,14 @@ func _process(_delta):
 	if activity == Activities.WALKING: # only if pet is moving
 		move() # moves the pet depending on the activity and type of the pet
 	
-	# Check edges to flip in case touching
-	if window.position.x + window.size.x > usable_rect.size.x or window.position.x < 0:
-		direction.x = direction.x * -1 # Change Direction
-		if sprite.flip_h == true:
-			sprite.flip_h = false
-			if debugMovement:
+	# Check edges to flip in case touching, sprite flip done in sprite_set()
+	if window.position.x < 0:
+		direction.x = 1 # Change Direction
+		if debugMovement:
 				print("Bounce off left")
-		else:
-			sprite.flip_h = true
-			if debugMovement:
+	if window.position.x + window.size.x > usable_rect.size.x:
+		direction.x = -1 # Change Direction
+		if debugMovement:
 				print("Bounce off right")
 
 # Moves the window around the screen depending on state and type
@@ -144,7 +142,7 @@ func brain():
 				direction.x = 0
 				if debugMovement:
 					print("Get Up")
-			elif rand_choice < 0.65 and window.position.x + window.size.x < ((usable_rect.size.x)*0.9):
+			elif rand_choice < 0.31 and window.position.x + window.size.x < ((usable_rect.size.x)*0.9):
 				activity = Activities.WALKING
 				direction.x = 1
 				if debugMovement:
