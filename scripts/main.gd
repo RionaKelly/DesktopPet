@@ -142,7 +142,7 @@ func brain():
 				direction.x = 0
 				if debugMovement:
 					print("Get Up")
-			elif rand_choice < 0.31 and window.position.x + window.size.x < ((usable_rect.size.x)*0.9):
+			elif rand_choice < 0.65 and window.position.x + window.size.x < ((usable_rect.size.x)*0.9):
 				activity = Activities.WALKING
 				direction.x = 1
 				if debugMovement:
