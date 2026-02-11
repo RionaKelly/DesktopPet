@@ -11,31 +11,46 @@ extends Node2D
 @onready var main_screen : int = window.current_screen
 # The 'Safe Area' that the window shouldn't leave --- usable_rect() = screen area minus taskbar/docks
 var usable_rect = DisplayServer.screen_get_usable_rect(main_screen)
+var screen_size = DisplayServer.screen_get_size(main_screen)
 
-# Game Stats
+# Pet Stats
 var move_speed = usable_rect.size.x * 0.001 # Pet speed based on the size of the screen
 var direction = Vector2(0, 0) # Not Moving
-enum Types {BIRD, BUNNY, OCTOPUS} # Possible species that the pet can be
+enum Types {BIRD, BUNNY, OCTOPUS, SLIME} # Possible species that the pet can be
 var type:Types = Types.BIRD # What species the pet is (bird set as default)
-enum Activities {GREETING, IDLE, SITTING, WALKING, STARING} # Possible states for Pet
+enum Activities {CLICKED, GREETING, IDLE, SITTING, WALKING, STARING} # Possible states for Pet
 var activity:Activities = Activities.IDLE # Current state of Pet (idle set as default)
 
-# Global Booleans
+# Game Variables
 var decision_time: bool = false # Pet must wait Timer wait time before making their first decision
 var move_time: bool = false # Specific pets only move during set intervals to make animations seem clean
+var monitor_count: int = 0 # How many monitors the player has
 
 # Bug-Testing 
-var debugMovement = true
-var debugScreen = false
+var debugMovement = false
+var debugScreen = true
+
+## Notes:
+## use os theme colour to colour ui, two clicks opens menu
 
 func _ready() -> void:
-	# prints to test issues with getting screen data
+	# Check if there is more than one monitor to run fix
+	monitor_count = DisplayServer.get_screen_count()
+	
+	# Prints to test issues with getting screen data
 	if debugScreen:
-		print("Window: ", window)
+		print("_Debug Info_")
+		print("Current Window: ", window)
 		print("Screen: ", DisplayServer.window_get_current_screen())
 		print("Screen End: ", usable_rect.end)
 		print("Screen Position: ", usable_rect.position)
 		print("Screen Size: ", usable_rect.size)
+		print("Screen Number: ", monitor_count)
+		print("Screen Size 2!!: ", DisplayServer.screen_get_size())
+		print("Primary Screen: ", DisplayServer.get_primary_screen())
+		print("Operating System: ", DisplayServer.get_name())
+		print(main_screen)
+		print("")
 	
 	# Calculates pet (window and sprite) size based on monitor size 
 	var pet_size : int = (usable_rect.size.y / 12) # size of the window in pixels
