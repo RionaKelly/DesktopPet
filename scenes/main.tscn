@@ -17,4 +17,14 @@ wait_time = 1.2
 one_shot = true
 autostart = true
 
+[node name="SaveTimer" type="Timer" parent="." unique_id=1728820249]
+wait_time = 10.0
+autostart = true
+
+[node name="FallTimer" type="Timer" parent="." unique_id=1536130338]
+wait_time = 0.05
+one_shot = true
+
 [connection signal="timeout" from="DecisionTimer" to="." method="_on_timer_timeout"]
+[connection signal="timeout" from="SaveTimer" to="." method="_on_save_timer_timeout"]
+[connection signal="timeout" from="FallTimer" to="." method="_on_fall_timer_timeout"]

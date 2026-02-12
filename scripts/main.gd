@@ -7,51 +7,54 @@ extends Node2D
 @onready var sprite : AnimatedSprite2D = $AnimatedSprite2D
 
 #get access to the OS Window (not just the game node)
-@onready var window = get_window()
-@onready var main_screen : int = window.current_screen
+@onready var window : Window = get_window()
+# @onready var main_screen : int = window.current_screen
 # The 'Safe Area' that the window shouldn't leave --- usable_rect() = screen area minus taskbar/docks
-var usable_rect = DisplayServer.screen_get_usable_rect(main_screen)
-var screen_size = DisplayServer.screen_get_size(main_screen)
+var usable_rect = DisplayServer.screen_get_usable_rect()
+# var screen_size = DisplayServer.screen_get_size(DisplayServer.window_get_current_screen())
+var taskbar_level = usable_rect.end.y
 
 # Pet Stats
 var move_speed = usable_rect.size.x * 0.001 # Pet speed based on the size of the screen
 var direction = Vector2(0, 0) # Not Moving
-enum Types {BIRD, BUNNY, OCTOPUS, SLIME} # Possible species that the pet can be
-var type:Types = Types.BIRD # What species the pet is (bird set as default)
+enum Types {BIRD, BUNNY, OCTOPUS} # Possible species that the pet can be
+var type : Types = Types.BIRD # What species the pet is (bird set as default)
 enum Activities {CLICKED, GREETING, IDLE, SITTING, WALKING, STARING} # Possible states for Pet
-var activity:Activities = Activities.IDLE # Current state of Pet (idle set as default)
+var activity:  Activities = Activities.IDLE # Current state of Pet (idle set as default)
 
 # Game Variables
-var decision_time: bool = false # Pet must wait Timer wait time before making their first decision
-var move_time: bool = false # Specific pets only move during set intervals to make animations seem clean
-var monitor_count: int = 0 # How many monitors the player has
+var decision_time : bool = false # Pet must wait Timer wait time before making their first decision
+var save_time : bool = false # Game waits 10 seconds before saving using this bool
+var fall_time : bool = true # Countdown to slowly increase fall speed to feel better
+var screen_count : int = DisplayServer.get_screen_count() # How many monitors the player has
+var gravity : bool = true # Gravity to keep Pet on taskbar, disabled when lifting
+var OS_base_color : Color = DisplayServer.get_base_color() # Find the computer's chosen base colour
+var OS_accent_color : Color = DisplayServer.get_accent_color() # Find the computer's chosen accent colour
 
 # Bug-Testing 
 var debugMovement = false
 var debugScreen = true
 
+
 ## Notes:
-## use os theme colour to colour ui, two clicks opens menu
+## Use os theme colour to colour ui, tint b&w images
+## One Click gets pets attention and stops them say hi, after too many clicks gets mad
+## Hold Click on pet lets you drag them around
+## Two Clicks on pet opens menu
 
 func _ready() -> void:
-	# Check if there is more than one monitor to run fix
-	monitor_count = DisplayServer.get_screen_count()
-	
 	# Prints to test issues with getting screen data
 	if debugScreen:
 		print("_Debug Info_")
-		print("Current Window: ", window)
-		print("Screen: ", DisplayServer.window_get_current_screen())
-		print("Screen End: ", usable_rect.end)
-		print("Screen Position: ", usable_rect.position)
-		print("Screen Size: ", usable_rect.size)
-		print("Screen Number: ", monitor_count)
-		print("Screen Size 2!!: ", DisplayServer.screen_get_size())
+		print("Current Screen: ", window.current_screen)
 		print("Primary Screen: ", DisplayServer.get_primary_screen())
+		print("Screen Count: ", screen_count)
+		print("Usable Rect: ", usable_rect)
+		print("Taskbar Level: ", taskbar_level)
 		print("Operating System: ", DisplayServer.get_name())
-		print(main_screen)
 		print("")
-	
+		print(OS_accent_color, OS_base_color)
+		
 	# Calculates pet (window and sprite) size based on monitor size 
 	var pet_size : int = (usable_rect.size.y / 12) # size of the window in pixels
 	var pet_scale = (pet_size/16.0) # scale for the sprite to fit in the window
@@ -72,11 +75,12 @@ func _ready() -> void:
 	window.always_on_top = true
 	
 	# Force borderless
-	window.unresizable = false
+	window.unresizable = true
 	
 	# Move the sprite to centre of the screen at above the taskbar
-	window.position.x = (usable_rect.size.x / 2) - (window.size.x / 2)
-	window.position.y = (usable_rect.end.y - window.size.y)
+	#window.position.x = (usable_rect.size.x / 2) - (window.size.x / 2)
+	#window.position.y = (usable_rect.size.y - window.size.y)
+	window.position = Vector2i(DisplayServer.screen_get_size().x/2 - (window.size.x/2), taskbar_level - window.size.y)
 	print("Starting Pet Position: ", window.position)
 	
 	# Start the timer for pet decision
@@ -86,6 +90,8 @@ func _ready() -> void:
 	change_type("random")
 
 func _process(_delta):
+	# Vector2i used to tell Windows to move to an exact pixel coordinate (integer)
+	var move_vector = Vector2i(direction * move_speed) # How Pet will move around screen
 	
 	# Make decision about movement every timer end
 	if decision_time == true:
@@ -94,7 +100,7 @@ func _process(_delta):
 	sprite_set() # changes the Pet's sprite to match what they're doing
 	
 	if activity == Activities.WALKING: # only if pet is moving
-		move() # moves the pet depending on the activity and type of the pet
+		move(move_vector) # moves the pet depending on the activity and type of the pet
 	
 	# Check edges to flip in case touching, sprite flip done in sprite_set()
 	if window.position.x < 0:
@@ -105,22 +111,42 @@ func _process(_delta):
 		direction.x = -1 # Change Direction
 		if debugMovement:
 				print("Bounce off right")
+	
+	if save_time:
+		save()
+	
+	# Check if pet is above taskbar to fall back down (if gravity is enabled)
+	if gravity || (window.position.y != (taskbar_level - window.size.y)):
+		if fall_time:
+			direction.y += 1
+			fall_time = false
+			$FallTimer.start()
+		if window.position.y < (taskbar_level - window.size.y):
+			window.position.y += move_vector.y
+		elif window.position.y > (taskbar_level - window.size.y):
+			$FallTimer.stop()
+			window.position.y = (taskbar_level - window.size.y)
+			activity = Activities.SITTING
+			direction.x = 0
+			if debugMovement:
+				print("Sit")
+	if window.position.y == (taskbar_level - window.size.y):
+		direction.y = 0
+		$FallTimer.stop()
 
 # Moves the window around the screen depending on state and type
-func move():
-	# Vector2i used to tell Windows to move to an exact pixel coordinate (integer)
-	var move_vector = Vector2i(direction * move_speed) # how Pet will move around screen
+func move(move_vector):
 	var current_frame = $AnimatedSprite2D.get_frame()
 	
 	# In-progress code to make the Bunny move differently to make the animation look smoother
 	# Apply movement to OS Window depending on type
 	if type == Types.BUNNY:
 		if current_frame == 3 or current_frame == 4 or current_frame == 5:
-			window.position += move_vector
+			window.position.x += move_vector.x
 		else:
 			pass
 	else:
-		window.position += move_vector
+		window.position.x += move_vector.x
 
 # Sets the Pet's sprite/animation to match state
 func sprite_set():
@@ -156,7 +182,7 @@ func brain():
 				activity = Activities.SITTING
 				direction.x = 0
 				if debugMovement:
-					print("Get Up")
+					print("Sit")
 			elif rand_choice < 0.65 and window.position.x + window.size.x < ((usable_rect.size.x)*0.9):
 				activity = Activities.WALKING
 				direction.x = 1
@@ -252,9 +278,21 @@ func change_type(choice):
 	else:
 		print ("Chosen Pet: ", chosen_type)
 
+# Saves the game's progress when called every 10 seconds
+func save():
+	print("Saving...")
+	save_time = false
+
 # Resets the Decision timer after random amount of seconds
 func _on_timer_timeout() -> void:
 	decision_time = true
 	if debugMovement:
 		print("Decide")
 		print("Current Position: ", window.position)
+
+func _on_save_timer_timeout() -> void:
+	save_time = true
+
+func _on_fall_timer_timeout() -> void:
+	fall_time = true
+	print(window.position)
