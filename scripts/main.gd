@@ -15,12 +15,21 @@ var usable_rect = DisplayServer.screen_get_usable_rect()
 var taskbar_level = usable_rect.end.y
 
 # Pet Stats
+var nickname: String = "Desktop Pet" # Pet's name, shows in UI and as Window title
 var move_speed = usable_rect.size.x * 0.001 # Pet speed based on the size of the screen
-var direction = Vector2(0, 0) # Not Moving
+var direction = Vector2(0, 0) # Direction of Pet Not Moving
+var fullness: int = 100 # Pet's hunger, 100 = full
+var happines: int = 100 # Pet's happiness, 100 = happy
+var age: int = 0 # How old the pet is in minutes
+var stage: int = 0 # How many evolution's the pet has undergone
 enum Types {BIRD, BUNNY, OCTOPUS} # Possible species that the pet can be
-var type : Types = Types.BIRD # What species the pet is (bird set as default)
-enum Activities {CLICKED, GREETING, IDLE, SITTING, WALKING, STARING} # Possible states for Pet
+var type: Types = Types.BIRD # What species the pet is (bird set as default)
+enum Activities {CLICKED, GREETING, IDLE, LIFTED, SITTING, SLEEPING, STARING, WALKING, WORKING} # Possible states for Pet
 var activity:  Activities = Activities.IDLE # Current state of Pet (idle set as default)
+enum Patterns {DEFAULT, UNCOMMON, RARE, EPIC, LEGENDARY} # Possible patterns the Pet can have
+var pattern:  Patterns = Patterns.DEFAULT # Current pattern of Pet (starts as default)
+enum Personality {NONE} # Possible personalities the Pet can have
+var personality:  Personality = Personality.NONE # Current personality of Pet (starts as default)
 
 # Game Variables
 var decision_time : bool = false # Pet must wait Timer wait time before making their first decision
@@ -34,7 +43,6 @@ var OS_accent_color : Color = DisplayServer.get_accent_color() # Find the comput
 # Bug-Testing 
 var debugMovement = false
 var debugScreen = true
-
 
 ## Notes:
 ## Use os theme colour to colour ui, tint b&w images
@@ -50,19 +58,13 @@ func _ready() -> void:
 		print("Primary Screen: ", DisplayServer.get_primary_screen())
 		print("Screen Count: ", screen_count)
 		print("Usable Rect: ", usable_rect)
-		print("Taskbar Level: ", taskbar_level)
+		print("Taskbar Level: ", taskbar_level) 
 		print("Operating System: ", DisplayServer.get_name())
 		print("")
 		print(OS_accent_color, OS_base_color)
-		
-	# Calculates pet (window and sprite) size based on monitor size 
-	var pet_size : int = (usable_rect.size.y / 12) # size of the window in pixels
-	var pet_scale = (pet_size/16.0) # scale for the sprite to fit in the window
-	window.size = Vector2i(pet_size, pet_size)
-	$AnimatedSprite2D.scale = Vector2(pet_scale, pet_scale)
-	if debugScreen:
-		print("Pet Size: ", pet_size)
-		print("Pet Scale: ", pet_scale)
+	
+	# Sets the window and pet's size
+	set_size()
 	
 	# We enable transparency for both the Godot Viewport and OS Window
 	get_viewport().transparent_bg = true
@@ -88,6 +90,15 @@ func _ready() -> void:
 	
 	# Call the function to decide random or specific starting pet, and prints the result
 	change_type("random")
+	
+	# Changes test sprite to OS colour for testing (works)
+	$ColorTest.set_modulate(OS_accent_color)
+	# Alert test (works)
+	# OS.alert("I'm huuungryyyyy :(", "Alert!") 
+	# Attention test (works)
+	# DisplayServer.window_request_attention()
+	# Window Name test (works!!)
+	# window.set_title("Buddy")
 
 func _process(_delta):
 	# Vector2i used to tell Windows to move to an exact pixel coordinate (integer)
@@ -97,12 +108,12 @@ func _process(_delta):
 	if decision_time == true:
 		brain() # tells the brain to make a decision
 	
-	sprite_set() # changes the Pet's sprite to match what they're doing
+	set_sprite() # changes the Pet's sprite to match what they're doing
 	
 	if activity == Activities.WALKING: # only if pet is moving
 		move(move_vector) # moves the pet depending on the activity and type of the pet
 	
-	# Check edges to flip in case touching, sprite flip done in sprite_set()
+	# Check edges to flip in case touching, sprite flip done in set_sprite()
 	if window.position.x < 0:
 		direction.x = 1 # Change Direction
 		if debugMovement:
@@ -111,9 +122,6 @@ func _process(_delta):
 		direction.x = -1 # Change Direction
 		if debugMovement:
 				print("Bounce off right")
-	
-	if save_time:
-		save()
 	
 	# Check if pet is above taskbar to fall back down (if gravity is enabled)
 	if gravity || (window.position.y != (taskbar_level - window.size.y)):
@@ -148,8 +156,29 @@ func move(move_vector):
 	else:
 		window.position.x += move_vector.x
 
+# Sets the Pet's size to fit on the window correctly, increaseing at evolution
+func set_size():
+	var size_div = 13 # default for stage 0
+	# Increase size with each stage
+	match stage:
+		1:
+			size_div = 12
+		2:
+			size_div = 11
+		3:
+			size_div = 10
+	
+	# Calculates pet (window and sprite) size based on monitor size 
+	var pet_size : int = (usable_rect.size.y / size_div) # size of the window in pixels
+	var pet_scale = (pet_size/16.0) # scale for the sprite to fit in the window
+	window.size = Vector2i(pet_size, pet_size)
+	$AnimatedSprite2D.scale = Vector2(pet_scale, pet_scale)
+	if debugScreen:
+		print("Pet Size: ", pet_size)
+		print("Pet Scale: ", pet_scale)
+
 # Sets the Pet's sprite/animation to match state
-func sprite_set():
+func set_sprite():
 	# Makes pet face the right direction and play the right animation after moving/stopping
 	match activity:
 		Activities.IDLE:
@@ -278,21 +307,27 @@ func change_type(choice):
 	else:
 		print ("Chosen Pet: ", chosen_type)
 
-# Saves the game's progress when called every 10 seconds
-func save():
-	print("Saving...")
-	save_time = false
+# Evolves the pet
+func evolve():
+	if stage < 3:
+		stage += 1
+		set_size()
+	else:
+		pass # finish game code here
 
-# Resets the Decision timer after random amount of seconds
-func _on_timer_timeout() -> void:
-	decision_time = true
-	if debugMovement:
-		print("Decide")
-		print("Current Position: ", window.position)
+# Saves the game's progress when called every 10 seconds, also increases age
+var age_secs = 0 # counter to increase age at 60 seconds
+func save() -> void:
+	age_secs += 1
+	if age_secs == 6:
+		age += 1
+		age_secs = 0
+		
+	# Saving code here
+	print("Saved at ", age, ":", age_secs, "0")
 
-func _on_save_timer_timeout() -> void:
-	save_time = true
 
+# Used to increase speed slowly when pet is falling
 func _on_fall_timer_timeout() -> void:
 	fall_time = true
 	print(window.position)

@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dcb64ynuvn13l" path="res://scripts/main.gd" id="1_sugp2"]
 [ext_resource type="SpriteFrames" uid="uid://dsnpgrv06xm2m" path="res://sprite_frames/bird.tres" id="2_0wfyh"]
+[ext_resource type="Texture2D" uid="uid://bn1th8j7t8ccc" path="res://sprites/color_test.png" id="3_sugp2"]
 
 [node name="Main" type="Node2D" unique_id=200465852]
 script = ExtResource("1_sugp2")
@@ -18,13 +19,19 @@ one_shot = true
 autostart = true
 
 [node name="SaveTimer" type="Timer" parent="." unique_id=1728820249]
-wait_time = 10.0
 autostart = true
 
 [node name="FallTimer" type="Timer" parent="." unique_id=1536130338]
 wait_time = 0.05
 one_shot = true
 
-[connection signal="timeout" from="DecisionTimer" to="." method="_on_timer_timeout"]
-[connection signal="timeout" from="SaveTimer" to="." method="_on_save_timer_timeout"]
+[node name="ColorTest" type="Sprite2D" parent="." unique_id=1558372372]
+visible = false
+texture_filter = 1
+position = Vector2(16, 16)
+scale = Vector2(2, 2)
+texture = ExtResource("3_sugp2")
+
+[connection signal="timeout" from="DecisionTimer" to="." method="brain"]
+[connection signal="timeout" from="SaveTimer" to="." method="save"]
 [connection signal="timeout" from="FallTimer" to="." method="_on_fall_timer_timeout"]
