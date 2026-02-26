@@ -22,6 +22,7 @@ var fullness: int = 100 # Pet's hunger, 100 = full
 var happines: int = 100 # Pet's happiness, 100 = happy
 var age: int = 0 # How old the pet is in minutes
 var stage: int = 0 # How many evolution's the pet has undergone
+var money: int = 0 # How much money the player/pet has
 enum Types {BIRD, BUNNY, OCTOPUS} # Possible species that the pet can be
 var type: Types = Types.BIRD # What species the pet is (bird set as default)
 enum Activities {CLICKED, GREETING, IDLE, LIFTED, SITTING, SLEEPING, STARING, WALKING, WORKING} # Possible states for Pet
@@ -32,13 +33,14 @@ enum Personality {NONE} # Possible personalities the Pet can have
 var personality:  Personality = Personality.NONE # Current personality of Pet (starts as default)
 
 # Game Variables
-var decision_time : bool = false # Pet must wait Timer wait time before making their first decision
-var save_time : bool = false # Game waits 10 seconds before saving using this bool
-var fall_time : bool = true # Countdown to slowly increase fall speed to feel better
-var screen_count : int = DisplayServer.get_screen_count() # How many monitors the player has
-var gravity : bool = true # Gravity to keep Pet on taskbar, disabled when lifting
-var OS_base_color : Color = DisplayServer.get_base_color() # Find the computer's chosen base colour
-var OS_accent_color : Color = DisplayServer.get_accent_color() # Find the computer's chosen accent colour
+var decision_time: bool = false # Pet must wait Timer wait time before making their first decision
+var save_time: bool = false # Game waits 10 seconds before saving using this bool
+var fall_time: bool = true # Countdown to slowly increase fall speed to feel better
+var screen_count: int = DisplayServer.get_screen_count() # How many monitors the player has
+var gravity: bool = true # Gravity to keep Pet on taskbar, disabled when lifting
+var OS_base_color: Color = DisplayServer.get_base_color() # Find the computer's chosen base colour
+var OS_accent_color: Color = DisplayServer.get_accent_color() # Find the computer's chosen accent colour
+var shader_on: bool = false # Whether the pet should use the distortion shade or not, changed in settings
 
 # Bug-Testing 
 var debugMovement = false
@@ -91,14 +93,18 @@ func _ready() -> void:
 	# Call the function to decide random or specific starting pet, and prints the result
 	change_type("random")
 	
+	# Sets the window name to the Pet's name
+	window.set_title(nickname)
+	
 	# Changes test sprite to OS colour for testing (works)
-	$ColorTest.set_modulate(OS_accent_color)
+	# $ColorTest.set_modulate(OS_accent_color)
 	# Alert test (works)
 	# OS.alert("I'm huuungryyyyy :(", "Alert!") 
 	# Attention test (works)
 	# DisplayServer.window_request_attention()
-	# Window Name test (works!!)
-	# window.set_title("Buddy")
+
+
+
 
 func _process(_delta):
 	# Vector2i used to tell Windows to move to an exact pixel coordinate (integer)
@@ -141,6 +147,10 @@ func _process(_delta):
 	if window.position.y == (taskbar_level - window.size.y):
 		direction.y = 0
 		$FallTimer.stop()
+	
+	# Check for settings
+	if shader_on: # Shader by enekoassets at https://godotshaders.com/shader/random-displacement-animation-easy-ui-animation/
+		$AnimatedSprite2D.set_material(load("res://shaders/baba_shader_material.tres"))
 
 # Moves the window around the screen depending on state and type
 func move(move_vector):

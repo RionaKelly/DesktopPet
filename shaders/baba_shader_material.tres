@@ -1,0 +1,11 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://k30i14r0evbq"]
+
+[ext_resource type="Shader" uid="uid://b7gu4vo37lfxg" path="res://shaders/baba.gdshader" id="1_8uwok"]
+
+[resource]
+shader = ExtResource("1_8uwok")
+shader_parameter/interval = 1.0
+shader_parameter/timeDelay = 0.0
+shader_parameter/intensityX = 0.5
+shader_parameter/intensityY = 0.1
+shader_parameter/seed = 42.0
