@@ -32,6 +32,7 @@ var pattern:  Patterns = Patterns.DEFAULT # Current pattern of Pet (starts as de
 enum Personality {NONE} # Possible personalities the Pet can have
 var personality:  Personality = Personality.NONE # Current personality of Pet (starts as default)
 var is_stopped: bool = false
+var pet_scale: float = 1.0 # scale for the pet to resized with in set_size()
 
 # Game Variables
 var decision_time: bool = false # Pet must wait Timer wait time before making their first decision
@@ -44,7 +45,7 @@ var OS_accent_color: Color = DisplayServer.get_accent_color() # Find the compute
 var shader_on: bool = false # Whether the pet should use the distortion shade or not, changed in settings
 
 # Bug-Testing 
-var debugMovement = false
+var debugMovement =true
 var debugScreen = true
 
 ## Notes:
@@ -106,9 +107,9 @@ func _ready() -> void:
 	# Sets the window name to the Pet's name
 	window.set_title(nickname)
 	
-	# Run once at the start and then every time the sprite changes
-	#_update_mouse_mask()
-	#sprite.frame_changed.connect(_update_mouse_mask)
+	## Run once at the start and then every time the sprite changes
+	_update_mouse_mask()
+	sprite.frame_changed.connect(_update_mouse_mask)
 	
 	# Changes test sprite to OS colour for testing (works)
 	#$ColorTest.set_modulate(OS_accent_color)
@@ -169,7 +170,7 @@ func _process(_delta):
 	
 	# Check for settings
 	if shader_on: # Shader by enekoassets at https://godotshaders.com/shader/random-displacement-animation-easy-ui-animation/
-		$PetSprite.set_material(load("res://shaders/baba_shader_material.tres"))
+		sprite.set_material(load("res://shaders/baba_shader_material.tres"))
 
 
 # Makes it so you can click through invisible space in the window
@@ -180,26 +181,28 @@ func _update_mouse_mask():
 	
 	# 1. Get the raw image date of the current frame
 	var texture = sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
+	
 	var image = texture.get_image()
+	image.resize(window.size.x, window.size.y)
 	# If the sprite is visually flipped, flip the image too
 	if sprite.flip_h:
 		image.flip_x()
-	
 	# 2. Create the Bitmap (map of solid pixels)
 	var bitmap = BitMap.new()
-	bitmap.create_from_image_alpha(image)
+	bitmap.create_from_image_alpha(image, 0.1)
 	
 	# 3. Create the Polygons (shape), 0.1 means ignore fully transparent pixels
-	var polygons = bitmap.opaque_to_polygons(Rect2(Vector2.ZERO, texture.get_size()), 0.1)
+	var polygons = bitmap.opaque_to_polygons(Rect2(Vector2.ZERO, window.size), 0)
 	
+	print(polygons)
 	# 4. Apply it to the OS Window
-	DisplayServer.window_set_mouse_passthrough(polygons)
-	print("Cut!")
+	# DisplayServer.window_set_mouse_passthrough(polygon)
+	window.set_mouse_passthrough_polygon(polygons)
 
 
 # Moves the window around the screen depending on state and type
 func move(move_vector):
-	var current_frame = $PetSprite.get_frame()
+	var current_frame = sprite.get_frame()
 	
 	# In-progress code to make the Bunny move differently to make the animation look smoother
 	# Apply movement to OS Window depending on type
@@ -225,12 +228,12 @@ func set_size():
 			size_div = 10
 	
 	# Calculates pet (window and sprite) size based on monitor size 
-	var pet_size : int = (usable_rect.size.y / size_div) # size of the window in pixels
-	var pet_scale = (pet_size/16.0) # scale for the sprite to fit in the window
-	window.size = Vector2i(pet_size, pet_size)
-	$PetSprite.scale = Vector2(pet_scale, pet_scale)
+	var window_size = (usable_rect.size.y / size_div) # size of the window in pixels
+	pet_scale = (window_size/16.0) # scale for the sprite to fit in the window
+	window.size = Vector2i(window_size, window_size)
+	sprite.scale = Vector2(pet_scale, pet_scale)
 	if debugScreen:
-		print("Pet Size: ", pet_size)
+		print("Window Size: ", window_size)
 		print("Pet Scale: ", pet_scale)
 
 
@@ -325,7 +328,7 @@ func brain():
 func start_stopping():
 	is_stopped = true
 	activity = Activities.IDLE
-	$PetSprite.set_modulate(OS_accent_color)
+	sprite.set_modulate(OS_accent_color)
 	
 	# We COULD use a Timer node, but instead we can use 'await', which created a timer waits, and destroys it
 	await get_tree().create_timer(3.0).timeout
