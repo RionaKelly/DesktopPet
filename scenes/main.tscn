@@ -7,33 +7,37 @@
 [node name="Main" type="Node2D" unique_id=200465852]
 script = ExtResource("1_sugp2")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1476839180]
+[node name="Window" type="Window" parent="." unique_id=1331203667]
+oversampling_override = 1.0
+position = Vector2i(0, 36)
+
+[node name="PetSprite" type="AnimatedSprite2D" parent="Window" unique_id=1476839180]
 light_mask = 257
 texture_filter = 1
 sprite_frames = ExtResource("2_0wfyh")
-animation = &"idle"
+animation = &"walk"
 centered = false
 
-[node name="DecisionTimer" type="Timer" parent="." unique_id=739945663]
+[node name="DecisionTimer" type="Timer" parent="Window" unique_id=739945663]
 wait_time = 1.2
 one_shot = true
 autostart = true
 
-[node name="SaveTimer" type="Timer" parent="." unique_id=1728820249]
+[node name="SaveTimer" type="Timer" parent="Window" unique_id=1728820249]
 wait_time = 10.0
 autostart = true
 
-[node name="FallTimer" type="Timer" parent="." unique_id=1536130338]
+[node name="FallTimer" type="Timer" parent="Window" unique_id=1536130338]
 wait_time = 0.05
 one_shot = true
 
-[node name="ColorTest" type="Sprite2D" parent="." unique_id=1558372372]
+[node name="ColorTest" type="Sprite2D" parent="Window" unique_id=1558372372]
 visible = false
 texture_filter = 1
 position = Vector2(16, 16)
 scale = Vector2(2, 2)
 texture = ExtResource("3_sugp2")
 
-[connection signal="timeout" from="DecisionTimer" to="." method="brain"]
-[connection signal="timeout" from="SaveTimer" to="." method="save"]
-[connection signal="timeout" from="FallTimer" to="." method="_on_fall_timer_timeout"]
+[connection signal="timeout" from="Window/DecisionTimer" to="." method="brain"]
+[connection signal="timeout" from="Window/SaveTimer" to="." method="save"]
+[connection signal="timeout" from="Window/FallTimer" to="." method="_on_fall_timer_timeout"]

@@ -1,10 +1,10 @@
 # Followed tutorial by Godot Dev Checkpoint to learn about windows with Godot
-# Used this for window presets (invisible, borderless etc.) and making them move around the screen
-# https://www.youtube.com/watch?v=9JHFrnt5j_k
+# Used this for window presets, making window around the screen, clicking through window, and performance enhancements
+# https://youtube.com/playlist?list=PLVzjdZVCXNTyVHAtpgF_uFbsz8MA8uWKO&si=FOG2BfnqTqjJTduE
 
 extends Node2D
 
-@onready var sprite : AnimatedSprite2D = $AnimatedSprite2D
+@onready var sprite : AnimatedSprite2D = $PetSprite
 
 #get access to the OS Window (not just the game node)
 @onready var window : Window = get_window()
@@ -16,7 +16,7 @@ var taskbar_level = usable_rect.end.y
 
 # Pet Stats
 var nickname: String = "Desktop Pet" # Pet's name, shows in UI and as Window title
-var move_speed = usable_rect.size.x * 0.001 # Pet speed based on the size of the screen
+var move_speed = usable_rect.size.x * 0.0015 # Pet speed based on the size of the screen
 var direction = Vector2(0, 0) # Direction of Pet Not Moving
 var fullness: int = 100 # Pet's hunger, 100 = full
 var happines: int = 100 # Pet's happiness, 100 = happy
@@ -31,6 +31,7 @@ enum Patterns {DEFAULT, UNCOMMON, RARE, EPIC, LEGENDARY} # Possible patterns the
 var pattern:  Patterns = Patterns.DEFAULT # Current pattern of Pet (starts as default)
 enum Personality {NONE} # Possible personalities the Pet can have
 var personality:  Personality = Personality.NONE # Current personality of Pet (starts as default)
+var is_stopped: bool = false
 
 # Game Variables
 var decision_time: bool = false # Pet must wait Timer wait time before making their first decision
@@ -51,6 +52,15 @@ var debugScreen = true
 ## One Click gets pets attention and stops them say hi, after too many clicks gets mad
 ## Hold Click on pet lets you drag them around
 ## Two Clicks on pet opens menu
+
+# Check for inputs
+func _input(event):
+	# Check for Left Mouse Button Press
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		if not is_stopped:
+			# start_stopping()
+			pass
+
 
 func _ready() -> void:
 	# Prints to test issues with getting screen data
@@ -91,22 +101,31 @@ func _ready() -> void:
 	$DecisionTimer.start()
 	
 	# Call the function to decide random or specific starting pet, and prints the result
-	change_type("random")
+	change_type("bird")
 	
 	# Sets the window name to the Pet's name
 	window.set_title(nickname)
 	
+	# Run once at the start and then every time the sprite changes
+	#_update_mouse_mask()
+	#sprite.frame_changed.connect(_update_mouse_mask)
+	
 	# Changes test sprite to OS colour for testing (works)
-	# $ColorTest.set_modulate(OS_accent_color)
+	#$ColorTest.set_modulate(OS_accent_color)
 	# Alert test (works)
-	# OS.alert("I'm huuungryyyyy :(", "Alert!") 
+	#OS.alert("I'm huuungryyyyy :(", "Alert!") 
 	# Attention test (works)
-	# DisplayServer.window_request_attention()
-
-
+	#DisplayServer.window_request_attention()
+	
+	# Framerate Cap
+	Engine.max_fps = 30
 
 
 func _process(_delta):
+	# The Red Light!
+	# If we are stopped then hit returm and stop reading code
+	if is_stopped: return
+	
 	# Vector2i used to tell Windows to move to an exact pixel coordinate (integer)
 	var move_vector = Vector2i(direction * move_speed) # How Pet will move around screen
 	
@@ -130,7 +149,7 @@ func _process(_delta):
 				print("Bounce off right")
 	
 	# Check if pet is above taskbar to fall back down (if gravity is enabled)
-	if gravity || (window.position.y != (taskbar_level - window.size.y)):
+	if gravity or (window.position.y != (taskbar_level - window.size.y)):
 		if fall_time:
 			direction.y += 1
 			fall_time = false
@@ -150,11 +169,37 @@ func _process(_delta):
 	
 	# Check for settings
 	if shader_on: # Shader by enekoassets at https://godotshaders.com/shader/random-displacement-animation-easy-ui-animation/
-		$AnimatedSprite2D.set_material(load("res://shaders/baba_shader_material.tres"))
+		$PetSprite.set_material(load("res://shaders/baba_shader_material.tres"))
+
+
+# Makes it so you can click through invisible space in the window
+func _update_mouse_mask():
+	## list activities with no animation to save resources
+	#if activity == Activities.IDLE or activity == Activities.SITTING:
+		#return
+	
+	# 1. Get the raw image date of the current frame
+	var texture = sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
+	var image = texture.get_image()
+	# If the sprite is visually flipped, flip the image too
+	if sprite.flip_h:
+		image.flip_x()
+	
+	# 2. Create the Bitmap (map of solid pixels)
+	var bitmap = BitMap.new()
+	bitmap.create_from_image_alpha(image)
+	
+	# 3. Create the Polygons (shape), 0.1 means ignore fully transparent pixels
+	var polygons = bitmap.opaque_to_polygons(Rect2(Vector2.ZERO, texture.get_size()), 0.1)
+	
+	# 4. Apply it to the OS Window
+	DisplayServer.window_set_mouse_passthrough(polygons)
+	print("Cut!")
+
 
 # Moves the window around the screen depending on state and type
 func move(move_vector):
-	var current_frame = $AnimatedSprite2D.get_frame()
+	var current_frame = $PetSprite.get_frame()
 	
 	# In-progress code to make the Bunny move differently to make the animation look smoother
 	# Apply movement to OS Window depending on type
@@ -165,6 +210,7 @@ func move(move_vector):
 			pass
 	else:
 		window.position.x += move_vector.x
+
 
 # Sets the Pet's size to fit on the window correctly, increaseing at evolution
 func set_size():
@@ -182,10 +228,11 @@ func set_size():
 	var pet_size : int = (usable_rect.size.y / size_div) # size of the window in pixels
 	var pet_scale = (pet_size/16.0) # scale for the sprite to fit in the window
 	window.size = Vector2i(pet_size, pet_size)
-	$AnimatedSprite2D.scale = Vector2(pet_scale, pet_scale)
+	$PetSprite.scale = Vector2(pet_scale, pet_scale)
 	if debugScreen:
 		print("Pet Size: ", pet_size)
 		print("Pet Scale: ", pet_scale)
+
 
 # Sets the Pet's sprite/animation to match state
 func set_sprite():
@@ -207,6 +254,7 @@ func set_sprite():
 				print("Direction [", direction.x, "] outside of given rage")
 		_:
 			print("Activity [", activity, "] not recognised")
+
 
 # Handles all of the decision making for the Pet
 func brain():
@@ -272,11 +320,27 @@ func brain():
 	$DecisionTimer.wait_time = rand_wait
 	$DecisionTimer.start()
 
+
+# Tells the Pet to stop when needed
+func start_stopping():
+	is_stopped = true
+	activity = Activities.IDLE
+	$PetSprite.set_modulate(OS_accent_color)
+	
+	# We COULD use a Timer node, but instead we can use 'await', which created a timer waits, and destroys it
+	await get_tree().create_timer(3.0).timeout
+	
+	# Time's up!
+	is_stopped = false
+	set_modulate(Color(1.0, 1.0, 1.0, 1.0))
+
+
 # Changes Pet's type and sprite set to given species or random
 func change_type(choice):
 	# establish pet variable to return with chosen pet, we set this here in case it is random
 	var random = false
 	var chosen_type:String = ""
+	
 	
 	match choice:
 		"bird":
@@ -317,6 +381,7 @@ func change_type(choice):
 	else:
 		print ("Chosen Pet: ", chosen_type)
 
+
 # Evolves the pet
 func evolve():
 	if stage < 3:
@@ -324,6 +389,7 @@ func evolve():
 		set_size()
 	else:
 		pass # finish game code here
+
 
 # Saves the game's progress when called every 10 seconds, also increases age
 var age_secs = 0 # counter to increase age at 60 seconds
