@@ -4,11 +4,13 @@
 
 extends Node2D
 
+# get access to the OS Window (not just the game node)
+@onready var window : Window = get_window()
+
 @onready var sprite : AnimatedSprite2D = $PetSprite
 
-#get access to the OS Window (not just the game node)
-@onready var window : Window = get_window()
-# @onready var main_screen : int = window.current_screen
+# @onready var _ClickPolygon: CollisionPolygon2D = $PetSprite/ClickArea/ClickPolygon
+
 # The 'Safe Area' that the window shouldn't leave --- usable_rect() = screen area minus taskbar/docks
 var usable_rect = DisplayServer.screen_get_usable_rect()
 # var screen_size = DisplayServer.screen_get_size(DisplayServer.window_get_current_screen())
@@ -59,7 +61,7 @@ func _input(event):
 	# Check for Left Mouse Button Press
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		if not is_stopped:
-			# start_stopping()
+			start_stopping()
 			pass
 
 
@@ -67,6 +69,7 @@ func _ready() -> void:
 	# Prints to test issues with getting screen data
 	if debugScreen:
 		print("_Debug Info_")
+		print("Window ID: ", window)
 		print("Current Screen: ", window.current_screen)
 		print("Primary Screen: ", DisplayServer.get_primary_screen())
 		print("Screen Count: ", screen_count)
@@ -74,10 +77,10 @@ func _ready() -> void:
 		print("Taskbar Level: ", taskbar_level) 
 		print("Operating System: ", DisplayServer.get_name())
 		print("")
-		print(OS_accent_color, OS_base_color)
 	
 	# Sets the window and pet's size
 	set_size()
+	# get_viewport().size_changed.connect(set_size()) # signal to change size when window resized
 	
 	# We enable transparency for both the Godot Viewport and OS Window
 	get_viewport().transparent_bg = true
@@ -107,9 +110,11 @@ func _ready() -> void:
 	# Sets the window name to the Pet's name
 	window.set_title(nickname)
 	
-	## Run once at the start and then every time the sprite changes
-	_update_mouse_mask()
-	sprite.frame_changed.connect(_update_mouse_mask)
+	sprite.play("idle")
+	# Run once here then whenever animation changes
+	#_update_mouse_mask()
+	#sprite.animation_changed.connect(_update_mouse_mask)
+	#_update_click_polygon()
 	
 	# Changes test sprite to OS colour for testing (works)
 	#$ColorTest.set_modulate(OS_accent_color)
@@ -133,8 +138,6 @@ func _process(_delta):
 	# Make decision about movement every timer end
 	if decision_time == true:
 		brain() # tells the brain to make a decision
-	
-	set_sprite() # changes the Pet's sprite to match what they're doing
 	
 	if activity == Activities.WALKING: # only if pet is moving
 		move(move_vector) # moves the pet depending on the activity and type of the pet
@@ -173,31 +176,51 @@ func _process(_delta):
 		sprite.set_material(load("res://shaders/baba_shader_material.tres"))
 
 
-# Makes it so you can click through invisible space in the window
-func _update_mouse_mask():
+#func _update_click_polygon() -> void:
+	#var click_polygon: PackedVector2Array = _ClickPolygon.polygon
+	#for vec_i in range(click_polygon.size()):
+		#click_polygon[vec_i] = to_global(click_polygon[vec_i])
+	#
+	##var poly2: PackedVector2Array = $PetSprite/ClickArea/ClickPolygon
+	##window.mouse_passthrough_polygon = click_polygon
+	##DisplayServer.window_set_mouse_passthrough(click_polygon)
+
+
+# Creates area of the window that can be clicked through
+#func _update_mouse_mask():
 	## list activities with no animation to save resources
-	#if activity == Activities.IDLE or activity == Activities.SITTING:
-		#return
-	
-	# 1. Get the raw image date of the current frame
-	var texture = sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
-	
-	var image = texture.get_image()
-	image.resize(window.size.x, window.size.y)
-	# If the sprite is visually flipped, flip the image too
-	if sprite.flip_h:
-		image.flip_x()
-	# 2. Create the Bitmap (map of solid pixels)
-	var bitmap = BitMap.new()
-	bitmap.create_from_image_alpha(image, 0.1)
-	
-	# 3. Create the Polygons (shape), 0.1 means ignore fully transparent pixels
-	var polygons = bitmap.opaque_to_polygons(Rect2(Vector2.ZERO, window.size), 0)
-	
-	print(polygons)
-	# 4. Apply it to the OS Window
-	# DisplayServer.window_set_mouse_passthrough(polygon)
-	window.set_mouse_passthrough_polygon(polygons)
+	##if activity == Activities.IDLE or activity == Activities.SITTING:
+		##return
+		#
+	##$MouseMask.set_offset(Vector2((window.size.x/2), (window.size.y/2)))
+	#
+	## 1. Get the raw image date of the current frame
+	#var current_sprite = sprite.sprite_frames.get_frame_texture(sprite.animation, 0)
+	#var image = current_sprite.get_image()
+	#
+	##var image = Image.load_from_file("res://sprites/bird/bird_hitbox.png")
+	#
+	##image.resize(window.size.x, window.size.y, Image.Interpolation.INTERPOLATE_NEAREST)
+	#
+	## If the sprite is visually flipped, flip the image too
+	##if sprite.flip_h:
+		##image.flip_x()
+	#
+	### Used for testing to see texture
+	#$MouseMask.set_texture(ImageTexture.create_from_image(image))
+	#
+	## 2. Create the Bitmap (map of solid pixels)
+	#var bitmap = BitMap.new()
+	#bitmap.create_from_image_alpha(image)
+	##bitmap.grow_mask(pet_scale, Rect2(Vector2.ZERO, image.get_size()))
+	#
+	## 3. Create the Polygons (shape), 0.1 means ignore fully transparent pixels
+	#var polygons: PackedVector2Array = bitmap.opaque_to_polygons(Rect2(Vector2.ZERO, bitmap.get_size()), 2.0)
+	#
+	## 4. Apply it to the OS Window
+	##DisplayServer.window_set_mouse_passthrough(polygons)
+	#get_window().mouse_passthrough_polygon = polygons
+	#print("Mask Updated")
 
 
 # Moves the window around the screen depending on state and type
@@ -322,20 +345,22 @@ func brain():
 		print("Wait ", rand_wait)
 	$DecisionTimer.wait_time = rand_wait
 	$DecisionTimer.start()
+	
+	set_sprite() # changes the Pet's sprite to match what they're doing
 
 
 # Tells the Pet to stop when needed
 func start_stopping():
 	is_stopped = true
 	activity = Activities.IDLE
-	sprite.set_modulate(OS_accent_color)
+	sprite.set_self_modulate(OS_accent_color)
 	
 	# We COULD use a Timer node, but instead we can use 'await', which created a timer waits, and destroys it
-	await get_tree().create_timer(3.0).timeout
+	await get_tree().create_timer(1.0).timeout
 	
 	# Time's up!
 	is_stopped = false
-	set_modulate(Color(1.0, 1.0, 1.0, 1.0))
+	sprite.set_self_modulate(Color(1.0, 1.0, 1.0))
 
 
 # Changes Pet's type and sprite set to given species or random
@@ -401,7 +426,7 @@ func save() -> void:
 	if age_secs == 6:
 		age += 1
 		age_secs = 0
-		
+	
 	# Saving code here
 	print("Saved at ", age, ":", age_secs, "0")
 
