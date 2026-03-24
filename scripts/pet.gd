@@ -9,7 +9,7 @@ extends Node2D
 
 @onready var sprite : AnimatedSprite2D = $PetSprite
 
-# @onready var _ClickPolygon: CollisionPolygon2D = $PetSprite/ClickArea/ClickPolygon
+@onready var _ClickPolygon: CollisionPolygon2D = $PetSprite/ClickArea/ClickPolygon
 
 # The 'Safe Area' that the window shouldn't leave --- usable_rect() = screen area minus taskbar/docks
 var usable_rect = DisplayServer.screen_get_usable_rect()
@@ -82,18 +82,15 @@ func _ready() -> void:
 	set_size()
 	# get_viewport().size_changed.connect(set_size()) # signal to change size when window resized
 	
-	# We enable transparency for both the Godot Viewport and OS Window
-	get_viewport().transparent_bg = true
-	window.transparent = true
-
-	# We remove the borders so it looks like the character is floating
-	window.borderless = true
-	
-	# Keep them above everything
-	window.always_on_top = true
-	
-	# Force borderless
-	window.unresizable = true
+	## We enable transparency for both the Godot Viewport and OS Window
+	#window.transparent_bg = true
+	#window.transparent = true
+	## We remove the borders so it looks like the character is floating
+	#window.borderless = true
+	## Keep them above everything
+	#window.always_on_top = true
+	## Force borderless
+	#window.unresizable = true
 	
 	# Move the sprite to centre of the screen at above the taskbar
 	#window.position.x = (usable_rect.size.x / 2) - (window.size.x / 2)
@@ -114,7 +111,9 @@ func _ready() -> void:
 	# Run once here then whenever animation changes
 	#_update_mouse_mask()
 	#sprite.animation_changed.connect(_update_mouse_mask)
-	#_update_click_polygon()
+	print(window.get_mouse_passthrough_polygon())
+	_update_click_polygon()
+	print(window.get_mouse_passthrough_polygon())
 	
 	# Changes test sprite to OS colour for testing (works)
 	#$ColorTest.set_modulate(OS_accent_color)
@@ -176,17 +175,17 @@ func _process(_delta):
 		sprite.set_material(load("res://shaders/baba_shader_material.tres"))
 
 
-#func _update_click_polygon() -> void:
-	#var click_polygon: PackedVector2Array = _ClickPolygon.polygon
-	#for vec_i in range(click_polygon.size()):
-		#click_polygon[vec_i] = to_global(click_polygon[vec_i])
-	#
-	##var poly2: PackedVector2Array = $PetSprite/ClickArea/ClickPolygon
-	##window.mouse_passthrough_polygon = click_polygon
-	##DisplayServer.window_set_mouse_passthrough(click_polygon)
+func _update_click_polygon() -> void:
+	var click_polygon: PackedVector2Array = _ClickPolygon.polygon
+	for vec_i in range(click_polygon.size()):
+		click_polygon[vec_i] = to_global(click_polygon[vec_i])
+	
+	# var poly2: PackedVector2Array = $PetSprite/ClickArea/ClickPolygon
+	window.mouse_passthrough_polygon = click_polygon
+	# DisplayServer.window_set_mouse_passthrough(click_polygon)
 
 
-# Creates area of the window that can be clicked through
+## Creates area of the window that can be clicked through
 #func _update_mouse_mask():
 	## list activities with no animation to save resources
 	##if activity == Activities.IDLE or activity == Activities.SITTING:
