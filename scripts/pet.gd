@@ -18,8 +18,8 @@ var taskbar_level = usable_rect.end.y
 
 # Pet Stats
 var nickname: String = "Desktop Pet" # Pet's name, shows in UI and as Window title
-var move_speed = usable_rect.size.x * 0.0015 # Pet speed based on the size of the screen
-var direction = Vector2(0, 0) # Direction of Pet Not Moving
+var move_speed = usable_rect.size.x * 0.0008 # Pet speed based on the size of the screen
+var direction = Vector2(0, 0) # Direction that the pet will move in and is facing
 var fullness: int = 100 # Pet's hunger, 100 = full
 var happines: int = 100 # Pet's happiness, 100 = happy
 var age: int = 0 # How old the pet is in minutes
@@ -27,8 +27,8 @@ var stage: int = 0 # How many evolution's the pet has undergone
 var money: int = 0 # How much money the player/pet has
 enum Types {BIRD, BUNNY, OCTOPUS} # Possible species that the pet can be
 var type: Types = Types.BIRD # What species the pet is (bird set as default)
-enum Activities {CLICKED, GREETING, IDLE, LIFTED, SITTING, SLEEPING, STARING, WALKING, WORKING} # Possible states for Pet
-var activity:  Activities = Activities.IDLE # Current state of Pet (idle set as default)
+enum Activities {GREETING, IDLE, LIFTED, SITTING, SLEEPING, STARING, STOPPED, WALKING, WORKING} # Possible states for Pet
+var activity:  Activities = Activities.IDLE # Current state of Pet (idle set as starting default)
 enum Patterns {DEFAULT, UNCOMMON, RARE, EPIC, LEGENDARY} # Possible patterns the Pet can have
 var pattern:  Patterns = Patterns.DEFAULT # Current pattern of Pet (starts as default)
 enum Personality {NONE} # Possible personalities the Pet can have
@@ -107,14 +107,11 @@ func _ready() -> void:
 	# Sets the window name to the Pet's name
 	window.set_title(nickname)
 	
-	sprite.play("idle")
 	# Run once here then whenever animation changes
-	#_update_mouse_mask()
-	#sprite.animation_changed.connect(_update_mouse_mask)
-	print(window.get_mouse_passthrough_polygon())
 	_update_click_polygon()
-	print(window.get_mouse_passthrough_polygon())
+	sprite.frame_changed.connect(_update_click_polygon)
 	
+	## Things I was testing to use later
 	# Changes test sprite to OS colour for testing (works)
 	#$ColorTest.set_modulate(OS_accent_color)
 	# Alert test (works)
@@ -123,7 +120,7 @@ func _ready() -> void:
 	#DisplayServer.window_request_attention()
 	
 	# Framerate Cap
-	Engine.max_fps = 30
+	Engine.max_fps = 60
 
 
 func _process(_delta):
@@ -144,10 +141,14 @@ func _process(_delta):
 	# Check edges to flip in case touching, sprite flip done in set_sprite()
 	if window.position.x < 0:
 		direction.x = 1 # Change Direction
+		_update_click_polygon(false)
+		sprite.flip_h = false # This is done in set_sprite() too but I set here for instant change
 		if debugMovement:
 				print("Bounce off left")
 	if window.position.x + window.size.x > usable_rect.size.x:
 		direction.x = -1 # Change Direction
+		_update_click_polygon(true)
+		sprite.flip_h = true # This is done in set_sprite() too but I set here for instant change
 		if debugMovement:
 				print("Bounce off right")
 	
@@ -175,51 +176,71 @@ func _process(_delta):
 		sprite.set_material(load("res://shaders/baba_shader_material.tres"))
 
 
-func _update_click_polygon() -> void:
-	var click_polygon: PackedVector2Array = _ClickPolygon.polygon
-	for vec_i in range(click_polygon.size()):
-		click_polygon[vec_i] = to_global(click_polygon[vec_i])
+# Creates area of the window that can be clicked through based on scaled up given polygon
+# Redundant after creation of the next function but left here just in case 
+var last_activity = Activities.STOPPED # Random default
+func _update_click_polygon(flip = null):
+	# list activities with no animation to save resources
+	if activity == Activities.IDLE or activity == Activities.SITTING:
+		if last_activity == activity: 
+			return
+	last_activity = activity
 	
-	# var poly2: PackedVector2Array = $PetSprite/ClickArea/ClickPolygon
+	var old_polygon: PackedVector2Array = _ClickPolygon.polygon
+	var click_polygon = PackedVector2Array()
+	if flip == false:
+		for vec_i in range(old_polygon.size()):
+			click_polygon.append((old_polygon.get(vec_i) * pet_scale))
+	elif flip == true: 
+		for vec_i in range(old_polygon.size()):
+			click_polygon.append(Vector2(
+				((old_polygon.get(vec_i).x * pet_scale * -1) + window.size.x), 
+				(old_polygon.get(vec_i).y * pet_scale)))
+	else:
+		if sprite.flip_h == false:
+			for vec_i in range(old_polygon.size()):
+				click_polygon.append((old_polygon.get(vec_i) * pet_scale))
+		elif sprite.flip_h == true: # flips the polygon if the sprite is flipped
+			for vec_i in range(old_polygon.size()):
+				click_polygon.append(Vector2(
+					((old_polygon.get(vec_i).x * pet_scale * -1) + window.size.x), 
+					(old_polygon.get(vec_i).y * pet_scale)))
+	
+	#for vec_i in range(click_polygon.size()):
+		#click_polygon[vec_i] = to_global(click_polygon[vec_i])
+	
 	window.mouse_passthrough_polygon = click_polygon
-	# DisplayServer.window_set_mouse_passthrough(click_polygon)
+	print("Clickable Area: ", window.get_mouse_passthrough_polygon())
 
 
-## Creates area of the window that can be clicked through
-#func _update_mouse_mask():
-	## list activities with no animation to save resources
-	##if activity == Activities.IDLE or activity == Activities.SITTING:
-		##return
-		#
-	##$MouseMask.set_offset(Vector2((window.size.x/2), (window.size.y/2)))
-	#
-	## 1. Get the raw image date of the current frame
-	#var current_sprite = sprite.sprite_frames.get_frame_texture(sprite.animation, 0)
-	#var image = current_sprite.get_image()
-	#
-	##var image = Image.load_from_file("res://sprites/bird/bird_hitbox.png")
-	#
-	##image.resize(window.size.x, window.size.y, Image.Interpolation.INTERPOLATE_NEAREST)
-	#
-	## If the sprite is visually flipped, flip the image too
-	##if sprite.flip_h:
-		##image.flip_x()
-	#
-	### Used for testing to see texture
-	#$MouseMask.set_texture(ImageTexture.create_from_image(image))
-	#
-	## 2. Create the Bitmap (map of solid pixels)
-	#var bitmap = BitMap.new()
-	#bitmap.create_from_image_alpha(image)
-	##bitmap.grow_mask(pet_scale, Rect2(Vector2.ZERO, image.get_size()))
-	#
-	## 3. Create the Polygons (shape), 0.1 means ignore fully transparent pixels
-	#var polygons: PackedVector2Array = bitmap.opaque_to_polygons(Rect2(Vector2.ZERO, bitmap.get_size()), 2.0)
-	#
-	## 4. Apply it to the OS Window
-	##DisplayServer.window_set_mouse_passthrough(polygons)
-	#get_window().mouse_passthrough_polygon = polygons
-	#print("Mask Updated")
+# Creates area of the window that can be clicked through
+var last_activity2 = Activities.STOPPED # Random default that just needs to not be idle
+func _update_mouse_mask():
+	# list activities with no animation to save resources
+	if activity == Activities.IDLE or activity == Activities.SITTING:
+		if last_activity2 == activity: 
+			return
+	last_activity2 = activity
+	
+	# 1. Get the raw image date of the current frame
+	var current_sprite = sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
+	var image = current_sprite.get_image()
+	
+	#image.resize(window.size.x, window.size.y, Image.Interpolation.INTERPOLATE_NEAREST)
+	
+	# If the sprite is visually flipped, flip the image too
+	if sprite.flip_h:
+		image.flip_x()
+	
+	# 2. Create the Bitmap (map of solid pixels)
+	var bitmap = BitMap.new()
+	bitmap.create_from_image_alpha(image)
+	
+	# 3. Create the Polygons (shape), 0.1 means ignore fully transparent pixels
+	var click_polygon: PackedVector2Array = bitmap.opaque_to_polygons(Rect2(Vector2.ZERO, bitmap.get_size()), 1)
+	
+	window.mouse_passthrough_polygon = click_polygon
+	print("Clickable Area: ", window.get_mouse_passthrough_polygon())
 
 
 # Moves the window around the screen depending on state and type
@@ -254,6 +275,7 @@ func set_size():
 	pet_scale = (window_size/16.0) # scale for the sprite to fit in the window
 	window.size = Vector2i(window_size, window_size)
 	sprite.scale = Vector2(pet_scale, pet_scale)
+	
 	if debugScreen:
 		print("Window Size: ", window_size)
 		print("Pet Scale: ", pet_scale)
@@ -272,8 +294,10 @@ func set_sprite():
 		Activities.WALKING:
 			sprite.play("walk")
 			if direction.x == 1:
+				_update_click_polygon(false)
 				sprite.flip_h = false
 			elif direction.x == -1:
+				_update_click_polygon(true)
 				sprite.flip_h = true
 			else: # extra check just in case direction variable is doing something weird
 				print("Direction [", direction.x, "] outside of given rage")

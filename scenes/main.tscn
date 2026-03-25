@@ -7,18 +7,3 @@
 script = ExtResource("1_0wfyh")
 
 [node name="Pet" parent="." unique_id=200465852 instance=ExtResource("1_o5qli")]
-
-[node name="PetWindow" type="Window" parent="." unique_id=250550609]
-transparent_bg = true
-oversampling_override = 1.0
-title = "Pet"
-size = Vector2i(160, 160)
-mouse_passthrough_polygon = PackedVector2Array(0, 0, 100, 0, 100, 100, 0, 100)
-unresizable = true
-borderless = true
-always_on_top = true
-transparent = true
-minimize_disabled = true
-maximize_disabled = true
-
-[node name="Pet" parent="PetWindow" unique_id=1887053004 instance=ExtResource("1_o5qli")]

@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://dcb64ynuvn13l" path="res://scripts/pet.gd" id="1_sugp2"]
 [ext_resource type="SpriteFrames" uid="uid://dsnpgrv06xm2m" path="res://sprite_frames/bird.tres" id="2_0wfyh"]
 [ext_resource type="Texture2D" uid="uid://bn1th8j7t8ccc" path="res://sprites/color_test.png" id="3_sugp2"]
-[ext_resource type="Texture2D" uid="uid://bcqnw5eaas1o5" path="res://sprites/octopus/octopus.png" id="4_jyhfs"]
 
 [node name="Pet" type="Node2D" unique_id=200465852]
 script = ExtResource("1_sugp2")
@@ -12,16 +11,15 @@ script = ExtResource("1_sugp2")
 light_mask = 257
 texture_filter = 1
 sprite_frames = ExtResource("2_0wfyh")
-animation = &"walk"
+animation = &"idle"
+frame_progress = 0.5177439
 centered = false
 
 [node name="ClickArea" type="Area2D" parent="PetSprite" unique_id=829967867]
-scale = Vector2(34.809284, 24.543425)
 
 [node name="ClickPolygon" type="CollisionPolygon2D" parent="PetSprite/ClickArea" unique_id=1404095194]
-position = Vector2(0.0861839, 0.12223233)
-scale = Vector2(0.8115817, 0.99910885)
-polygon = PackedVector2Array(0, 0, 1.4901161e-08, 0.5301459, 0.35397506, 0.5301459, 0.35397506, 0)
+visible = false
+polygon = PackedVector2Array(3, 6, 5, 3, 5, 0, 10, 0, 10, 3, 13, 6, 13, 8, 15, 8, 15, 11, 13, 11, 13, 16, 3, 16)
 
 [node name="ColorTest" type="Sprite2D" parent="." unique_id=1558372372]
 visible = false
@@ -29,12 +27,6 @@ texture_filter = 1
 position = Vector2(16, 16)
 scale = Vector2(2, 2)
 texture = ExtResource("3_sugp2")
-
-[node name="MouseMask" type="Sprite2D" parent="." unique_id=580771884]
-visible = false
-texture_filter = 1
-texture = ExtResource("4_jyhfs")
-centered = false
 
 [node name="DecisionTimer" type="Timer" parent="." unique_id=739945663]
 wait_time = 1.2
