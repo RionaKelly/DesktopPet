@@ -82,19 +82,18 @@ func _ready() -> void:
 	set_size()
 	# get_viewport().size_changed.connect(set_size()) # signal to change size when window resized
 	
-	## We enable transparency for both the Godot Viewport and OS Window
-	#window.transparent_bg = true
-	#window.transparent = true
-	## We remove the borders so it looks like the character is floating
-	#window.borderless = true
-	## Keep them above everything
-	#window.always_on_top = true
-	## Force borderless
-	#window.unresizable = true
+	## Window settings are set here as well as in the project just in case
+	# We enable transparency for both the Godot Viewport and OS Window
+	window.transparent_bg = true
+	window.transparent = true
+	# We remove the borders so it looks like the character is floating
+	window.borderless = true
+	# Keep them above everything
+	window.always_on_top = true
+	# Force borderless
+	window.unresizable = true
 	
 	# Move the sprite to centre of the screen at above the taskbar
-	#window.position.x = (usable_rect.size.x / 2) - (window.size.x / 2)
-	#window.position.y = (usable_rect.size.y - window.size.y)
 	window.position = Vector2i(DisplayServer.screen_get_size().x/2 - (window.size.x/2), taskbar_level - window.size.y)
 	print("Starting Pet Position: ", window.position)
 	
@@ -176,60 +175,49 @@ func _process(_delta):
 		sprite.set_material(load("res://shaders/baba_shader_material.tres"))
 
 
-# Creates area of the window that can be clicked through based on scaled up given polygon
-# Redundant after creation of the next function but left here just in case 
-var last_activity = Activities.STOPPED # Random default
+## Creates area of the window that can be clicked through based on scaled up given polygon
+## Redundant after creation of the next function but left here just in case 
+#var last_activity = Activities.STOPPED # Random default
+#func _update_click_polygon2(flip = null):
+	## list activities with no animation to save resources
+	#if activity == Activities.IDLE or activity == Activities.SITTING:
+		#if last_activity == activity: 
+			#return
+	#last_activity = activity
+	#
+	#var old_polygon: PackedVector2Array = _ClickPolygon.polygon
+	#var click_polygon = PackedVector2Array()
+	#if flip == false or sprite.flip_h == false:
+		#for vec_i in range(old_polygon.size()):
+			#click_polygon.append((old_polygon.get(vec_i) * pet_scale))
+	#elif flip == true or sprite.flip_h == true: # flips the polygon if the sprite is flipped
+		#for vec_i in range(old_polygon.size()):
+			#click_polygon.append(Vector2(
+				#((old_polygon.get(vec_i).x * pet_scale * -1) + window.size.x), 
+				#(old_polygon.get(vec_i).y * pet_scale)))
+	#
+	##for vec_i in range(click_polygon.size()):
+		##click_polygon[vec_i] = to_global(click_polygon[vec_i])
+	#
+	#window.mouse_passthrough_polygon = click_polygon
+	#print("Clickable Area: ", window.get_mouse_passthrough_polygon())
+
+
+# Creates area of the window that can be clicked through
+var last_activity = Activities.STOPPED # Random default that just needs to not be idle
 func _update_click_polygon(flip = null):
+	
 	# list activities with no animation to save resources
 	if activity == Activities.IDLE or activity == Activities.SITTING:
 		if last_activity == activity: 
 			return
 	last_activity = activity
 	
-	var old_polygon: PackedVector2Array = _ClickPolygon.polygon
-	var click_polygon = PackedVector2Array()
-	if flip == false:
-		for vec_i in range(old_polygon.size()):
-			click_polygon.append((old_polygon.get(vec_i) * pet_scale))
-	elif flip == true: 
-		for vec_i in range(old_polygon.size()):
-			click_polygon.append(Vector2(
-				((old_polygon.get(vec_i).x * pet_scale * -1) + window.size.x), 
-				(old_polygon.get(vec_i).y * pet_scale)))
-	else:
-		if sprite.flip_h == false:
-			for vec_i in range(old_polygon.size()):
-				click_polygon.append((old_polygon.get(vec_i) * pet_scale))
-		elif sprite.flip_h == true: # flips the polygon if the sprite is flipped
-			for vec_i in range(old_polygon.size()):
-				click_polygon.append(Vector2(
-					((old_polygon.get(vec_i).x * pet_scale * -1) + window.size.x), 
-					(old_polygon.get(vec_i).y * pet_scale)))
-	
-	#for vec_i in range(click_polygon.size()):
-		#click_polygon[vec_i] = to_global(click_polygon[vec_i])
-	
-	window.mouse_passthrough_polygon = click_polygon
-	print("Clickable Area: ", window.get_mouse_passthrough_polygon())
-
-
-# Creates area of the window that can be clicked through
-var last_activity2 = Activities.STOPPED # Random default that just needs to not be idle
-func _update_mouse_mask():
-	# list activities with no animation to save resources
-	if activity == Activities.IDLE or activity == Activities.SITTING:
-		if last_activity2 == activity: 
-			return
-	last_activity2 = activity
-	
-	# 1. Get the raw image date of the current frame
-	var current_sprite = sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
+	# 1. Get the raw image date of the current frame ans size/flip accordingly
+	var current_sprite : Texture2D = sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
 	var image = current_sprite.get_image()
-	
-	#image.resize(window.size.x, window.size.y, Image.Interpolation.INTERPOLATE_NEAREST)
-	
-	# If the sprite is visually flipped, flip the image too
-	if sprite.flip_h:
+	image.resize((image.get_size().x * ceil(pet_scale)), (image.get_size().y * ceil(pet_scale)), Image.Interpolation.INTERPOLATE_NEAREST)
+	if flip == true or sprite.flip_h == true: # flips the polygon if the sprite is flipped
 		image.flip_x()
 	
 	# 2. Create the Bitmap (map of solid pixels)
@@ -237,10 +225,19 @@ func _update_mouse_mask():
 	bitmap.create_from_image_alpha(image)
 	
 	# 3. Create the Polygons (shape), 0.1 means ignore fully transparent pixels
-	var click_polygon: PackedVector2Array = bitmap.opaque_to_polygons(Rect2(Vector2.ZERO, bitmap.get_size()), 1)
+	var polys = bitmap.opaque_to_polygons(Rect2(Vector2.ZERO, bitmap.get_size()), 5)
+	var click_polygon = PackedVector2Array()
+	for vec_i in range(polys.size()):
+		print(polys.get(vec_i))
+		click_polygon.append_array(polys.get(vec_i))
 	
+	# 4. We set the PackedVector2Array as the passthrough area
 	window.mouse_passthrough_polygon = click_polygon
 	print("Clickable Area: ", window.get_mouse_passthrough_polygon())
+	
+	## TO DO:
+	# fix accuracy by messing with bitmap creation number and adding buffer (scale slightly from centre)
+	# get frame that will be used before it is applied to make more consistent
 
 
 # Moves the window around the screen depending on state and type
