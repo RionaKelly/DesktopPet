@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://26egn3lye1b7"]
+[gd_scene format=3 uid="uid://bfj8iaras1tpb"]
 
 [ext_resource type="Script" uid="uid://dcb64ynuvn13l" path="res://scripts/pet.gd" id="1_sugp2"]
 [ext_resource type="SpriteFrames" uid="uid://dsnpgrv06xm2m" path="res://sprite_frames/bird.tres" id="2_0wfyh"]
@@ -16,15 +16,15 @@ frame_progress = 0.5177439
 centered = false
 
 [node name="ClickArea" type="Area2D" parent="PetSprite" unique_id=829967867]
+visible = false
 
 [node name="ClickPolygon" type="CollisionPolygon2D" parent="PetSprite/ClickArea" unique_id=1404095194]
-visible = false
 polygon = PackedVector2Array(3, 6, 5, 3, 5, 0, 10, 0, 10, 3, 13, 6, 13, 8, 15, 8, 15, 11, 13, 11, 13, 16, 3, 16)
 
 [node name="BoundaryTest" type="Area2D" parent="PetSprite" unique_id=1330278040]
-visible = false
 
 [node name="BoundaryTestPolygon" type="CollisionPolygon2D" parent="PetSprite/BoundaryTest" unique_id=1409041247]
+visible = false
 polygon = PackedVector2Array(16, 0, 0, 0, 0, 16, 16, 16)
 
 [node name="ColorTest" type="Sprite2D" parent="." unique_id=1558372372]

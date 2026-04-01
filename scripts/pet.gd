@@ -9,7 +9,7 @@ extends Node2D
 
 @onready var sprite : AnimatedSprite2D = $PetSprite
 
-@onready var _ClickPolygon: CollisionPolygon2D = $PetSprite/ClickArea/ClickPolygon
+# @onready var _ClickPolygon: CollisionPolygon2D = $PetSprite/ClickArea/ClickPolygon
 
 # The 'Safe Area' that the window shouldn't leave --- usable_rect() = screen area minus taskbar/docks
 var usable_rect = DisplayServer.screen_get_usable_rect()
@@ -101,7 +101,7 @@ func _ready() -> void:
 	$DecisionTimer.start()
 	
 	# Call the function to decide random or specific starting pet, and prints the result
-	change_type("bird")
+	change_type("random")
 	
 	# Sets the window name to the Pet's name
 	window.set_title(nickname)
@@ -171,7 +171,8 @@ func _process(_delta):
 		$FallTimer.stop()
 	
 	# Check for settings
-	if shader_on: # Shader by enekoassets at https://godotshaders.com/shader/random-displacement-animation-easy-ui-animation/
+	# Shader by enekoassets at https://godotshaders.com/shader/random-displacement-animation-easy-ui-animation/
+	if shader_on:
 		sprite.set_material(load("res://shaders/baba_shader_material.tres"))
 
 
@@ -206,17 +207,33 @@ func _process(_delta):
 # Creates area of the window that can be clicked through
 var last_activity = Activities.STOPPED # Random default that just needs to not be idle
 func _update_click_polygon(flip = null):
-	
 	# list activities with no animation to save resources
 	if activity == Activities.IDLE or activity == Activities.SITTING:
 		if last_activity == activity: 
 			return
 	last_activity = activity
 	
+	
+	
+	var current_frame : int = 0
+	var current_animation : String = ""
+	match activity:
+		Activities.IDLE:
+			current_animation = "idle"
+		Activities.SITTING:
+			current_animation = "sit"
+		Activities.WALKING:
+			current_animation = "walk"
+			current_frame = sprite.frame
+	if current_frame >= sprite.sprite_frames.get_frame_count(current_animation):
+		current_frame = 0
+			
+
 	# 1. Get the raw image date of the current frame ans size/flip accordingly
-	var current_sprite : Texture2D = sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
+	var current_sprite : Texture2D = sprite.sprite_frames.get_frame_texture(current_animation, current_frame)
 	var image = current_sprite.get_image()
-	image.resize((image.get_size().x * ceil(pet_scale)), (image.get_size().y * ceil(pet_scale)), Image.Interpolation.INTERPOLATE_NEAREST)
+	image.resize((ceil(image.get_size().x * pet_scale) * 1.0), (ceil(image.get_size().y * pet_scale) * 1.0), 
+	Image.Interpolation.INTERPOLATE_NEAREST)
 	if flip == true or sprite.flip_h == true: # flips the polygon if the sprite is flipped
 		image.flip_x()
 	
@@ -225,19 +242,18 @@ func _update_click_polygon(flip = null):
 	bitmap.create_from_image_alpha(image)
 	
 	# 3. Create the Polygons (shape), 0.1 means ignore fully transparent pixels
-	var polys = bitmap.opaque_to_polygons(Rect2(Vector2.ZERO, bitmap.get_size()), 5)
+	var polys = bitmap.opaque_to_polygons(Rect2(Vector2.ZERO, bitmap.get_size()), 1.0)
 	var click_polygon = PackedVector2Array()
-	for vec_i in range(polys.size()):
-		print(polys.get(vec_i))
+	for vec_i in range(polys.size()):		
+		#print(polys.get(vec_i))
 		click_polygon.append_array(polys.get(vec_i))
 	
 	# 4. We set the PackedVector2Array as the passthrough area
 	window.mouse_passthrough_polygon = click_polygon
-	print("Clickable Area: ", window.get_mouse_passthrough_polygon())
+	#print("Clickable Area: ", window.get_mouse_passthrough_polygon())
 	
 	## TO DO:
-	# fix accuracy by messing with bitmap creation number and adding buffer (scale slightly from centre)
-	# get frame that will be used before it is applied to make more consistent
+	# fix polygon not drawing unconnected pixels/add buffer
 
 
 # Moves the window around the screen depending on state and type
@@ -253,7 +269,6 @@ func move(move_vector):
 			pass
 	else:
 		window.position.x += move_vector.x
-
 
 # Sets the Pet's size to fit on the window correctly, increaseing at evolution
 func set_size():
@@ -283,13 +298,14 @@ func set_sprite():
 	# Makes pet face the right direction and play the right animation after moving/stopping
 	match activity:
 		Activities.IDLE:
+			_update_click_polygon()
 			sprite.play("idle")
 			if direction.x != 0: # This should happen anyway but I check here just in case
 				direction.x = 0 
 		Activities.SITTING:
+			_update_click_polygon()
 			sprite.play("sit")
 		Activities.WALKING:
-			sprite.play("walk")
 			if direction.x == 1:
 				_update_click_polygon(false)
 				sprite.flip_h = false
@@ -298,6 +314,7 @@ func set_sprite():
 				sprite.flip_h = true
 			else: # extra check just in case direction variable is doing something weird
 				print("Direction [", direction.x, "] outside of given rage")
+			sprite.play("walk")
 		_:
 			print("Activity [", activity, "] not recognised")
 
