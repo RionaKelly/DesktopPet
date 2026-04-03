@@ -18,6 +18,7 @@ centered = false
 [node name="BoundaryTest" type="Area2D" parent="PetSprite" unique_id=1330278040]
 
 [node name="BoundaryTestPolygon" type="CollisionPolygon2D" parent="PetSprite/BoundaryTest" unique_id=1409041247]
+visible = false
 polygon = PackedVector2Array(16, 0, 0, 0, 0, 16, 16, 16)
 
 [node name="ColorTest" type="Sprite2D" parent="." unique_id=1558372372]

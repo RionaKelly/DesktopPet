@@ -44,6 +44,7 @@ var screen_count: int = DisplayServer.get_screen_count() # How many monitors the
 var gravity: bool = true # Gravity to keep Pet on taskbar, disabled when lifting
 var OS_base_color: Color = DisplayServer.get_base_color() # Find the computer's chosen base colour
 var OS_accent_color: Color = DisplayServer.get_accent_color() # Find the computer's chosen accent colour
+var grab_offset: Vector2 = Vector2.ZERO
 var shader_on: bool = false # Whether the pet should use the distortion shade or not, changed in settings
 
 # Bug-Testing 
@@ -103,7 +104,7 @@ func _ready() -> void:
 	$DecisionTimer.start()
 	
 	# Call the function to decide random or specific starting pet, and prints the result
-	change_type("bird")
+	change_type("random") # set as random when exporting
 	
 	# Sets the window name to the Pet's name
 	window.set_title(nickname)
@@ -123,14 +124,14 @@ func _ready() -> void:
 	# Framerate Cap
 	Engine.max_fps = 60
 
-
+var last_mouse_pos : Vector2 = Vector2.ZERO
 func _process(_delta):
-	# If we are stopped then hit return and stop reading code
+	# If we are stopped then return and stop reading code
 	if is_stopped: 
-		if Vector2(window.position) != get_global_mouse_position():
-			window.set_position(get_global_mouse_position())
-			print("Window Position: ", window.position)
-			print("Mouse Position: ", get_global_mouse_position())
+		#if Vector2(window.position) != get_global_mouse_position():
+		#var drag_offset = Vector2(window.position) - get_global_mouse_position() 
+		window.position = Vector2(window.position) + get_global_mouse_position() - grab_offset
+		last_mouse_pos = get_global_mouse_position()
 		return
 
 	# Vector2i used to tell Windows to move to an exact pixel coordinate (integer)
@@ -158,23 +159,24 @@ func _process(_delta):
 				print("Bounce off right")
 	
 	# Check if pet is above taskbar to fall back down (if gravity is enabled)
-	if gravity and (window.position.y != (taskbar_level - window.size.y)):
+	if window.position.y != (taskbar_level - window.size.y):
 		if fall_time:
 			direction.y += 1
 			fall_time = false
 			$FallTimer.start()
 		if window.position.y < (taskbar_level - window.size.y):
 			window.position.y += move_vector.y
+			#$FallTimer.start()
 		elif window.position.y > (taskbar_level - window.size.y):
 			$FallTimer.stop()
 			window.position.y = (taskbar_level - window.size.y)
 			activity = Activities.SITTING
-			direction.x = 0
+			direction.y = 0
 			if debugMovement:
-				print("Sit")
-	if window.position.y == (taskbar_level - window.size.y):
-		direction.y = 0
-		$FallTimer.stop()
+				print("Reached Floor")
+	#if window.position.y == (taskbar_level - window.size.y):
+		#direction.y = 0
+		#$FallTimer.stop()
 	
 	# Check for settings
 	# Shader by enekoassets at https://godotshaders.com/shader/random-displacement-animation-easy-ui-animation/
@@ -236,9 +238,8 @@ func _update_click_polygon(flip = null):
 func move(move_vector):
 	var current_frame = sprite.get_frame()
 	
-	# In-progress code to make the Bunny move differently to make the animation look smoother
-	# Apply movement to OS Window depending on type
-	if type == Types.BUNNY:
+	# Apply movement to OS Window depending on pet type
+	if type == Types.BUNNY: 	# Makes the Bunny move differently to look better
 		if current_frame == 3 or current_frame == 4 or current_frame == 5:
 			window.position.x += move_vector.x
 		else:
@@ -367,23 +368,25 @@ func start_stopping(stop):
 	if stop:
 		is_stopped = true
 		gravity = false
+		grab_offset = get_global_mouse_position()
 		activity = Activities.SITTING
 		set_sprite()
-		sprite.set_self_modulate(OS_accent_color)
+		#sprite.set_self_modulate(OS_accent_color)
 		#sprite.set_speed_scale(0.0)
 		$DecisionTimer.stop()
 		$FallTimer.stop()
-		print("Sprite Stopped")
+		print("Pet Stopped")
 		
 	# Creats a timer, waits, and destroys it
 	#await get_tree().create_timer(2.0).timeout
 	
 	else:
 		# Time's up!
-		print("Sprite Continuing")
-		is_stopped = false
+		print("Pet Continuing")
 		gravity = true
-		sprite.set_self_modulate(Color(1.0, 1.0, 1.0))
+		grab_offset = Vector2.ZERO
+		is_stopped = false
+		#sprite.set_self_modulate(Color(1.0, 1.0, 1.0))
 		#sprite.set_speed_scale(1.0)
 		brain()
 
@@ -459,4 +462,4 @@ func save() -> void:
 # Used to increase speed slowly when pet is falling
 func _on_fall_timer_timeout() -> void:
 	fall_time = true
-	print(window.position)
+	#print(window.position)
