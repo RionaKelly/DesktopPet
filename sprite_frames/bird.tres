@@ -4,35 +4,39 @@
 [ext_resource type="Texture2D" uid="uid://d1fafp8k2y87r" path="res://sprites/bird/bird_walk.png" id="2_806ye"]
 [ext_resource type="Texture2D" uid="uid://c1e6c612nenuv" path="res://sprites/bird/bird_sit.png" id="2_bghfo"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_66iqc"]
-atlas = ExtResource("2_806ye")
-region = Rect2(0, 0, 16, 16)
-
 [sub_resource type="AtlasTexture" id="AtlasTexture_806ye"]
-atlas = ExtResource("2_806ye")
-region = Rect2(16, 0, 16, 16)
+atlas = ExtResource("1_66iqc")
+region = Rect2(0, 0, 16, 16)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_bghfo"]
 atlas = ExtResource("2_806ye")
-region = Rect2(32, 0, 16, 16)
+region = Rect2(0, 0, 16, 16)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_ksd27"]
 atlas = ExtResource("2_806ye")
-region = Rect2(48, 0, 16, 16)
+region = Rect2(16, 0, 16, 16)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_erynv"]
 atlas = ExtResource("2_806ye")
-region = Rect2(64, 0, 16, 16)
+region = Rect2(32, 0, 16, 16)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_r4jo6"]
 atlas = ExtResource("2_806ye")
-region = Rect2(80, 0, 16, 16)
+region = Rect2(48, 0, 16, 16)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_b4g5a"]
 atlas = ExtResource("2_806ye")
-region = Rect2(96, 0, 16, 16)
+region = Rect2(64, 0, 16, 16)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_xqsso"]
+atlas = ExtResource("2_806ye")
+region = Rect2(80, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1tea7"]
+atlas = ExtResource("2_806ye")
+region = Rect2(96, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1o2pj"]
 atlas = ExtResource("2_806ye")
 region = Rect2(112, 0, 16, 16)
 
@@ -42,7 +46,7 @@ resource_name = "bird"
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("1_66iqc")
+"texture": SubResource("AtlasTexture_806ye")
 }],
 "loop": true,
 "name": &"idle",
@@ -57,12 +61,6 @@ animations = [{
 "speed": 5.0
 }, {
 "frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_66iqc")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_806ye")
-}, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_bghfo")
 }, {
@@ -80,6 +78,12 @@ animations = [{
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_xqsso")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1tea7")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1o2pj")
 }],
 "loop": true,
 "name": &"walk",

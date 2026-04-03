@@ -61,8 +61,10 @@ func _input(event):
 	# Check for Left Mouse Button Press
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		if not is_stopped:
-			start_stopping()
-			pass
+			start_stopping(true)
+		
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed == false and is_stopped:
+		start_stopping(false)
 
 
 func _ready() -> void:
@@ -101,7 +103,7 @@ func _ready() -> void:
 	$DecisionTimer.start()
 	
 	# Call the function to decide random or specific starting pet, and prints the result
-	change_type("random")
+	change_type("bird")
 	
 	# Sets the window name to the Pet's name
 	window.set_title(nickname)
@@ -123,10 +125,14 @@ func _ready() -> void:
 
 
 func _process(_delta):
-	# The Red Light!
-	# If we are stopped then hit returm and stop reading code
-	if is_stopped: return
-	
+	# If we are stopped then hit return and stop reading code
+	if is_stopped: 
+		if Vector2(window.position) != get_global_mouse_position():
+			window.set_position(get_global_mouse_position())
+			print("Window Position: ", window.position)
+			print("Mouse Position: ", get_global_mouse_position())
+		return
+
 	# Vector2i used to tell Windows to move to an exact pixel coordinate (integer)
 	var move_vector = Vector2i(direction * move_speed) # How Pet will move around screen
 	
@@ -152,7 +158,7 @@ func _process(_delta):
 				print("Bounce off right")
 	
 	# Check if pet is above taskbar to fall back down (if gravity is enabled)
-	if gravity or (window.position.y != (taskbar_level - window.size.y)):
+	if gravity and (window.position.y != (taskbar_level - window.size.y)):
 		if fall_time:
 			direction.y += 1
 			fall_time = false
@@ -176,37 +182,10 @@ func _process(_delta):
 		sprite.set_material(load("res://shaders/baba_shader_material.tres"))
 
 
-## Creates area of the window that can be clicked through based on scaled up given polygon
-## Redundant after creation of the next function but left here just in case 
-#var last_activity = Activities.STOPPED # Random default
-#func _update_click_polygon2(flip = null):
-	## list activities with no animation to save resources
-	#if activity == Activities.IDLE or activity == Activities.SITTING:
-		#if last_activity == activity: 
-			#return
-	#last_activity = activity
-	#
-	#var old_polygon: PackedVector2Array = _ClickPolygon.polygon
-	#var click_polygon = PackedVector2Array()
-	#if flip == false or sprite.flip_h == false:
-		#for vec_i in range(old_polygon.size()):
-			#click_polygon.append((old_polygon.get(vec_i) * pet_scale))
-	#elif flip == true or sprite.flip_h == true: # flips the polygon if the sprite is flipped
-		#for vec_i in range(old_polygon.size()):
-			#click_polygon.append(Vector2(
-				#((old_polygon.get(vec_i).x * pet_scale * -1) + window.size.x), 
-				#(old_polygon.get(vec_i).y * pet_scale)))
-	#
-	##for vec_i in range(click_polygon.size()):
-		##click_polygon[vec_i] = to_global(click_polygon[vec_i])
-	#
-	#window.mouse_passthrough_polygon = click_polygon
-	#print("Clickable Area: ", window.get_mouse_passthrough_polygon())
-
-
 # Creates area of the window that can be clicked through
 var last_activity = Activities.STOPPED # Random default that just needs to not be idle
 func _update_click_polygon(flip = null):
+	# 1. Stop function if it shouldn't be running
 	# list activities with no animation to save resources
 	if activity == Activities.IDLE or activity == Activities.SITTING:
 		if last_activity == activity: 
@@ -214,7 +193,7 @@ func _update_click_polygon(flip = null):
 	last_activity = activity
 	
 	
-	
+	# 2. Find the current frame and animation to be used for getting the right image
 	var current_frame : int = 0
 	var current_animation : String = ""
 	match activity:
@@ -229,7 +208,7 @@ func _update_click_polygon(flip = null):
 		current_frame = 0
 			
 
-	# 1. Get the raw image date of the current frame ans size/flip accordingly
+	# 3. Get the raw image date of the frame and size/flip accordingly
 	var current_sprite : Texture2D = sprite.sprite_frames.get_frame_texture(current_animation, current_frame)
 	var image = current_sprite.get_image()
 	image.resize((ceil(image.get_size().x * pet_scale) * 1.0), (ceil(image.get_size().y * pet_scale) * 1.0), 
@@ -237,23 +216,20 @@ func _update_click_polygon(flip = null):
 	if flip == true or sprite.flip_h == true: # flips the polygon if the sprite is flipped
 		image.flip_x()
 	
-	# 2. Create the Bitmap (map of solid pixels)
+	# 4. Create the Bitmap (map of solid pixels) from image
 	var bitmap = BitMap.new()
-	bitmap.create_from_image_alpha(image)
+	bitmap.create_from_image_alpha(image, 0.0)
 	
-	# 3. Create the Polygons (shape), 0.1 means ignore fully transparent pixels
+	# 5. Create the Polygons (shape), 0.1 means ignore fully transparent pixels
 	var polys = bitmap.opaque_to_polygons(Rect2(Vector2.ZERO, bitmap.get_size()), 1.0)
 	var click_polygon = PackedVector2Array()
 	for vec_i in range(polys.size()):		
 		#print(polys.get(vec_i))
 		click_polygon.append_array(polys.get(vec_i))
 	
-	# 4. We set the PackedVector2Array as the passthrough area
+	# 6. We set the PackedVector2Array as the passthrough area
 	window.mouse_passthrough_polygon = click_polygon
 	#print("Clickable Area: ", window.get_mouse_passthrough_polygon())
-	
-	## TO DO:
-	# fix polygon not drawing unconnected pixels/add buffer
 
 
 # Moves the window around the screen depending on state and type
@@ -323,7 +299,7 @@ func set_sprite():
 func brain():
 	# Randomise decision & time
 	var rand_choice = randf()
-	var rand_wait = 1.2 # Temporary wait time to establish variable
+	var rand_wait = 1.2 # Temporary wait time while establishing variable
 	
 	# Decides the Pet's next action based on what they are currently doing and a random number
 	match activity:
@@ -386,18 +362,30 @@ func brain():
 	set_sprite() # changes the Pet's sprite to match what they're doing
 
 
-# Tells the Pet to stop when needed
-func start_stopping():
-	is_stopped = true
-	activity = Activities.IDLE
-	sprite.set_self_modulate(OS_accent_color)
+# Tells the Pet to stop
+func start_stopping(stop):
+	if stop:
+		is_stopped = true
+		gravity = false
+		activity = Activities.SITTING
+		set_sprite()
+		sprite.set_self_modulate(OS_accent_color)
+		#sprite.set_speed_scale(0.0)
+		$DecisionTimer.stop()
+		$FallTimer.stop()
+		print("Sprite Stopped")
+		
+	# Creats a timer, waits, and destroys it
+	#await get_tree().create_timer(2.0).timeout
 	
-	# We COULD use a Timer node, but instead we can use 'await', which created a timer waits, and destroys it
-	await get_tree().create_timer(1.0).timeout
-	
-	# Time's up!
-	is_stopped = false
-	sprite.set_self_modulate(Color(1.0, 1.0, 1.0))
+	else:
+		# Time's up!
+		print("Sprite Continuing")
+		is_stopped = false
+		gravity = true
+		sprite.set_self_modulate(Color(1.0, 1.0, 1.0))
+		#sprite.set_speed_scale(1.0)
+		brain()
 
 
 # Changes Pet's type and sprite set to given species or random
