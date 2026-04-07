@@ -2,6 +2,8 @@
 # Used this for window presets, making window around the screen, clicking through window, and performance enhancements
 # https://youtube.com/playlist?list=PLVzjdZVCXNTyVHAtpgF_uFbsz8MA8uWKO&si=FOG2BfnqTqjJTduE
 
+##TO DO:
+
 extends Node2D
 
 # get access to the OS Window (not just the game node)
@@ -20,6 +22,7 @@ var taskbar_level = usable_rect.end.y
 var nickname: String = "Desktop Pet" # Pet's name, shows in UI and as Window title
 var move_speed = usable_rect.size.x * 0.0008 # Pet speed based on the size of the screen
 var direction = Vector2(0, 0) # Direction that the pet will move in and is facing
+var velocity = Vector2(0, 0) # Velocity of the pet while falling/being thrown
 var fullness: int = 100 # Pet's hunger, 100 = full
 var happines: int = 100 # Pet's happiness, 100 = happy
 var age: int = 0 # How old the pet is in minutes
@@ -39,12 +42,11 @@ var pet_scale: float = 1.0 # scale for the pet to resized with in set_size()
 # Game Variables
 var decision_time: bool = false # Pet must wait Timer wait time before making their first decision
 var save_time: bool = false # Game waits 10 seconds before saving using this bool
-var fall_time: bool = true # Countdown to slowly increase fall speed to feel better
 var screen_count: int = DisplayServer.get_screen_count() # How many monitors the player has
-var gravity: bool = true # Gravity to keep Pet on taskbar, disabled when lifting
 var OS_base_color: Color = DisplayServer.get_base_color() # Find the computer's chosen base colour
 var OS_accent_color: Color = DisplayServer.get_accent_color() # Find the computer's chosen accent colour
 var grab_offset: Vector2 = Vector2.ZERO
+var in_air: bool = false
 var shader_on: bool = false # Whether the pet should use the distortion shade or not, changed in settings
 
 # Bug-Testing 
@@ -65,7 +67,8 @@ func _input(event):
 			start_stopping(true)
 		
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed == false and is_stopped:
-		start_stopping(false)
+		if is_stopped:
+			start_stopping(false)
 
 
 func _ready() -> void:
@@ -128,14 +131,22 @@ var last_mouse_pos : Vector2 = Vector2.ZERO
 func _process(_delta):
 	# If we are stopped then return and stop reading code
 	if is_stopped: 
-		#if Vector2(window.position) != get_global_mouse_position():
-		#var drag_offset = Vector2(window.position) - get_global_mouse_position() 
-		window.position = Vector2(window.position) + get_global_mouse_position() - grab_offset
-		last_mouse_pos = get_global_mouse_position()
+		var mouse_pos = get_global_mouse_position()
+		window.position = Vector2(window.position) + mouse_pos - grab_offset
+		velocity = (velocity + (last_mouse_pos - mouse_pos))/2
+		print("Current Mouse Pos: ", mouse_pos)
+		print("Velocity: ", velocity)
+		print("")
+		last_mouse_pos = mouse_pos
 		return
 
 	# Vector2i used to tell Windows to move to an exact pixel coordinate (integer)
 	var move_vector = Vector2i(direction * move_speed) # How Pet will move around screen
+	
+	if window.position.y < (taskbar_level - window.size.y):
+		in_air = true
+	else:
+		in_air = false
 	
 	# Make decision about movement every timer end
 	if decision_time == true:
@@ -144,39 +155,52 @@ func _process(_delta):
 	if activity == Activities.WALKING: # only if pet is moving
 		move(move_vector) # moves the pet depending on the activity and type of the pet
 	
-	# Check edges to flip in case touching, sprite flip done in set_sprite()
+	# Check edges to flip and change direction if touching, sprite flip done in set_sprite()
 	if window.position.x < 0:
 		direction.x = 1 # Change Direction
+		if in_air:
+			velocity.x = velocity.x * -1
 		_update_click_polygon(false)
 		sprite.flip_h = false # This is done in set_sprite() too but I set here for instant change
 		if debugMovement:
 				print("Bounce off left")
 	if window.position.x + window.size.x > usable_rect.size.x:
 		direction.x = -1 # Change Direction
+		if in_air:
+			velocity.x = velocity.x * -1
 		_update_click_polygon(true)
 		sprite.flip_h = true # This is done in set_sprite() too but I set here for instant change
 		if debugMovement:
 				print("Bounce off right")
-	
-	# Check if pet is above taskbar to fall back down (if gravity is enabled)
-	if window.position.y != (taskbar_level - window.size.y):
-		if fall_time:
-			direction.y += 1
-			fall_time = false
-			$FallTimer.start()
-		if window.position.y < (taskbar_level - window.size.y):
-			window.position.y += move_vector.y
-			#$FallTimer.start()
-		elif window.position.y > (taskbar_level - window.size.y):
-			$FallTimer.stop()
-			window.position.y = (taskbar_level - window.size.y)
-			activity = Activities.SITTING
+	if window.position.y < 0: # Mainly to check if pet is thrown agains the top
+		if direction.y < 0:
 			direction.y = 0
-			if debugMovement:
-				print("Reached Floor")
-	#if window.position.y == (taskbar_level - window.size.y):
-		#direction.y = 0
-		#$FallTimer.stop()
+		if velocity.y < 0:
+			velocity.y = velocity.y * -1
+		if debugMovement:
+				print("Bounce off top")
+	
+	# Check if pet is above taskbar to fall back down
+	if in_air:
+		velocity.y += 0.3 # increase fall speed slowly while falling
+		#velocity.x = velocity.x * .95
+		#if velocity.x > 0:
+			#velocity.x -= 0.2 + (velocity.x * 0.1)
+		#elif velocity.x < 0:
+			#velocity.x += 0.2 + (velocity.x * 0.1)
+		velocity = Vector2(snapped(velocity.x, 0.001), snapped(velocity.y, 0.001))
+		window.position += Vector2i(velocity * move_speed)
+		if debugMovement:
+			print("Falling with velocity ", velocity)
+	elif window.position.y > (taskbar_level - window.size.y):
+		if debugMovement:
+			print("Reached Floor with velocity ", velocity)
+		window.position.y = (taskbar_level - window.size.y)
+		activity = Activities.SITTING
+		set_sprite()
+		velocity = Vector2.ZERO # reset fall speed upon reaching ground
+	else:
+		velocity = Vector2.ZERO # reset fall speed upon reaching ground
 	
 	# Check for settings
 	# Shader by enekoassets at https://godotshaders.com/shader/random-displacement-animation-easy-ui-animation/
@@ -226,7 +250,6 @@ func _update_click_polygon(flip = null):
 	var polys = bitmap.opaque_to_polygons(Rect2(Vector2.ZERO, bitmap.get_size()), 1.0)
 	var click_polygon = PackedVector2Array()
 	for vec_i in range(polys.size()):		
-		#print(polys.get(vec_i))
 		click_polygon.append_array(polys.get(vec_i))
 	
 	# 6. We set the PackedVector2Array as the passthrough area
@@ -234,7 +257,7 @@ func _update_click_polygon(flip = null):
 	#print("Clickable Area: ", window.get_mouse_passthrough_polygon())
 
 
-# Moves the window around the screen depending on state and type
+# Moves the window around the screen depending on state and type, typically when walking
 func move(move_vector):
 	var current_frame = sprite.get_frame()
 	
@@ -367,14 +390,13 @@ func brain():
 func start_stopping(stop):
 	if stop:
 		is_stopped = true
-		gravity = false
+		#gravity = false
 		grab_offset = get_global_mouse_position()
 		activity = Activities.SITTING
 		set_sprite()
 		#sprite.set_self_modulate(OS_accent_color)
 		#sprite.set_speed_scale(0.0)
 		$DecisionTimer.stop()
-		$FallTimer.stop()
 		print("Pet Stopped")
 		
 	# Creats a timer, waits, and destroys it
@@ -383,7 +405,7 @@ func start_stopping(stop):
 	else:
 		# Time's up!
 		print("Pet Continuing")
-		gravity = true
+		#gravity = true
 		grab_offset = Vector2.ZERO
 		is_stopped = false
 		#sprite.set_self_modulate(Color(1.0, 1.0, 1.0))
@@ -457,9 +479,3 @@ func save() -> void:
 	
 	# Saving code here
 	print("Saved at ", age, ":", age_secs, "0")
-
-
-# Used to increase speed slowly when pet is falling
-func _on_fall_timer_timeout() -> void:
-	fall_time = true
-	#print(window.position)

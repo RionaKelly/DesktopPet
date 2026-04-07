@@ -37,10 +37,5 @@ autostart = true
 wait_time = 10.0
 autostart = true
 
-[node name="FallTimer" type="Timer" parent="." unique_id=1536130338]
-wait_time = 0.05
-one_shot = true
-
 [connection signal="timeout" from="DecisionTimer" to="." method="brain"]
 [connection signal="timeout" from="SaveTimer" to="." method="save"]
-[connection signal="timeout" from="FallTimer" to="." method="_on_fall_timer_timeout"]
