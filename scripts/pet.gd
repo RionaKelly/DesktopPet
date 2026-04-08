@@ -36,7 +36,6 @@ enum Patterns {DEFAULT, UNCOMMON, RARE, EPIC, LEGENDARY} # Possible patterns the
 var pattern:  Patterns = Patterns.DEFAULT # Current pattern of Pet (starts as default)
 enum Personality {NONE} # Possible personalities the Pet can have
 var personality:  Personality = Personality.NONE # Current personality of Pet (starts as default)
-var is_stopped: bool = false
 var pet_scale: float = 1.0 # scale for the pet to resized with in set_size()
 
 # Game Variables
@@ -46,7 +45,9 @@ var screen_count: int = DisplayServer.get_screen_count() # How many monitors the
 var OS_base_color: Color = DisplayServer.get_base_color() # Find the computer's chosen base colour
 var OS_accent_color: Color = DisplayServer.get_accent_color() # Find the computer's chosen accent colour
 var grab_offset: Vector2 = Vector2.ZERO
-var in_air: bool = false
+var in_air: bool = false # if the pet is in the air or not
+var is_stopped: bool = false # bool to stop functions when pet is lifted
+var out_of_bounds: int = 0 # counter for how long pet has been out of bounds
 var shader_on: bool = false # Whether the pet should use the distortion shade or not, changed in settings
 
 # Bug-Testing 
@@ -127,17 +128,17 @@ func _ready() -> void:
 	# Framerate Cap
 	Engine.max_fps = 60
 
-var last_mouse_pos : Vector2 = Vector2.ZERO
+var last_window_pos : Vector2 = Vector2.ZERO
 func _process(_delta):
 	# If we are stopped then return and stop reading code
 	if is_stopped: 
 		var mouse_pos = get_global_mouse_position()
 		window.position = Vector2(window.position) + mouse_pos - grab_offset
-		velocity = (velocity + (last_mouse_pos - mouse_pos))/2
+		velocity = (velocity + (Vector2(window.position) - last_window_pos))/3
 		print("Current Mouse Pos: ", mouse_pos)
 		print("Velocity: ", velocity)
 		print("")
-		last_mouse_pos = mouse_pos
+		last_window_pos = window.position
 		return
 
 	# Vector2i used to tell Windows to move to an exact pixel coordinate (integer)
@@ -147,6 +148,8 @@ func _process(_delta):
 		in_air = true
 	else:
 		in_air = false
+	if window.position.x > 0 and window.position.x + window.size.x < usable_rect.size.x:
+		out_of_bounds = 0
 	
 	# Make decision about movement every timer end
 	if decision_time == true:
@@ -158,18 +161,20 @@ func _process(_delta):
 	# Check edges to flip and change direction if touching, sprite flip done in set_sprite()
 	if window.position.x < 0:
 		direction.x = 1 # Change Direction
-		if in_air:
+		if in_air and velocity.x < 0:
 			velocity.x = velocity.x * -1
 		_update_click_polygon(false)
 		sprite.flip_h = false # This is done in set_sprite() too but I set here for instant change
+		out_of_bounds += 1
 		if debugMovement:
 				print("Bounce off left")
 	if window.position.x + window.size.x > usable_rect.size.x:
 		direction.x = -1 # Change Direction
-		if in_air:
+		if in_air and velocity.x > 0:
 			velocity.x = velocity.x * -1
 		_update_click_polygon(true)
 		sprite.flip_h = true # This is done in set_sprite() too but I set here for instant change
+		out_of_bounds += 1
 		if debugMovement:
 				print("Bounce off right")
 	if window.position.y < 0: # Mainly to check if pet is thrown agains the top
@@ -183,11 +188,11 @@ func _process(_delta):
 	# Check if pet is above taskbar to fall back down
 	if in_air:
 		velocity.y += 0.3 # increase fall speed slowly while falling
-		#velocity.x = velocity.x * .95
-		#if velocity.x > 0:
-			#velocity.x -= 0.2 + (velocity.x * 0.1)
-		#elif velocity.x < 0:
-			#velocity.x += 0.2 + (velocity.x * 0.1)
+		velocity = velocity * .99
+		if velocity.x > 0:
+			velocity.x -= 0.2
+		elif velocity.x < 0:
+			velocity.x += 0.2
 		velocity = Vector2(snapped(velocity.x, 0.001), snapped(velocity.y, 0.001))
 		window.position += Vector2i(velocity * move_speed)
 		if debugMovement:
@@ -201,6 +206,12 @@ func _process(_delta):
 		velocity = Vector2.ZERO # reset fall speed upon reaching ground
 	else:
 		velocity = Vector2.ZERO # reset fall speed upon reaching ground
+	
+	# If pet is out of bounds for 60 frames, reset position
+	if out_of_bounds >= 60:
+		out_of_bounds = 0
+		window.position = Vector2i(DisplayServer.screen_get_size().x/2 - (window.size.x/2), taskbar_level - window.size.y)
+		print("Pet Position Reset to ", window.position)
 	
 	# Check for settings
 	# Shader by enekoassets at https://godotshaders.com/shader/random-displacement-animation-easy-ui-animation/
@@ -218,7 +229,6 @@ func _update_click_polygon(flip = null):
 			return
 	last_activity = activity
 	
-	
 	# 2. Find the current frame and animation to be used for getting the right image
 	var current_frame : int = 0
 	var current_animation : String = ""
@@ -232,8 +242,7 @@ func _update_click_polygon(flip = null):
 			current_frame = sprite.frame
 	if current_frame >= sprite.sprite_frames.get_frame_count(current_animation):
 		current_frame = 0
-			
-
+	
 	# 3. Get the raw image date of the frame and size/flip accordingly
 	var current_sprite : Texture2D = sprite.sprite_frames.get_frame_texture(current_animation, current_frame)
 	var image = current_sprite.get_image()
