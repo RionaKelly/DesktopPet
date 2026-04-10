@@ -107,9 +107,14 @@ func _ready() -> void:
 	# Force borderless
 	window.unresizable = true
 	
-	# Move the sprite to centre of the screen at above the taskbar
-	window.position = Vector2i(DisplayServer.screen_get_size().x/2 - (window.size.x/2), taskbar_level - window.size.y)
+	# Move the sprite to centre of the last screen at above the taskbar
+	window.position = Vector2i(DisplayServer.screen_get_size(main_screen).x/2 - (window.size.x/2) + 
+	DisplayServer.screen_get_position(main_screen).x, taskbar_level - window.size.y)
 	print("Starting Pet Position: ", window.position)
+	# Resets the usable rect if the pet is not starting on the default screen
+	if main_screen != DisplayServer.get_primary_screen():
+		usable_rect = DisplayServer.screen_get_usable_rect()
+		taskbar_level = usable_rect.end.y
 	
 	
 	
@@ -159,7 +164,7 @@ func _process(_delta):
 		in_air = true
 	else:
 		in_air = false
-	if window.position.x > 0 and window.position.x + window.size.x < usable_rect.size.x:
+	if window.position.x > 0 + usable_rect.position.x and window.position.x + window.size.x < usable_rect.size.x + usable_rect.position.x:
 		out_of_bounds = 0
 	
 	# Make decision about movement every timer end
@@ -223,14 +228,14 @@ func _process(_delta):
 	if out_of_bounds >= 60:
 		out_of_bounds = 0
 		if main_screen == window.current_screen:
-			window.position = Vector2i(DisplayServer.screen_get_size().x/2 - (window.size.x/2), taskbar_level - window.size.y)
+			window.position = Vector2i(DisplayServer.screen_get_size(main_screen).x/2 - (window.size.x/2) + 
+			DisplayServer.screen_get_position(main_screen).x, taskbar_level - window.size.y)
 			print("Pet Position Reset to ", window.position)
 		else:
 			main_screen = window.current_screen
 			usable_rect = DisplayServer.screen_get_usable_rect()
 			taskbar_level = usable_rect.end.y
 			print("Pet Found on Screen ", window.current_screen, ", Main Screen Changed")
-			print(usable_rect)
 	
 	# Check for settings
 	# Shader by enekoassets at https://godotshaders.com/shader/random-displacement-animation-easy-ui-animation/
@@ -369,12 +374,12 @@ func brain():
 				direction.x = 0
 				if debugMovement:
 					print("Sit")
-			elif rand_choice < 0.65 and window.position.x + window.size.x < ((usable_rect.size.x)*0.9):
+			elif rand_choice < 0.65 and window.position.x + window.size.x < ((usable_rect.size.x)*0.9) + usable_rect.position.x:
 				activity = Activities.WALKING
 				direction.x = 1
 				if debugMovement:
 					print("Turn Right")
-			elif window.position.x > (usable_rect.size.x * 0.1):
+			elif window.position.x > (usable_rect.size.x * 0.1) + usable_rect.position.x:
 				activity = Activities.WALKING
 				direction.x = -1
 				if debugMovement:
