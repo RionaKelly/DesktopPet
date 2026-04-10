@@ -41,6 +41,7 @@ var pet_scale: float = 1.0 # scale for the pet to resized with in set_size()
 # Game Variables
 var decision_time: bool = false # Pet must wait Timer wait time before making their first decision
 var save_time: bool = false # Game waits 10 seconds before saving using this bool
+var main_screen: int = DisplayServer.get_primary_screen() # Screen for pet to be confined to, will be changed later
 var screen_count: int = DisplayServer.get_screen_count() # How many monitors the player has
 var OS_base_color: Color = DisplayServer.get_base_color() # Find the computer's chosen base colour
 var OS_accent_color: Color = DisplayServer.get_accent_color() # Find the computer's chosen accent colour
@@ -48,10 +49,12 @@ var grab_offset: Vector2 = Vector2.ZERO
 var in_air: bool = false # if the pet is in the air or not
 var is_stopped: bool = false # bool to stop functions when pet is lifted
 var out_of_bounds: int = 0 # counter for how long pet has been out of bounds
+
+# Game Settings
 var shader_on: bool = false # Whether the pet should use the distortion shade or not, changed in settings
 
 # Bug-Testing 
-var debugMovement = true
+var debugMovement = false
 var debugScreen = true
 var debugInput = false
 
@@ -72,7 +75,7 @@ func _input(event):
 		if is_stopped:
 			start_stopping(false)
 			if window.position.y == taskbar_level - window.size.y:
-				$Menu.visible = true
+				$Menu.show()
 				$Menu.position = Vector2i(window.position.x, window.position.y - $Menu.size.y)
 
 
@@ -130,6 +133,7 @@ func _ready() -> void:
 	#OS.alert("I'm huuungryyyyy :(", "Alert!") 
 	# Attention test (works)
 	#DisplayServer.window_request_attention()
+	# Test mouse_entered() window signal
 	
 	# Framerate Cap
 	Engine.max_fps = 60
@@ -166,7 +170,7 @@ func _process(_delta):
 		move(move_vector) # moves the pet depending on the activity and type of the pet
 	
 	# Check edges to flip and change direction if touching, sprite flip done in set_sprite()
-	if window.position.x < 0:
+	if window.position.x < 0 + usable_rect.position.x:
 		direction.x = 1 # Change Direction
 		if in_air and velocity.x < 0:
 			velocity.x = velocity.x * -1
@@ -175,7 +179,7 @@ func _process(_delta):
 		out_of_bounds += 1
 		if debugMovement:
 				print("Bounce off left")
-	if window.position.x + window.size.x > usable_rect.size.x:
+	if window.position.x + window.size.x > usable_rect.size.x + usable_rect.position.x:
 		direction.x = -1 # Change Direction
 		if in_air and velocity.x > 0:
 			velocity.x = velocity.x * -1
@@ -184,7 +188,7 @@ func _process(_delta):
 		out_of_bounds += 1
 		if debugMovement:
 				print("Bounce off right")
-	if window.position.y < 0: # Mainly to check if pet is thrown agains the top
+	if window.position.y < 0 + usable_rect.position.y: # Mainly to check if pet is thrown agains the top
 		if direction.y < 0:
 			direction.y = 0
 		if velocity.y < 0:
@@ -218,8 +222,15 @@ func _process(_delta):
 	# If pet is out of bounds for 60 frames, reset position
 	if out_of_bounds >= 60:
 		out_of_bounds = 0
-		window.position = Vector2i(DisplayServer.screen_get_size().x/2 - (window.size.x/2), taskbar_level - window.size.y)
-		print("Pet Position Reset to ", window.position)
+		if main_screen == window.current_screen:
+			window.position = Vector2i(DisplayServer.screen_get_size().x/2 - (window.size.x/2), taskbar_level - window.size.y)
+			print("Pet Position Reset to ", window.position)
+		else:
+			main_screen = window.current_screen
+			usable_rect = DisplayServer.screen_get_usable_rect()
+			taskbar_level = usable_rect.end.y
+			print("Pet Found on Screen ", window.current_screen, ", Main Screen Changed")
+			print(usable_rect)
 	
 	# Check for settings
 	# Shader by enekoassets at https://godotshaders.com/shader/random-displacement-animation-easy-ui-animation/
