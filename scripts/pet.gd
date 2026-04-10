@@ -504,3 +504,16 @@ func save() -> void:
 	
 	# Saving code here
 	print("Saved at ", age, ":", age_secs, "0")
+
+
+# Exits the game after saving when called
+func exit() -> void:
+	print("Saving...")
+	save()
+	print("Exitting Game")
+	get_tree().quit() # default behavior
+
+
+func _notification(what):
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		exit()

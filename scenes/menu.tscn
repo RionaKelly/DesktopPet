@@ -1,12 +1,98 @@
 [gd_scene format=3 uid="uid://b7lo7xmarfae7"]
 
 [ext_resource type="Script" uid="uid://cwnsdt0oc4q7d" path="res://scripts/menu.gd" id="1_yqeox"]
+[ext_resource type="Texture2D" uid="uid://b84c6631cf8i7" path="res://icon.svg" id="2_vjb58"]
 
-[node name="Control" type="Control" unique_id=1969325156]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="Menu" type="Window" unique_id=1008188484]
+transparent_bg = true
+oversampling_override = 1.0
+title = "Menu"
+size = Vector2i(480, 320)
+unresizable = true
+borderless = true
+always_on_top = true
+transparent = true
+content_scale_size = Vector2i(480, 320)
+content_scale_mode = 2
+accessibility_name = "Menu"
 script = ExtResource("1_yqeox")
+
+[node name="Control" type="Control" parent="." unique_id=1984231602]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 480.0
+offset_bottom = 320.0
+
+[node name="TextureRect" type="TextureRect" parent="Control" unique_id=183108371]
+self_modulate = Color(0.47988325, 0.00016186372, 0.4798798, 1)
+texture_filter = 1
+layout_mode = 0
+offset_right = 480.0
+offset_bottom = 320.0
+texture = ExtResource("2_vjb58")
+
+[node name="Close" type="Button" parent="Control" unique_id=859355270]
+layout_mode = 0
+offset_left = 17.0
+offset_top = 16.0
+offset_right = 77.0
+offset_bottom = 76.0
+theme_override_font_sizes/font_size = 36
+text = "X"
+
+[node name="Pet" type="Button" parent="Control" unique_id=1508628908]
+layout_mode = 0
+offset_left = 15.0
+offset_top = 105.0
+offset_right = 156.0
+offset_bottom = 163.0
+theme_override_font_sizes/font_size = 36
+text = "Pet"
+
+[node name="Storage" type="Button" parent="Control" unique_id=833352985]
+layout_mode = 0
+offset_left = 174.0
+offset_top = 104.0
+offset_right = 315.0
+offset_bottom = 162.0
+theme_override_font_sizes/font_size = 36
+text = "Storage"
+
+[node name="Games" type="Button" parent="Control" unique_id=751194713]
+layout_mode = 0
+offset_left = 325.0
+offset_top = 105.0
+offset_right = 466.0
+offset_bottom = 163.0
+theme_override_font_sizes/font_size = 36
+text = "Games"
+
+[node name="Info" type="Button" parent="Control" unique_id=393316840]
+layout_mode = 0
+offset_left = 21.0
+offset_top = 228.0
+offset_right = 162.0
+offset_bottom = 286.0
+theme_override_font_sizes/font_size = 36
+text = "Info"
+
+[node name="Settings" type="Button" parent="Control" unique_id=216736246]
+layout_mode = 0
+offset_left = 173.0
+offset_top = 228.0
+offset_right = 320.0
+offset_bottom = 286.0
+theme_override_font_sizes/font_size = 36
+text = "Settings"
+
+[node name="Exit" type="Button" parent="Control" unique_id=53801702]
+layout_mode = 0
+offset_left = 326.0
+offset_top = 225.0
+offset_right = 467.0
+offset_bottom = 283.0
+theme_override_font_sizes/font_size = 36
+text = "Exit"
+
+[connection signal="pressed" from="Control/Close" to="." method="_on_close_pressed"]
+[connection signal="pressed" from="Control/Exit" to="." method="_on_exit_pressed"]

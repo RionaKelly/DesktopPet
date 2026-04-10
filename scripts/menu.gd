@@ -34,8 +34,11 @@ var shader_on: bool = false # Whether the pet should use the distortion shade or
 	#pass
 
 
-
-
-
+# Hides the Window
 func _on_close_pressed():
 	window.visible = false
+
+
+# Tells the main script to close the game
+func _on_exit_pressed():
+	$"..".exit()
