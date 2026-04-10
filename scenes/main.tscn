@@ -1,9 +1,9 @@
-[gd_scene format=3 uid="uid://brneepfyso425"]
+[gd_scene format=3 uid="uid://26egn3lye1b7"]
 
 [ext_resource type="Script" uid="uid://sfu5la0w52yu" path="res://scripts/main.gd" id="1_0wfyh"]
-[ext_resource type="PackedScene" uid="uid://26egn3lye1b7" path="res://scenes/pet.tscn" id="1_o5qli"]
+[ext_resource type="PackedScene" uid="uid://bfj8iaras1tpb" path="res://scenes/pet.tscn" id="1_o5qli"]
 
-[node name="Main" type="Node2D" unique_id=1458736766]
+[node name="Main" type="Node2D" unique_id=1108540820]
 script = ExtResource("1_0wfyh")
 
 [node name="Pet" parent="." unique_id=200465852 instance=ExtResource("1_o5qli")]

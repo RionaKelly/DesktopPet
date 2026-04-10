@@ -30,7 +30,7 @@ var stage: int = 0 # How many evolution's the pet has undergone
 var money: int = 0 # How much money the player/pet has
 enum Types {BIRD, BUNNY, OCTOPUS} # Possible species that the pet can be
 var type: Types = Types.BIRD # What species the pet is (bird set as default)
-enum Activities {GREETING, IDLE, LIFTED, SITTING, SLEEPING, STARING, STOPPED, WALKING, WORKING} # Possible states for Pet
+enum Activities {FALLING, GRABBED, GREETING, IDLE, SITTING, SLEEPING, STARING, STOPPED, WALKING, WORKING} # Possible states for Pet
 var activity:  Activities = Activities.IDLE # Current state of Pet (idle set as starting default)
 enum Patterns {DEFAULT, UNCOMMON, RARE, EPIC, LEGENDARY} # Possible patterns the Pet can have
 var pattern:  Patterns = Patterns.DEFAULT # Current pattern of Pet (starts as default)
@@ -51,8 +51,9 @@ var out_of_bounds: int = 0 # counter for how long pet has been out of bounds
 var shader_on: bool = false # Whether the pet should use the distortion shade or not, changed in settings
 
 # Bug-Testing 
-var debugMovement =true
+var debugMovement = true
 var debugScreen = true
+var debugInput = false
 
 ## Notes:
 ## Use os theme colour to colour ui, tint b&w images
@@ -70,6 +71,9 @@ func _input(event):
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed == false and is_stopped:
 		if is_stopped:
 			start_stopping(false)
+			if window.position.y == taskbar_level - window.size.y:
+				$Menu.visible = true
+				$Menu.position = Vector2i(window.position.x, window.position.y - $Menu.size.y)
 
 
 func _ready() -> void:
@@ -104,6 +108,8 @@ func _ready() -> void:
 	window.position = Vector2i(DisplayServer.screen_get_size().x/2 - (window.size.x/2), taskbar_level - window.size.y)
 	print("Starting Pet Position: ", window.position)
 	
+	
+	
 	# Start the timer for pet decision
 	$DecisionTimer.start()
 	
@@ -135,9 +141,10 @@ func _process(_delta):
 		var mouse_pos = get_global_mouse_position()
 		window.position = Vector2(window.position) + mouse_pos - grab_offset
 		velocity = (velocity + (Vector2(window.position) - last_window_pos))/3
-		print("Current Mouse Pos: ", mouse_pos)
-		print("Velocity: ", velocity)
-		print("")
+		if debugInput:
+			print("Current Mouse Pos: ", mouse_pos)
+			print("Velocity: ", velocity)
+			print("")
 		last_window_pos = window.position
 		return
 
@@ -201,11 +208,12 @@ func _process(_delta):
 		if debugMovement:
 			print("Reached Floor with velocity ", velocity)
 		window.position.y = (taskbar_level - window.size.y)
-		activity = Activities.SITTING
-		set_sprite()
 		velocity = Vector2.ZERO # reset fall speed upon reaching ground
 	else:
 		velocity = Vector2.ZERO # reset fall speed upon reaching ground
+		if activity == Activities.FALLING:
+			activity = Activities.SITTING
+			brain()
 	
 	# If pet is out of bounds for 60 frames, reset position
 	if out_of_bounds >= 60:
@@ -240,6 +248,8 @@ func _update_click_polygon(flip = null):
 		Activities.WALKING:
 			current_animation = "walk"
 			current_frame = sprite.frame
+		_:
+			current_animation = "idle" # default to match sprite if no animation is found
 	if current_frame >= sprite.sprite_frames.get_frame_count(current_animation):
 		current_frame = 0
 	
@@ -279,7 +289,7 @@ func move(move_vector):
 	else:
 		window.position.x += move_vector.x
 
-# Sets the Pet's size to fit on the window correctly, increaseing at evolution
+# Sets the Pet's size to fit on the window correctly, increasing at evolution
 func set_size():
 	var size_div = 13 # default for stage 0
 	# Increase size with each stage
@@ -297,6 +307,10 @@ func set_size():
 	window.size = Vector2i(window_size, window_size)
 	sprite.scale = Vector2(pet_scale, pet_scale)
 	
+	# Sets the Menu window and object sizes
+	$Menu.size = Vector2i(window_size * 3, window_size * 2)
+
+	
 	if debugScreen:
 		print("Window Size: ", window_size)
 		print("Pet Scale: ", pet_scale)
@@ -309,8 +323,8 @@ func set_sprite():
 		Activities.IDLE:
 			_update_click_polygon()
 			sprite.play("idle")
-			if direction.x != 0: # This should happen anyway but I check here just in case
-				direction.x = 0 
+			#if direction.x != 0: # This should happen anyway but I check here just in case
+				#direction.x = 0 
 		Activities.SITTING:
 			_update_click_polygon()
 			sprite.play("sit")
@@ -326,6 +340,8 @@ func set_sprite():
 			sprite.play("walk")
 		_:
 			print("Activity [", activity, "] not recognised")
+			_update_click_polygon()
+			sprite.play("idle") # default animation for if there is none ready
 
 
 # Handles all of the decision making for the Pet
@@ -397,29 +413,29 @@ func brain():
 
 # Tells the Pet to stop
 func start_stopping(stop):
-	if stop:
+	if stop: # stops events and s
 		is_stopped = true
 		#gravity = false
 		grab_offset = get_global_mouse_position()
-		activity = Activities.SITTING
+		activity = Activities.STOPPED
 		set_sprite()
 		#sprite.set_self_modulate(OS_accent_color)
 		#sprite.set_speed_scale(0.0)
 		$DecisionTimer.stop()
 		print("Pet Stopped")
-		
-	# Creats a timer, waits, and destroys it
-	#await get_tree().create_timer(2.0).timeout
 	
 	else:
-		# Time's up!
 		print("Pet Continuing")
 		#gravity = true
 		grab_offset = Vector2.ZERO
 		is_stopped = false
 		#sprite.set_self_modulate(Color(1.0, 1.0, 1.0))
 		#sprite.set_speed_scale(1.0)
-		brain()
+		if window.position.y == taskbar_level - window.size.y:
+			activity = Activities.SITTING
+			brain()
+		else:
+			activity = Activities.FALLING
 
 
 # Changes Pet's type and sprite set to given species or random
