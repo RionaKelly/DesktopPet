@@ -22,25 +22,28 @@ var usable_rect = DisplayServer.screen_get_usable_rect()
 # var screen_size = DisplayServer.screen_get_size(DisplayServer.window_get_current_screen())
 var taskbar_level = usable_rect.end.y
 
-# Pet Stats
-var nickname: String = "Desktop Pet" # Pet's name, shows in UI and as Window title
+# Pet Stats (the rest of them are autoloaded from a data file, or _ready() on first boot)
 var move_speed = usable_rect.size.x * 0.0008 # Pet speed based on the size of the screen
 var direction = Vector2(0, 0) # Direction that the pet will move in and is facing
 var velocity = Vector2(0, 0) # Velocity of the pet while falling/being thrown
+enum Activities {FALLING, GRABBED, GREETING, IDLE, SITTING, SLEEPING, STARING, STOPPED, WALKING, WORKING} # Possible states for Pet
+var activity:  Activities = Activities.IDLE # Current state of Pet (idle set as starting default)
+enum Types {BIRD, BUNNY, OCTOPUS} # Possible species that the pet can be
+enum Patterns {DEFAULT, UNCOMMON, RARE, EPIC, LEGENDARY} # Possible patterns the Pet can have
+enum Personality {NONE} # Possible personalities the Pet can have
+var pet_scale: float = 1.0 # scale for the pet to resized with in set_size()
+
+var nickname: String = "Desktop Pet" # Pet's name, shows in UI and as Window title
 var fullness: int = 100 # Pet's hunger, 100 = full
 var happines: int = 100 # Pet's happiness, 100 = happy
 var age: int = 0 # How old the pet is in minutes
 var stage: int = 0 # How many evolution's the pet has undergone
 var money: int = 0 # How much money the player/pet has
-enum Types {BIRD, BUNNY, OCTOPUS} # Possible species that the pet can be
+# These variables are overwritten in _ready() with the saved variable
 var type: Types = Types.BIRD # What species the pet is (bird set as default)
-enum Activities {FALLING, GRABBED, GREETING, IDLE, SITTING, SLEEPING, STARING, STOPPED, WALKING, WORKING} # Possible states for Pet
-var activity:  Activities = Activities.IDLE # Current state of Pet (idle set as starting default)
-enum Patterns {DEFAULT, UNCOMMON, RARE, EPIC, LEGENDARY} # Possible patterns the Pet can have
 var pattern:  Patterns = Patterns.DEFAULT # Current pattern of Pet (starts as default)
-enum Personality {NONE} # Possible personalities the Pet can have
 var personality:  Personality = Personality.NONE # Current personality of Pet (starts as default)
-var pet_scale: float = 1.0 # scale for the pet to resized with in set_size()
+
 
 # Game Variables
 var decision_time: bool = false # Pet must wait Timer wait time before making their first decision
@@ -61,7 +64,7 @@ var large_hitbox: bool = false # Whether the pet should keep the default window-
 # Bug-Testing 
 var debugMovement = false
 var debugScreen = true
-var debugInput = true
+var debugInput = false
 
 # Check for inputs
 func _input(event):
@@ -88,6 +91,20 @@ func _input(event):
 
 
 func _ready() -> void:
+	# Sets up the Pet's variables if this is the first boot or data file can't be found
+	nickname = Data.nickname
+	fullness = Data.fullness
+	happines = Data.happines
+	age = Data.age
+	stage = Data.stage
+	money = Data.money
+	match Data.type_str:
+		"BIRD":
+			type = Types.BIRD
+	pattern = Patterns.DEFAULT # Current pattern of Pet (starts as default)
+	personality = Personality.NONE # Current personality of Pet (starts as default)
+	
+	
 	# Prints to test issues with getting screen data
 	if debugScreen:
 		print("_Debug Info_")

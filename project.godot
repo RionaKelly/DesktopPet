@@ -22,6 +22,10 @@ config/icon="res://sprites/icon/egg.ico"
 config/macos_native_icon="res://sprites/icon/egg.ico"
 config/windows_native_icon="res://sprites/icon/egg.ico"
 
+[autoload]
+
+Data="*uid://43u458uismur"
+
 [debug]
 
 gdscript/warnings/integer_division=0
