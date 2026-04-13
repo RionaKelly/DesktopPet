@@ -2,7 +2,11 @@
 # Used this for window presets, making window around the screen, clicking through window, and performance enhancements
 # https://youtube.com/playlist?list=PLVzjdZVCXNTyVHAtpgF_uFbsz8MA8uWKO&si=FOG2BfnqTqjJTduE
 
-##TO DO:
+## Notes:
+## Use os theme colour to colour ui, tint b&w images
+## One Click gets pets attention and stops them say hi, after too many clicks gets mad
+## Hold Click on pet lets you drag them around
+## Two Clicks on pet opens menu
 
 extends Node2D
 
@@ -59,25 +63,28 @@ var debugMovement = false
 var debugScreen = true
 var debugInput = true
 
-## Notes:
-## Use os theme colour to colour ui, tint b&w images
-## One Click gets pets attention and stops them say hi, after too many clicks gets mad
-## Hold Click on pet lets you drag them around
-## Two Clicks on pet opens menu
-
 # Check for inputs
 func _input(event):
-	# Check for Left Mouse Button Press
+	# Check for Left Mouse Button Press and make pet stopped
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		if not is_stopped:
 			start_stopping(true)
-		
+	
+	# When LMB Press released un-stop pet and create a window if pet is on the taskbar
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed == false and is_stopped:
 		if is_stopped:
 			start_stopping(false)
 			if window.position.y == taskbar_level - window.size.y:
 				$Menu.show()
-				$Menu.position = Vector2i(window.position.x - $Menu.size.x/3, window.position.y - $Menu.size.y)
+				# The window will move over more to the left or right if the pet is too close to the edge to avoid being cut off
+				var padding: int
+				if window.position.x + window.size.x > ((usable_rect.size.x)*0.95) + usable_rect.position.x:
+					padding = $Menu.size.x - window.size.x
+				elif window.position.x < (usable_rect.size.x * 0.05) + usable_rect.position.x:
+					padding = 0
+				else:
+					padding = $Menu.size.x/3
+				$Menu.position = Vector2i(window.position.x - padding, window.position.y - $Menu.size.y)
 
 
 func _ready() -> void:
@@ -89,7 +96,6 @@ func _ready() -> void:
 		print("Primary Screen: ", DisplayServer.get_primary_screen())
 		print("Screen Count: ", screen_count)
 		print("Usable Rect: ", usable_rect)
-		print("Taskbar Level: ", taskbar_level) 
 		print("Operating System: ", DisplayServer.get_name())
 		print("")
 	
@@ -133,7 +139,7 @@ func _ready() -> void:
 	# Changes test sprite to OS colour for testing (works)
 	#$ColorTest.set_modulate(OS_accent_color)
 	# Alert test (works)
-	#OS.alert("I'm huuungryyyyy :(", "Alert!") 
+	#OS.alert("I'm hungry :(", "Alert!") 
 	# Attention test (works)
 	#DisplayServer.window_request_attention()
 	# Test mouse_entered() window signal
@@ -160,10 +166,12 @@ func _process(_delta):
 	# Vector2i used to tell Windows to move to an exact pixel coordinate (integer)
 	var move_vector = Vector2i(direction * move_speed) # How Pet will move around screen
 	
+	# Checks if pet is in the air for throwing physics
 	if window.position.y < (taskbar_level - window.size.y):
 		in_air = true
 	else:
 		in_air = false
+	# Checks to make sure the pet is not out of bounds
 	if window.position.x > 0 + usable_rect.position.x and window.position.x + window.size.x < usable_rect.size.x + usable_rect.position.x:
 		out_of_bounds = 0
 	
@@ -245,6 +253,7 @@ func _process(_delta):
 var last_activity = Activities.STOPPED # Random default that just needs to not be idle
 func _update_click_polygon(flip = null):
 	# 1. Stop function if it shouldn't be running
+	# function shouldnt run if player needs larger hitboxes
 	if large_hitbox:
 		return
 	# list activities with no animation to save resources
@@ -289,7 +298,6 @@ func _update_click_polygon(flip = null):
 	
 	# 6. We set the PackedVector2Array as the passthrough area
 	window.mouse_passthrough_polygon = click_polygon
-	#print("Clickable Area: ", window.get_mouse_passthrough_polygon())
 
 
 # Moves the window around the screen depending on state and type, typically when walking

@@ -80,31 +80,7 @@ flat = true
 icon_alignment = 1
 expand_icon = true
 
-[node name="Exit" type="Button" parent="Control" unique_id=53801702]
-texture_filter = 1
-layout_mode = 0
-offset_left = 340.0
-offset_top = 220.0
-offset_right = 480.0
-offset_bottom = 360.0
-theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
-theme_override_colors/icon_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/icon_hover_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
-theme_override_colors/icon_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_font_sizes/font_size = 36
-icon = ExtResource("4_mhnvy")
-flat = true
-icon_alignment = 1
-expand_icon = true
-
-[node name="TextureButton" type="TextureButton" parent="Control" unique_id=599735614]
-layout_mode = 0
-offset_left = 20.0
-offset_top = 60.0
-offset_right = 60.0
-offset_bottom = 100.0
-
-[node name="Pet2" type="Button" parent="Control" unique_id=1108782139]
+[node name="Shop" type="Button" parent="Control" unique_id=1108782139]
 texture_filter = 1
 layout_mode = 0
 offset_left = 180.0
@@ -123,7 +99,7 @@ flat = true
 icon_alignment = 1
 expand_icon = true
 
-[node name="Pet3" type="Button" parent="Control" unique_id=955674807]
+[node name="Games" type="Button" parent="Control" unique_id=955674807]
 texture_filter = 1
 layout_mode = 0
 offset_left = 340.0
@@ -142,7 +118,26 @@ flat = true
 icon_alignment = 1
 expand_icon = true
 
-[node name="Pet4" type="Button" parent="Control" unique_id=37485018]
+[node name="Info" type="Button" parent="Control" unique_id=581710026]
+texture_filter = 1
+layout_mode = 0
+offset_left = 20.0
+offset_top = 220.0
+offset_right = 160.0
+offset_bottom = 360.0
+theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
+theme_override_colors/icon_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_colors/icon_hover_color = Color(0.4223091, 0.19683152, 0.49723, 1)
+theme_override_colors/icon_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_colors/icon_disabled_color = Color(0, 0, 0, 0.4)
+theme_override_font_sizes/font_size = 36
+disabled = true
+icon = ExtResource("8_mj5lg")
+flat = true
+icon_alignment = 1
+expand_icon = true
+
+[node name="Settings" type="Button" parent="Control" unique_id=37485018]
 texture_filter = 1
 layout_mode = 0
 offset_left = 180.0
@@ -161,21 +156,19 @@ flat = true
 icon_alignment = 1
 expand_icon = true
 
-[node name="Pet5" type="Button" parent="Control" unique_id=581710026]
+[node name="Exit" type="Button" parent="Control" unique_id=53801702]
 texture_filter = 1
 layout_mode = 0
-offset_left = 20.0
+offset_left = 340.0
 offset_top = 220.0
-offset_right = 160.0
+offset_right = 480.0
 offset_bottom = 360.0
 theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
 theme_override_colors/icon_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/icon_hover_color = Color(0.4223091, 0.19683152, 0.49723, 1)
+theme_override_colors/icon_hover_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
 theme_override_colors/icon_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/icon_disabled_color = Color(0, 0, 0, 0.4)
 theme_override_font_sizes/font_size = 36
-disabled = true
-icon = ExtResource("8_mj5lg")
+icon = ExtResource("4_mhnvy")
 flat = true
 icon_alignment = 1
 expand_icon = true
