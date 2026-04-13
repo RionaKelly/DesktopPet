@@ -52,11 +52,12 @@ var out_of_bounds: int = 0 # counter for how long pet has been out of bounds
 
 # Game Settings
 var shader_on: bool = false # Whether the pet should use the distortion shade or not, changed in settings
+var large_hitbox: bool = false # Whether the pet should keep the default window-size hitbox for accesibility
 
 # Bug-Testing 
 var debugMovement = false
 var debugScreen = true
-var debugInput = false
+var debugInput = true
 
 ## Notes:
 ## Use os theme colour to colour ui, tint b&w images
@@ -113,10 +114,7 @@ func _ready() -> void:
 	print("Starting Pet Position: ", window.position)
 	# Resets the usable rect if the pet is not starting on the default screen
 	if main_screen != DisplayServer.get_primary_screen():
-		usable_rect = DisplayServer.screen_get_usable_rect()
-		taskbar_level = usable_rect.end.y
-	
-	
+		change_screen()
 	
 	# Start the timer for pet decision
 	$DecisionTimer.start()
@@ -150,6 +148,8 @@ func _process(_delta):
 		var mouse_pos = get_global_mouse_position()
 		window.position = Vector2(window.position) + mouse_pos - grab_offset
 		velocity = (velocity + (Vector2(window.position) - last_window_pos))/3
+		if main_screen != window.current_screen:
+			change_screen()
 		if debugInput:
 			print("Current Mouse Pos: ", mouse_pos)
 			print("Velocity: ", velocity)
@@ -232,10 +232,8 @@ func _process(_delta):
 			DisplayServer.screen_get_position(main_screen).x, taskbar_level - window.size.y)
 			print("Pet Position Reset to ", window.position)
 		else:
-			main_screen = window.current_screen
-			usable_rect = DisplayServer.screen_get_usable_rect()
-			taskbar_level = usable_rect.end.y
-			print("Pet Found on Screen ", window.current_screen, ", Main Screen Changed")
+			print("Pet Found on Screen ", window.current_screen)
+			change_screen()
 	
 	# Check for settings
 	# Shader by enekoassets at https://godotshaders.com/shader/random-displacement-animation-easy-ui-animation/
@@ -247,6 +245,8 @@ func _process(_delta):
 var last_activity = Activities.STOPPED # Random default that just needs to not be idle
 func _update_click_polygon(flip = null):
 	# 1. Stop function if it shouldn't be running
+	if large_hitbox:
+		return
 	# list activities with no animation to save resources
 	if activity == Activities.IDLE or activity == Activities.SITTING:
 		if last_activity == activity: 
@@ -500,6 +500,13 @@ func change_type(choice):
 	else:
 		print ("Chosen Pet: ", chosen_type)
 
+
+# Recalculates the Pet's usable screen area when called, normally for when screen the Pet is on changes
+func change_screen():
+	main_screen = window.current_screen
+	usable_rect = DisplayServer.screen_get_usable_rect()
+	taskbar_level = usable_rect.end.y
+	print("Main Screen Changed to ", main_screen)
 
 # Evolves the pet
 func evolve():
