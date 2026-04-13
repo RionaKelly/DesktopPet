@@ -1,18 +1,25 @@
 [gd_scene format=3 uid="uid://b7lo7xmarfae7"]
 
 [ext_resource type="Script" uid="uid://cwnsdt0oc4q7d" path="res://scripts/menu.gd" id="1_yqeox"]
-[ext_resource type="Texture2D" uid="uid://b84c6631cf8i7" path="res://icon.svg" id="2_vjb58"]
+[ext_resource type="Texture2D" uid="uid://ysks1eywj4jk" path="res://sprites/menu/window_back.png" id="2_vjb58"]
+[ext_resource type="Texture2D" uid="uid://dec1g4apoieb4" path="res://sprites/menu/menu_egg.png" id="3_con2f"]
+[ext_resource type="Texture2D" uid="uid://bomhdlwkbd57k" path="res://sprites/menu/menu_close.png" id="3_i6lef"]
+[ext_resource type="Texture2D" uid="uid://b251u8ht4cncj" path="res://sprites/menu/menu_exit.png" id="4_mhnvy"]
+[ext_resource type="Texture2D" uid="uid://dyo7wfo68pwui" path="res://sprites/menu/menu_shop.png" id="5_13sgg"]
+[ext_resource type="Texture2D" uid="uid://dsxm7tmwmquqk" path="res://sprites/menu/menu_games.png" id="6_i6lef"]
+[ext_resource type="Texture2D" uid="uid://ca5yxsrk5uk6m" path="res://sprites/menu/menu_settings.png" id="7_70i5f"]
+[ext_resource type="Texture2D" uid="uid://cd4nffcf1eehd" path="res://sprites/menu/menu_info.png" id="8_mj5lg"]
 
 [node name="Menu" type="Window" unique_id=1008188484]
 transparent_bg = true
 oversampling_override = 1.0
 title = "Menu"
-size = Vector2i(480, 320)
+size = Vector2i(500, 380)
 unresizable = true
 borderless = true
 always_on_top = true
 transparent = true
-content_scale_size = Vector2i(480, 320)
+content_scale_size = Vector2i(500, 380)
 content_scale_mode = 2
 accessibility_name = "Menu"
 script = ExtResource("1_yqeox")
@@ -20,80 +27,161 @@ script = ExtResource("1_yqeox")
 [node name="Control" type="Control" parent="." unique_id=1984231602]
 layout_mode = 3
 anchors_preset = 0
-offset_right = 480.0
-offset_bottom = 320.0
+offset_right = 500.0
+offset_bottom = 380.0
 
 [node name="TextureRect" type="TextureRect" parent="Control" unique_id=183108371]
-self_modulate = Color(0.47988325, 0.00016186372, 0.4798798, 1)
 texture_filter = 1
 layout_mode = 0
-offset_right = 480.0
-offset_bottom = 320.0
+offset_right = 500.0
+offset_bottom = 380.0
 texture = ExtResource("2_vjb58")
 
-[node name="Close" type="Button" parent="Control" unique_id=859355270]
+[node name="Handle" type="Button" parent="Control" unique_id=389058584]
 layout_mode = 0
-offset_left = 17.0
-offset_top = 16.0
-offset_right = 77.0
-offset_bottom = 76.0
-theme_override_font_sizes/font_size = 36
-text = "X"
+offset_right = 500.0
+offset_bottom = 50.0
+theme_override_font_sizes/font_size = 24
+flat = true
+
+[node name="Close" type="Button" parent="Control" unique_id=859355270]
+texture_filter = 1
+layout_mode = 0
+offset_left = 390.0
+offset_right = 500.0
+offset_bottom = 50.0
+theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
+theme_override_colors/icon_pressed_color = Color(0.9998681, 0.26648736, 0.27391, 1)
+theme_override_colors/icon_hover_color = Color(0.87038356, 0.0002117753, 0.13675946, 1)
+theme_override_colors/icon_hover_pressed_color = Color(0.87058824, 0.38431373, 0.40392157, 1)
+theme_override_constants/icon_max_width = 90
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("3_i6lef")
+flat = true
+icon_alignment = 1
+expand_icon = true
 
 [node name="Pet" type="Button" parent="Control" unique_id=1508628908]
+texture_filter = 1
 layout_mode = 0
-offset_left = 15.0
-offset_top = 105.0
-offset_right = 156.0
-offset_bottom = 163.0
+offset_left = 20.0
+offset_top = 60.0
+offset_right = 160.0
+offset_bottom = 200.0
+theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
+theme_override_colors/icon_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_colors/icon_hover_color = Color(0.4223091, 0.19683152, 0.49723, 1)
+theme_override_colors/icon_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_colors/icon_disabled_color = Color(0, 0, 0, 0.4)
 theme_override_font_sizes/font_size = 36
-text = "Pet"
-
-[node name="Storage" type="Button" parent="Control" unique_id=833352985]
-layout_mode = 0
-offset_left = 174.0
-offset_top = 104.0
-offset_right = 315.0
-offset_bottom = 162.0
-theme_override_font_sizes/font_size = 36
-text = "Storage"
-
-[node name="Games" type="Button" parent="Control" unique_id=751194713]
-layout_mode = 0
-offset_left = 325.0
-offset_top = 105.0
-offset_right = 466.0
-offset_bottom = 163.0
-theme_override_font_sizes/font_size = 36
-text = "Games"
-
-[node name="Info" type="Button" parent="Control" unique_id=393316840]
-layout_mode = 0
-offset_left = 21.0
-offset_top = 228.0
-offset_right = 162.0
-offset_bottom = 286.0
-theme_override_font_sizes/font_size = 36
-text = "Info"
-
-[node name="Settings" type="Button" parent="Control" unique_id=216736246]
-layout_mode = 0
-offset_left = 173.0
-offset_top = 228.0
-offset_right = 320.0
-offset_bottom = 286.0
-theme_override_font_sizes/font_size = 36
-text = "Settings"
+disabled = true
+icon = ExtResource("3_con2f")
+flat = true
+icon_alignment = 1
+expand_icon = true
 
 [node name="Exit" type="Button" parent="Control" unique_id=53801702]
+texture_filter = 1
 layout_mode = 0
-offset_left = 326.0
-offset_top = 225.0
-offset_right = 467.0
-offset_bottom = 283.0
+offset_left = 340.0
+offset_top = 220.0
+offset_right = 480.0
+offset_bottom = 360.0
+theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
+theme_override_colors/icon_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_colors/icon_hover_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
+theme_override_colors/icon_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
 theme_override_font_sizes/font_size = 36
-text = "Exit"
+icon = ExtResource("4_mhnvy")
+flat = true
+icon_alignment = 1
+expand_icon = true
+
+[node name="TextureButton" type="TextureButton" parent="Control" unique_id=599735614]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 60.0
+offset_right = 60.0
+offset_bottom = 100.0
+
+[node name="Pet2" type="Button" parent="Control" unique_id=1108782139]
+texture_filter = 1
+layout_mode = 0
+offset_left = 180.0
+offset_top = 60.0
+offset_right = 320.0
+offset_bottom = 200.0
+theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
+theme_override_colors/icon_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_colors/icon_hover_color = Color(0.4223091, 0.19683152, 0.49723, 1)
+theme_override_colors/icon_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_colors/icon_disabled_color = Color(0, 0, 0, 0.4)
+theme_override_font_sizes/font_size = 36
+disabled = true
+icon = ExtResource("5_13sgg")
+flat = true
+icon_alignment = 1
+expand_icon = true
+
+[node name="Pet3" type="Button" parent="Control" unique_id=955674807]
+texture_filter = 1
+layout_mode = 0
+offset_left = 340.0
+offset_top = 60.0
+offset_right = 480.0
+offset_bottom = 200.0
+theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
+theme_override_colors/icon_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_colors/icon_hover_color = Color(0.4223091, 0.19683152, 0.49723, 1)
+theme_override_colors/icon_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_colors/icon_disabled_color = Color(0, 0, 0, 0.4)
+theme_override_font_sizes/font_size = 36
+disabled = true
+icon = ExtResource("6_i6lef")
+flat = true
+icon_alignment = 1
+expand_icon = true
+
+[node name="Pet4" type="Button" parent="Control" unique_id=37485018]
+texture_filter = 1
+layout_mode = 0
+offset_left = 180.0
+offset_top = 220.0
+offset_right = 320.0
+offset_bottom = 360.0
+theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
+theme_override_colors/icon_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_colors/icon_hover_color = Color(0.4223091, 0.19683152, 0.49723, 1)
+theme_override_colors/icon_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_colors/icon_disabled_color = Color(0, 0, 0, 0.4)
+theme_override_font_sizes/font_size = 36
+disabled = true
+icon = ExtResource("7_70i5f")
+flat = true
+icon_alignment = 1
+expand_icon = true
+
+[node name="Pet5" type="Button" parent="Control" unique_id=581710026]
+texture_filter = 1
+layout_mode = 0
+offset_left = 20.0
+offset_top = 220.0
+offset_right = 160.0
+offset_bottom = 360.0
+theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
+theme_override_colors/icon_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_colors/icon_hover_color = Color(0.4223091, 0.19683152, 0.49723, 1)
+theme_override_colors/icon_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_colors/icon_disabled_color = Color(0, 0, 0, 0.4)
+theme_override_font_sizes/font_size = 36
+disabled = true
+icon = ExtResource("8_mj5lg")
+flat = true
+icon_alignment = 1
+expand_icon = true
 
 [connection signal="close_requested" from="." to="." method="_on_close_requested"]
+[connection signal="button_down" from="Control/Handle" to="." method="_on_handle_button_down"]
+[connection signal="button_up" from="Control/Handle" to="." method="_on_handle_button_up"]
 [connection signal="pressed" from="Control/Close" to="." method="_on_close_pressed"]
 [connection signal="pressed" from="Control/Exit" to="." method="_on_exit_pressed"]

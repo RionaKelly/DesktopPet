@@ -77,7 +77,7 @@ func _input(event):
 			start_stopping(false)
 			if window.position.y == taskbar_level - window.size.y:
 				$Menu.show()
-				$Menu.position = Vector2i(window.position.x, window.position.y - $Menu.size.y)
+				$Menu.position = Vector2i(window.position.x - $Menu.size.x/3, window.position.y - $Menu.size.y)
 
 
 func _ready() -> void:
@@ -324,7 +324,7 @@ func set_size():
 	sprite.scale = Vector2(pet_scale, pet_scale)
 	
 	# Sets the Menu window and object sizes
-	$Menu.size = Vector2i(window_size * 3, window_size * 2)
+	$Menu.size = Vector2i(window_size * 3.125, window_size * 2.375) # multiplied by the difference in size compared to the pet
 
 	
 	if debugScreen:
