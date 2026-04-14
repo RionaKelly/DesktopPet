@@ -1,3 +1,5 @@
+## This code handles everything for the menu window, primarily inputs
+
 extends Window
 
 # get access to the OS Window (not just the game node)

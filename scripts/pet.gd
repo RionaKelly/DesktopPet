@@ -22,33 +22,9 @@ var usable_rect = DisplayServer.screen_get_usable_rect()
 # var screen_size = DisplayServer.screen_get_size(DisplayServer.window_get_current_screen())
 var taskbar_level = usable_rect.end.y
 
-# Pet Stats (the rest of them are autoloaded from a data file, or _ready() on first boot)
-var move_speed = usable_rect.size.x * 0.0008 # Pet speed based on the size of the screen
-var direction = Vector2(0, 0) # Direction that the pet will move in and is facing
-var velocity = Vector2(0, 0) # Velocity of the pet while falling/being thrown
-enum Activities {FALLING, GRABBED, GREETING, IDLE, SITTING, SLEEPING, STARING, STOPPED, WALKING, WORKING} # Possible states for Pet
-var activity:  Activities = Activities.IDLE # Current state of Pet (idle set as starting default)
-enum Types {BIRD, BUNNY, OCTOPUS} # Possible species that the pet can be
-enum Patterns {DEFAULT, UNCOMMON, RARE, EPIC, LEGENDARY} # Possible patterns the Pet can have
-enum Personality {NONE} # Possible personalities the Pet can have
-var pet_scale: float = 1.0 # scale for the pet to resized with in set_size()
-
-var nickname: String = "Desktop Pet" # Pet's name, shows in UI and as Window title
-var fullness: int = 100 # Pet's hunger, 100 = full
-var happines: int = 100 # Pet's happiness, 100 = happy
-var age: int = 0 # How old the pet is in minutes
-var stage: int = 0 # How many evolution's the pet has undergone
-var money: int = 0 # How much money the player/pet has
-# These variables are overwritten in _ready() with the saved variable
-var type: Types = Types.BIRD # What species the pet is (bird set as default)
-var pattern:  Patterns = Patterns.DEFAULT # Current pattern of Pet (starts as default)
-var personality:  Personality = Personality.NONE # Current personality of Pet (starts as default)
-
-
 # Game Variables
 var decision_time: bool = false # Pet must wait Timer wait time before making their first decision
 var save_time: bool = false # Game waits 10 seconds before saving using this bool
-var main_screen: int = DisplayServer.get_primary_screen() # Screen for pet to be confined to, will be changed later
 var screen_count: int = DisplayServer.get_screen_count() # How many monitors the player has
 var OS_base_color: Color = DisplayServer.get_base_color() # Find the computer's chosen base colour
 var OS_accent_color: Color = DisplayServer.get_accent_color() # Find the computer's chosen accent colour
@@ -57,14 +33,38 @@ var in_air: bool = false # if the pet is in the air or not
 var is_stopped: bool = false # bool to stop functions when pet is lifted
 var out_of_bounds: int = 0 # counter for how long pet has been out of bounds
 
-# Game Settings
+# Pet Stats
+var move_speed = usable_rect.size.x * 0.0008 # Pet speed based on the size of the screen
+var direction = Vector2(0, 0) # Direction that the pet will move in and is facing
+var velocity = Vector2(0, 0) # Velocity of the pet while falling/being thrown
+enum Activities {FALLING, GRABBED, GREETING, IDLE, SITTING, SLEEPING, STARING, STOPPED, WALKING, WORKING} # Possible states for Pet
+var activity:  Activities = Activities.IDLE # Current state of Pet (idle set as starting default)
+enum Types {BIRD, BUNNY, OCTOPUS} # Possible species that the pet can be
+enum Patterns {NONE, UNCOMMON, RARE, EPIC, LEGENDARY} # Possible patterns the Pet can have
+enum Personalities {NONE} # Possible personalities the Pet can have
+var pet_scale: float = 1.0 # scale for the pet to resized with in set_size()
+
+# These stats are loaded from the save file (or default if not found)
+var nickname: String # Pet's name, shows in UI and as Window title
+var fullness: int # Pet's hunger, 100 = full
+var happiness: int # Pet's happiness, 100 = happy
+var age: int # How old the pet is in minutes
+var stage: int # How many evolution's the pet has undergone
+var money: int # How much money the player/pet has
+var type: Types = Types.BIRD # What species the pet is (default = Bird)
+var pattern: Patterns = Patterns.NONE# Current pattern of Pet (default = None)
+var personality: Personalities = Personalities.NONE # Current personality of Pet (default = None)
+
+# Game Settings (also loaded from save file or set to default on first boot)
+var main_screen: int = DisplayServer.get_primary_screen() # Screen for pet to be confined to, will be changed later
 var shader_on: bool = false # Whether the pet should use the distortion shade or not, changed in settings
 var large_hitbox: bool = false # Whether the pet should keep the default window-size hitbox for accesibility
 
 # Bug-Testing 
 var debugMovement = false
-var debugScreen = true
+var debugScreen = false
 var debugInput = false
+var saveGame = true
 
 # Check for inputs
 func _input(event):
@@ -94,16 +94,16 @@ func _ready() -> void:
 	# Sets up the Pet's variables if this is the first boot or data file can't be found
 	nickname = Data.nickname
 	fullness = Data.fullness
-	happines = Data.happines
+	happiness = Data.happiness
 	age = Data.age
 	stage = Data.stage
 	money = Data.money
-	match Data.type_str:
-		"BIRD":
-			type = Types.BIRD
-	pattern = Patterns.DEFAULT # Current pattern of Pet (starts as default)
-	personality = Personality.NONE # Current personality of Pet (starts as default)
-	
+	type = Data.type as Types
+	pattern = Data.pattern as Patterns
+	personality = Data.personality as Personalities
+	main_screen = Data.main_screen
+	shader_on = Data.shader_on
+	large_hitbox = Data.large_hitbox
 	
 	# Prints to test issues with getting screen data
 	if debugScreen:
@@ -118,7 +118,8 @@ func _ready() -> void:
 	
 	# Sets the window and pet's size
 	set_size()
-	# get_viewport().size_changed.connect(set_size()) # signal to change size when window resized
+	# Sets the pet's appearance to match their type, either from save data or randomised in data.gd
+	set_sprite_type() 
 	
 	## Window settings are set here as well as in the project just in case
 	# We enable transparency for both the Godot Viewport and OS Window
@@ -130,20 +131,21 @@ func _ready() -> void:
 	window.always_on_top = true
 	# Force borderless
 	window.unresizable = true
+	# Disallow quit requests so we can handle them ourselves to make sure the game saves
+	get_tree().set_auto_accept_quit(false)
 	
 	# Move the sprite to centre of the last screen at above the taskbar
 	window.position = Vector2i(DisplayServer.screen_get_size(main_screen).x/2 - (window.size.x/2) + 
 	DisplayServer.screen_get_position(main_screen).x, taskbar_level - window.size.y)
-	print("Starting Pet Position: ", window.position)
+	if debugMovement:
+		print("Starting Pet Position: ", window.position)
 	# Resets the usable rect if the pet is not starting on the default screen
 	if main_screen != DisplayServer.get_primary_screen():
 		change_screen()
 	
-	# Start the timer for pet decision
+	# Start the timers for pet decision and saving
 	$DecisionTimer.start()
-	
-	# Call the function to decide random or specific starting pet, and prints the result
-	change_type("random") # set as random when exporting
+	$SaveTimer.start()
 	
 	# Sets the window name to the Pet's name
 	window.set_title(nickname)
@@ -163,6 +165,9 @@ func _ready() -> void:
 	
 	# Framerate Cap
 	Engine.max_fps = 60
+	
+	# Finally, saves the game with the assigned data just in case
+	save(true) 
 
 var last_window_pos : Vector2 = Vector2.ZERO
 func _process(_delta):
@@ -330,6 +335,7 @@ func move(move_vector):
 	else:
 		window.position.x += move_vector.x
 
+
 # Sets the Pet's size to fit on the window correctly, increasing at evolution
 func set_size():
 	var size_div = 13 # default for stage 0
@@ -383,6 +389,32 @@ func set_sprite():
 			print("Activity [", activity, "] not recognised")
 			_update_click_polygon()
 			sprite.play("idle") # default animation for if there is none ready
+
+
+# Changes Pet's sprite to match the set type
+func set_sprite_type():
+	match (Types.keys()[type]).capitalize():
+		"Bird":
+			sprite.set_sprite_frames(load("res://sprite_frames/bird.tres"))
+		"Bunny":
+			sprite.set_sprite_frames(load("res://sprite_frames/bunny.tres"))
+		"Octopus":
+			sprite.set_sprite_frames(load("res://sprite_frames/octopus.tres"))
+		# Backup to choos a random pet using a random integer from a range if no valid type is found
+		_:
+			print("No Valid Type Found, Sprite Randomised")
+			match randi_range(0, 2):
+				0:
+					type = Types.BIRD
+					sprite.set_sprite_frames(load("res://sprite_frames/bird.tres"))
+				1:
+					type = Types.BUNNY
+					sprite.set_sprite_frames(load("res://sprite_frames/bunny.tres"))
+				2:
+					type = Types.OCTOPUS
+					sprite.set_sprite_frames(load("res://sprite_frames/octopus.tres"))
+	# Prints the selected pet in an easily readable format
+	print ("Pet: ", (Types.keys()[type]).capitalize())
 
 
 # Handles all of the decision making for the Pet
@@ -479,53 +511,6 @@ func start_stopping(stop):
 			activity = Activities.FALLING
 
 
-# Changes Pet's type and sprite set to given species or random
-func change_type(choice):
-	# establish pet variable to return with chosen pet, we set this here in case it is random
-	var random = false
-	var chosen_type:String = ""
-	
-	
-	match choice:
-		"bird":
-			type = Types.BIRD
-			chosen_type = "Bird"
-			sprite.set_sprite_frames(load("res://sprite_frames/bird.tres"))
-		"bunny":
-			type = Types.BUNNY
-			chosen_type = "Bunny"
-			sprite.set_sprite_frames(load("res://sprite_frames/bunny.tres"))
-		"octopus":
-			type = Types.OCTOPUS
-			chosen_type = "Octopus"
-			sprite.set_sprite_frames(load("res://sprite_frames/octopus.tres"))
-		"random": # chooses a random pet using a random integer from a range
-			random = true
-			match randi_range(1, 3):
-				1:
-					type = Types.BIRD
-					chosen_type = "Bird"
-					sprite.set_sprite_frames(load("res://sprite_frames/bird.tres"))
-				2:
-					type = Types.BUNNY
-					chosen_type = "Bunny"
-					sprite.set_sprite_frames(load("res://sprite_frames/bunny.tres"))
-				3:
-					type = Types.OCTOPUS
-					chosen_type = "Octopus"
-					sprite.set_sprite_frames(load("res://sprite_frames/octopus.tres"))
-		_: # defaults to bird
-			type = Types.BIRD
-			chosen_type = "Bird"
-			sprite.set_sprite_frames(load("res://sprite_frames/bird.tres"))
-	
-	# Modifies the string to tell me whether the returned pet was random or chosen, for testing
-	if random:
-		print ("Random Pet: ", chosen_type)
-	else:
-		print ("Chosen Pet: ", chosen_type)
-
-
 # Recalculates the Pet's usable screen area when called, normally for when screen the Pet is on changes
 func change_screen():
 	main_screen = window.current_screen
@@ -542,26 +527,57 @@ func evolve():
 		pass # finish game code here
 
 
-# Saves the game's progress when called every 10 seconds, also increases age
-var age_secs = 0 # counter to increase age at 60 seconds
-func save() -> void:
-	age_secs += 1
-	if age_secs == 6:
-		age += 1
-		age_secs = 0
+# Saves the game's progress when called, also increases age
+func save(manual = null) -> void:
+	# Check for if save was done manually by code instead of automatically with the timer, to not increase age 
+	if manual != true:
+		age += 1 # increases the pet's age by 1
 	
-	# Saving code here
-	print("Saved at ", age, ":", age_secs, "0")
+	# Don't save anything if enabled, usually left on for testing
+	if saveGame == false:
+		print("Game not saved")
+		return
+	
+	# Creates the new config file 
+	var config := ConfigFile.new()
+	# Writes the Pet's data
+	config.set_value("pet", "nickname", nickname)
+	config.set_value("pet", "fullness", fullness)
+	config.set_value("pet", "happiness", happiness)
+	config.set_value("pet", "age", age)
+	config.set_value("pet", "stage", stage)
+	config.set_value("pet", "money", money)
+	config.set_value("pet", "type", type)
+	config.set_value("pet", "pattern", pattern)
+	config.set_value("pet", "personality", personality)
+	# Writes the Settings data
+	config.set_value("settings", "main_screen", main_screen)
+	config.set_value("settings", "shader_on", shader_on)
+	config.set_value("settings", "large_hitbox", large_hitbox)
+	
+	# Saves the data as a config file
+	var error_code: = config.save("user://data.cfg")
+	# Print just to know that saving is complete with no issues
+	if error_code == OK:
+		print("Saved at ", age, ":", str(snapped(60 - $SaveTimer.get_time_left(), 1)).pad_zeros(2))
+	# Prints error code if there was an issue during saving
+	else:
+		print("Saving failed with Error: ", error_code)
+	
+	# Restart the Timer
+	$SaveTimer.start()
 
 
 # Exits the game after saving when called
 func exit() -> void:
 	print("Saving...")
-	save()
-	print("Exitting Game")
+	save(true)
+	print("Exitting Game... See you next time!")
 	get_tree().quit() # default behavior
 
 
+# If the player attempts to close the app manually, this lets it use my exit function instead to save progress
 func _notification(what):
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		print("Exit Request Recieved")
 		exit()
