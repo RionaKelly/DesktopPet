@@ -184,6 +184,7 @@ func _ready() -> void:
 	# Finally, saves the game with the assigned data just in case
 	save() 
 
+var shader_progress: float = 0.0
 var last_window_pos : Vector2 = Vector2.ZERO
 func _process(_delta):
 	# If we are stopped then return and stop reading code
@@ -199,7 +200,10 @@ func _process(_delta):
 			print("")
 		last_window_pos = window.position
 		return
-
+	if activity == Activities.EVOLVING:
+		shader_progress += 0.01
+		sprite.get_material().set_shader_parameter("progress", shader_progress)
+	
 	# Vector2i used to tell Windows to move to an exact pixel coordinate (integer)
 	var move_vector = Vector2i(direction * move_speed) # How Pet will move around screen
 	
@@ -399,9 +403,6 @@ func set_sprite():
 			else: # extra check just in case direction variable is doing something weird
 				print("Direction [", direction.x, "] outside of given rage")
 			sprite.play("walk")
-		#Activities.EVOLVING:
-			#_update_click_polygon()
-			#sprite.play("evolve")
 		_:
 			print("Activity [", activity, "] not recognised")
 			_update_click_polygon()
@@ -551,6 +552,8 @@ func evolve():
 	$DecisionTimer.stop()
 	activity = Activities.EVOLVING
 	
+	await get_tree().create_timer(1.5).timeout
+	
 	# Increase stage and set new size
 	print("Evolving from Stage ", stage, " to ", stage + 1, "...")
 	stage += 1
@@ -561,8 +564,10 @@ func evolve():
 	
 	
 	# Wait for animation to play and pet to stand for a second
+	await get_tree().create_timer(1.0).timeout
 	
 	# Continue pet's decisionmaking after 2 seconds
+	sprite.get_material().set_shader_parameter("progress", 0.0)
 	activity = Activities.IDLE
 	$DecisionTimer.start(2.0)
 

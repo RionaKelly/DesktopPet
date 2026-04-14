@@ -1,32 +1,31 @@
-// Shader designed by Demyr
-// https://godotshaders.com/shader/pixelated-burn/
+// Shader by ericalfaro
+// https://godotshaders.com/shader/pixel-melt/
 
 shader_type canvas_item;
 
-uniform vec2 position;
-uniform float radius;
-uniform float borderWidth = 0.2;
-uniform float burnMult = 0.34;
-uniform sampler2D noiseTexture;
-uniform vec4 burnColor : source_color;
-uniform float pixel_size = 0.004;
-uniform float blend_steps = 8.5; // lower number = more saturated
+// Animate from 0 to 1
+uniform float progress: hint_range(0.0, 1.0) = 0.0;
 
-uniform sampler2D colorCurve;
+// How jagged each band of melting pixels are
+uniform float meltiness: hint_range(0.0, 16.0) = 1.0;
 
+float psuedo_rand(float x) {
+	return mod(x * 2048103.0 + cos(x * 1912.0), 1.0);
+}
 
 void fragment() {
-    vec2 snapped_uv = floor(UV / pixel_size) * pixel_size;
-
-    float dist = length(position - snapped_uv) + (texture(noiseTexture, snapped_uv).b) * burnMult;
-    float mask = clamp((dist - (radius - borderWidth)) / (2.0 * borderWidth), 0.0, 1.0);
-    mask = 1.0 - mask;
-    mask = floor(mask * blend_steps) / blend_steps;
+	vec2 uv = UV;
 	
-    vec4 curve_value = texture(colorCurve, vec2(mask, 0.0));
-    
-    float blendMask = pow(mask, 0.1); 
-    COLOR.rgb = mix(COLOR.rgb, curve_value.rgb, blendMask);
-    
-	COLOR.a *= min(COLOR.a,1.0-(float(dist<radius)));
+	// Move pixels near the top faster
+	uv.y -= progress / UV.y;
+	
+	// Created jagged edges for each pixel on the x-axis 
+	uv.y -= progress * meltiness * psuedo_rand(UV.x - mod(UV.x, TEXTURE_PIXEL_SIZE.x));
+	
+	COLOR = texture(TEXTURE, uv);
+	
+	// "delete" pixels out of range
+	if (uv.y <= 0.0) {
+		COLOR.a = 0.0;
+	}
 }

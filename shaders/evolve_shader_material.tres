@@ -1,15 +1,8 @@
 [gd_resource type="ShaderMaterial" format=3 uid="uid://dffhhcor3o7tq"]
 
 [ext_resource type="Shader" uid="uid://fp0nv33eblwe" path="res://shaders/evolve.gdshader" id="1_ewvbh"]
-[ext_resource type="Texture2D" uid="uid://dpctruvwt4g8a" path="res://sprites/noisy-texture-100x100-o100-d10-c-ffffff-t0.png" id="2_thxum"]
 
 [resource]
 shader = ExtResource("1_ewvbh")
-shader_parameter/position = Vector2(0.5, 0)
-shader_parameter/radius = 0.0
-shader_parameter/borderWidth = 0.2
-shader_parameter/burnMult = 0.15
-shader_parameter/noiseTexture = ExtResource("2_thxum")
-shader_parameter/burnColor = Color(0.2700405, 0.48757488, 1, 1)
-shader_parameter/pixel_size = 0.08
-shader_parameter/blend_steps = 8.5
+shader_parameter/progress = 0.0
+shader_parameter/meltiness = 0.2000000095
