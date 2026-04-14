@@ -13,7 +13,6 @@ light_mask = 257
 texture_filter = 1
 sprite_frames = ExtResource("2_0wfyh")
 animation = &"idle"
-frame_progress = 0.5177439
 centered = false
 
 [node name="DebugObjects" type="Node2D" parent="PetSprite" unique_id=697582205]
@@ -35,13 +34,18 @@ polygon = PackedVector2Array(16, 0, 0, 0, 0, 16, 16, 16)
 wait_time = 1.2
 one_shot = true
 autostart = true
-ignore_time_scale = true
 
-[node name="SaveTimer" type="Timer" parent="." unique_id=1728820249]
+[node name="UpdateTimer" type="Timer" parent="." unique_id=1728820249]
 wait_time = 60.0
+autostart = true
+
+[node name="AttentionTimer" type="Timer" parent="." unique_id=1330001196]
+wait_time = 2.0
+autostart = true
 
 [node name="Menu" parent="." unique_id=1008188484 instance=ExtResource("4_hmkkh")]
 visible = false
 
 [connection signal="timeout" from="DecisionTimer" to="." method="brain"]
-[connection signal="timeout" from="SaveTimer" to="." method="save"]
+[connection signal="timeout" from="UpdateTimer" to="." method="update_stats"]
+[connection signal="timeout" from="AttentionTimer" to="." method="request_attention"]

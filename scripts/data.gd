@@ -12,6 +12,7 @@ var money: int # How much money the player/pet has
 var type: int # What species the pet is
 var pattern: int # Current pattern of Pet 
 var personality: int # Current personality of Pet
+var silent: bool # Whether the app should not send alerts as to bother less
 var main_screen: int # Screen for pet to be confined to, will be changed later
 var shader_on: bool # Whether the pet should use the distortion shade or not, changed in settings
 var large_hitbox: bool # Whether the pet should keep the default window-size hitbox for accesibility
@@ -31,6 +32,7 @@ func _ready() -> void:
 	type = config.get_value("pet", "type", randi_range(0, 2))
 	pattern = config.get_value("pet", "pattern", 0)
 	personality = config.get_value("pet", "personality", 0)
+	silent = config.get_value("settings", "silent", false)
 	main_screen = config.get_value("settings", "main_screen", DisplayServer.get_primary_screen())
 	shader_on = config.get_value("settings", "shader_on", false)
 	large_hitbox = config.get_value("settings", "large_hitbox", false)

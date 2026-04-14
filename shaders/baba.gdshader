@@ -1,4 +1,5 @@
 // Shaders designed by enekoassets
+// https://godotshaders.com/shader/random-displacement-animation-easy-ui-animation/
 
 shader_type canvas_item;
 uniform float interval = 1.0; // the displacement will happen every [interval] seconds

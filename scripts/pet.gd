@@ -2,11 +2,17 @@
 # Used this for window presets, making window around the screen, clicking through window, and performance enhancements
 # https://youtube.com/playlist?list=PLVzjdZVCXNTyVHAtpgF_uFbsz8MA8uWKO&si=FOG2BfnqTqjJTduE
 
-## Notes:
-## Use os theme colour to colour ui, tint b&w images
-## One Click gets pets attention and stops them say hi, after too many clicks gets mad
-## Hold Click on pet lets you drag them around
-## Two Clicks on pet opens menu
+## TO DO
+# Work Mode
+# Anomalies from Evolution
+# Evolution Animation
+# Pet Info display
+# Shop
+# Games
+# Game Info display
+# Game settings menu
+# Happiness and Fullness changes
+# New game start with rarity boost
 
 extends Node2D
 
@@ -24,7 +30,6 @@ var taskbar_level = usable_rect.end.y
 
 # Game Variables
 var decision_time: bool = false # Pet must wait Timer wait time before making their first decision
-var save_time: bool = false # Game waits 10 seconds before saving using this bool
 var screen_count: int = DisplayServer.get_screen_count() # How many monitors the player has
 var OS_base_color: Color = DisplayServer.get_base_color() # Find the computer's chosen base colour
 var OS_accent_color: Color = DisplayServer.get_accent_color() # Find the computer's chosen accent colour
@@ -37,14 +42,25 @@ var out_of_bounds: int = 0 # counter for how long pet has been out of bounds
 var move_speed = usable_rect.size.x * 0.0008 # Pet speed based on the size of the screen
 var direction = Vector2(0, 0) # Direction that the pet will move in and is facing
 var velocity = Vector2(0, 0) # Velocity of the pet while falling/being thrown
-enum Activities {FALLING, GRABBED, GREETING, IDLE, SITTING, SLEEPING, STARING, STOPPED, WALKING, WORKING} # Possible states for Pet
+enum Activities {EVOLVING, FALLING, GRABBED, GREETING, IDLE, SITTING, SLEEPING, STARING, STOPPED, WALKING, WORKING} # Possible states for Pet
 var activity:  Activities = Activities.IDLE # Current state of Pet (idle set as starting default)
 enum Types {BIRD, BUNNY, OCTOPUS} # Possible species that the pet can be
 enum Patterns {NONE, UNCOMMON, RARE, EPIC, LEGENDARY} # Possible patterns the Pet can have
-enum Personalities {NONE} # Possible personalities the Pet can have
-var pet_scale: float = 1.0 # scale for the pet to resized with in set_size()
+enum Personalities {NONE, AFFECTIONATE, ENERGETIC, SlEEPY} # Possible personalities the Pet can have
+var pet_scale: float = 1.0 # Ccale for the pet to resized with in set_size()
+var sad_count: int = 0 # Counter to keep track of how much happiness should be lost during update based on what has happened
+var hungry_count: int = 0 # Counter to keep track of how much fullness should be lost during update based on what has happened
+var ready_to_evolve: bool = false # Whether the pet is ready to evolve and should alert the player
+var work_mode: bool = false # When work mode is on, pet will not disturb player at all
 
-# These stats are loaded from the save file (or default if not found)
+# Bug-Testing 
+var debugMovement = false
+var debugScreen = false
+var debugInput = false
+var saveGame = true
+
+## Variables from here are loaded from save data (or set to default) using data.gd
+# Pet Data
 var nickname: String # Pet's name, shows in UI and as Window title
 var fullness: int # Pet's hunger, 100 = full
 var happiness: int # Pet's happiness, 100 = happy
@@ -55,16 +71,11 @@ var type: Types = Types.BIRD # What species the pet is (default = Bird)
 var pattern: Patterns = Patterns.NONE# Current pattern of Pet (default = None)
 var personality: Personalities = Personalities.NONE # Current personality of Pet (default = None)
 
-# Game Settings (also loaded from save file or set to default on first boot)
+# Game Settings
+var silent: bool = false # Whether the app should not send alerts as to bother less
 var main_screen: int = DisplayServer.get_primary_screen() # Screen for pet to be confined to, will be changed later
 var shader_on: bool = false # Whether the pet should use the distortion shade or not, changed in settings
 var large_hitbox: bool = false # Whether the pet should keep the default window-size hitbox for accesibility
-
-# Bug-Testing 
-var debugMovement = false
-var debugScreen = false
-var debugInput = false
-var saveGame = true
 
 # Check for inputs
 func _input(event):
@@ -78,6 +89,11 @@ func _input(event):
 		if is_stopped:
 			start_stopping(false)
 			if window.position.y == taskbar_level - window.size.y:
+				# If ready to evolve, begin evolution when clicked
+				if ready_to_evolve:
+					evolve()
+					return
+				# If not requesting attention for something, open Menu
 				$Menu.show()
 				# The window will move over more to the left or right if the pet is too close to the edge to avoid being cut off
 				var padding: int
@@ -145,12 +161,11 @@ func _ready() -> void:
 	
 	# Start the timers for pet decision and saving
 	$DecisionTimer.start()
-	$SaveTimer.start()
 	
 	# Sets the window name to the Pet's name
 	window.set_title(nickname)
 	
-	# Run once here then whenever animation changes
+	# Run click area creation once here then whenever animation changes or it is called again
 	_update_click_polygon()
 	sprite.frame_changed.connect(_update_click_polygon)
 	
@@ -167,7 +182,7 @@ func _ready() -> void:
 	Engine.max_fps = 60
 	
 	# Finally, saves the game with the assigned data just in case
-	save(true) 
+	save() 
 
 var last_window_pos : Vector2 = Vector2.ZERO
 func _process(_delta):
@@ -265,10 +280,17 @@ func _process(_delta):
 			print("Pet Found on Screen ", window.current_screen)
 			change_screen()
 	
+	# Check if the pet is old enough to begin evolution (after 5, 15, and 30 hours)
+	if (stage == 0 and age >= 300) or (stage == 1 and age >= 900) or (stage == 2 and age >= 1800):
+		ready_to_evolve = true
+	else:
+		ready_to_evolve = false
+	
 	# Check for settings
 	# Shader by enekoassets at https://godotshaders.com/shader/random-displacement-animation-easy-ui-animation/
 	if shader_on:
 		sprite.set_material(load("res://shaders/baba_shader_material.tres"))
+	sprite.set_material(load("res://shaders/evolve_shader_material.tres"))
 
 
 # Creates area of the window that can be clicked through
@@ -278,10 +300,9 @@ func _update_click_polygon(flip = null):
 	# function shouldnt run if player needs larger hitboxes
 	if large_hitbox:
 		return
-	# list activities with no animation to save resources
-	if activity == Activities.IDLE or activity == Activities.SITTING:
-		if last_activity == activity: 
-			return
+	# List activities with no animation to save resources
+	if (activity == Activities.IDLE or activity == Activities.SITTING) and last_activity == activity:
+		return
 	last_activity = activity
 	
 	# 2. Find the current frame and animation to be used for getting the right image
@@ -295,6 +316,8 @@ func _update_click_polygon(flip = null):
 		Activities.WALKING:
 			current_animation = "walk"
 			current_frame = sprite.frame
+		Activities.EVOLVING:
+			current_animation = "idle"
 		_:
 			current_animation = "idle" # default to match sprite if no animation is found
 	if current_frame >= sprite.sprite_frames.get_frame_count(current_animation):
@@ -338,15 +361,7 @@ func move(move_vector):
 
 # Sets the Pet's size to fit on the window correctly, increasing at evolution
 func set_size():
-	var size_div = 13 # default for stage 0
-	# Increase size with each stage
-	match stage:
-		1:
-			size_div = 12
-		2:
-			size_div = 11
-		3:
-			size_div = 10
+	var size_div = 14 - stage # Ranged between 14 and 11
 	
 	# Calculates pet (window and sprite) size based on monitor size 
 	var window_size = (usable_rect.size.y / size_div) # size of the window in pixels
@@ -356,7 +371,6 @@ func set_size():
 	
 	# Sets the Menu window and object sizes
 	$Menu.size = Vector2i(window_size * 3.125, window_size * 2.375) # multiplied by the difference in size compared to the pet
-
 	
 	if debugScreen:
 		print("Window Size: ", window_size)
@@ -385,6 +399,9 @@ func set_sprite():
 			else: # extra check just in case direction variable is doing something weird
 				print("Direction [", direction.x, "] outside of given rage")
 			sprite.play("walk")
+		#Activities.EVOLVING:
+			#_update_click_polygon()
+			#sprite.play("evolve")
 		_:
 			print("Activity [", activity, "] not recognised")
 			_update_click_polygon()
@@ -461,7 +478,7 @@ func brain():
 					print("Continue Walking")
 		_:
 			if debugMovement:
-					print("No Change")
+					print("Activity Not Found")
 	
 	match activity:
 		Activities.IDLE: # wait time doesn't matter because no animation
@@ -518,21 +535,39 @@ func change_screen():
 	taskbar_level = usable_rect.end.y
 	print("Main Screen Changed to ", main_screen)
 
+
+# Called every minute to update the Pet's stats (age, fullness, happiness, etc.), also calls save()
+func update_stats():
+	# Increases the pet's age by 1 every 60 seconds and evolves after 10, 20, and 30 hours
+	age += 1 
+
 # Evolves the pet
 func evolve():
-	if stage < 3:
-		stage += 1
-		set_size()
-	else:
-		pass # finish game code here
-
-
-# Saves the game's progress when called, also increases age
-func save(manual = null) -> void:
-	# Check for if save was done manually by code instead of automatically with the timer, to not increase age 
-	if manual != true:
-		age += 1 # increases the pet's age by 1
+	# Leave and evolve later if not in ground
+	if in_air or is_stopped:
+		return
 	
+	# Begin animation
+	$DecisionTimer.stop()
+	activity = Activities.EVOLVING
+	
+	# Increase stage and set new size
+	print("Evolving from Stage ", stage, " to ", stage + 1, "...")
+	stage += 1
+	set_size()
+	_update_click_polygon()
+	
+	# Randomise whether pet should gain an anomaly (new personality or pattern)
+	
+	
+	# Wait for animation to play and pet to stand for a second
+	
+	# Continue pet's decisionmaking after 2 seconds
+	activity = Activities.IDLE
+	$DecisionTimer.start(2.0)
+
+# Saves the game's progress when called
+func save() -> void:
 	# Don't save anything if enabled, usually left on for testing
 	if saveGame == false:
 		print("Game not saved")
@@ -551,6 +586,7 @@ func save(manual = null) -> void:
 	config.set_value("pet", "pattern", pattern)
 	config.set_value("pet", "personality", personality)
 	# Writes the Settings data
+	config.set_value("settings", "silent", silent)
 	config.set_value("settings", "main_screen", main_screen)
 	config.set_value("settings", "shader_on", shader_on)
 	config.set_value("settings", "large_hitbox", large_hitbox)
@@ -559,19 +595,16 @@ func save(manual = null) -> void:
 	var error_code: = config.save("user://data.cfg")
 	# Print just to know that saving is complete with no issues
 	if error_code == OK:
-		print("Saved at ", age, ":", str(snapped(60 - $SaveTimer.get_time_left(), 1)).pad_zeros(2))
+		print("Saved at ", age/60, ":" , age % 60, ":", str(snapped(60 - $UpdateTimer.get_time_left(), 1)).pad_zeros(2))
 	# Prints error code if there was an issue during saving
 	else:
 		print("Saving failed with Error: ", error_code)
-	
-	# Restart the Timer
-	$SaveTimer.start()
 
 
 # Exits the game after saving when called
 func exit() -> void:
 	print("Saving...")
-	save(true)
+	save()
 	print("Exitting Game... See you next time!")
 	get_tree().quit() # default behavior
 
@@ -581,3 +614,14 @@ func _notification(what):
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		print("Exit Request Recieved")
 		exit()
+
+
+# Checks if attention should be requested every 5 seconds
+func request_attention() -> void:
+	# Check if Pet should be quiet
+	if silent or work_mode:
+		# Put quieter attention request code here
+		return
+	# Request attention if pet is ready to evolve
+	if ready_to_evolve:
+		DisplayServer.window_request_attention()
