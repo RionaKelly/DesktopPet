@@ -63,7 +63,6 @@ var sprite_material: ShaderMaterial = load("res://shaders/pet_shader_material.tr
 var debugMovement = false
 var debugScreen = false
 var debugInput = false
-var saveGame = true
 
 ## Variables from here are loaded from save data (or set to default) using data.gd
 # Pet Data
@@ -82,6 +81,7 @@ var silent: bool = false # Whether the app should not send alerts as to bother l
 var main_screen: int = DisplayServer.get_primary_screen() # Screen for pet to be confined to, will be changed later
 var shader_on: bool = false # Whether the pet should use the distortion shade or not, changed in settings
 var large_hitbox: bool = false # Whether the pet should keep the default window-size hitbox for accesibility
+var saveGame: bool = true
 
 # Check for inputs
 func _input(event):
@@ -129,6 +129,7 @@ func _ready() -> void:
 	main_screen = Data.main_screen
 	shader_on = Data.shader_on
 	large_hitbox = Data.large_hitbox
+	saveGame = Data.save_game
 	
 	# Prints to test issues with getting screen data
 	if debugScreen:
@@ -322,6 +323,8 @@ func _update_click_polygon(flip = null):
 	# 1. Stop function if it shouldn't be running
 	# function shouldnt run if player needs larger hitboxes
 	if large_hitbox:
+		window.mouse_passthrough_polygon = []
+
 		return
 	# List activities with no animation to save resources
 	if (activity == Activities.IDLE or activity == Activities.SITTING) and last_activity == activity:
@@ -745,6 +748,7 @@ func save() -> void:
 	config.set_value("settings", "main_screen", main_screen)
 	config.set_value("settings", "shader_on", shader_on)
 	config.set_value("settings", "large_hitbox", large_hitbox)
+	config.set_value("settings", "save_game", saveGame)
 	
 	# Saves the data as a config file
 	var error_code: = config.save("user://data.cfg")

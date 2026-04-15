@@ -124,7 +124,6 @@ theme_override_colors/icon_hover_color = Color(0.4223091, 0.19683152, 0.49723, 1
 theme_override_colors/icon_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
 theme_override_colors/icon_disabled_color = Color(0, 0, 0, 0.4)
 theme_override_font_sizes/font_size = 36
-disabled = true
 icon = ExtResource("7_70i5f")
 flat = true
 icon_alignment = 1
@@ -268,6 +267,86 @@ anchors_preset = 0
 offset_right = 500.0
 offset_bottom = 380.0
 
+[node name="Info" type="Label" parent="Settings" unique_id=976847588]
+layout_mode = 0
+offset_left = 169.0
+offset_top = 52.0
+offset_right = 332.0
+offset_bottom = 110.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 42
+text = "Settings"
+
+[node name="Saving" type="CheckBox" parent="Settings" unique_id=1904017939]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 107.0
+offset_right = 232.0
+offset_bottom = 154.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_colors/font_hover_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
+theme_override_colors/font_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_font_sizes/font_size = 28
+text = "Game Saving"
+
+[node name="Silent" type="CheckBox" parent="Settings" unique_id=424202244]
+layout_mode = 0
+offset_left = 267.0
+offset_top = 108.0
+offset_right = 451.0
+offset_bottom = 155.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_colors/font_hover_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
+theme_override_colors/font_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_font_sizes/font_size = 28
+text = "Silent"
+
+[node name="Hitbox" type="CheckBox" parent="Settings" unique_id=1842780816]
+layout_mode = 0
+offset_left = 29.0
+offset_top = 154.0
+offset_right = 213.0
+offset_bottom = 196.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_colors/font_hover_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
+theme_override_colors/font_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_font_sizes/font_size = 28
+text = "Large Hitbox"
+
+[node name="Shader" type="CheckBox" parent="Settings" unique_id=1227032883]
+layout_mode = 0
+offset_left = 267.0
+offset_top = 156.0
+offset_right = 451.0
+offset_bottom = 203.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_colors/font_hover_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
+theme_override_colors/font_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_font_sizes/font_size = 28
+text = "Silly Shader"
+
+[node name="Delete" type="Button" parent="Settings" unique_id=250538259]
+texture_filter = 1
+layout_mode = 0
+offset_left = 29.0
+offset_top = 290.0
+offset_right = 470.0
+offset_bottom = 359.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_colors/font_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_colors/font_hover_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
+theme_override_colors/font_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
+theme_override_colors/icon_disabled_color = Color(0, 0, 0, 0.4)
+theme_override_font_sizes/font_size = 28
+text = "Delete Data (turn off saving too)"
+icon_alignment = 1
+expand_icon = true
+
 [node name="Handle" type="Button" parent="." unique_id=389058584]
 offset_right = 500.0
 offset_bottom = 50.0
@@ -311,8 +390,14 @@ expand_icon = true
 [connection signal="close_requested" from="." to="." method="_on_close_requested"]
 [connection signal="pressed" from="Default/Pet" to="." method="_on_pet_pressed"]
 [connection signal="pressed" from="Default/Info" to="." method="_on_info_pressed"]
+[connection signal="pressed" from="Default/Settings" to="." method="_on_settings_pressed"]
 [connection signal="pressed" from="Default/Exit" to="." method="_on_exit_pressed"]
 [connection signal="text_submitted" from="Pet/Name Entry" to="." method="_on_name_entry_text_submitted"]
+[connection signal="toggled" from="Settings/Saving" to="." method="_on_saving_toggled"]
+[connection signal="toggled" from="Settings/Silent" to="." method="_on_silent_toggled"]
+[connection signal="toggled" from="Settings/Hitbox" to="." method="_on_hitbox_toggled"]
+[connection signal="toggled" from="Settings/Shader" to="." method="_on_shader_toggled"]
+[connection signal="pressed" from="Settings/Delete" to="." method="_on_delete_pressed"]
 [connection signal="button_down" from="Handle" to="." method="_on_handle_button_down"]
 [connection signal="button_up" from="Handle" to="." method="_on_handle_button_up"]
 [connection signal="pressed" from="Close" to="." method="_on_close_pressed"]

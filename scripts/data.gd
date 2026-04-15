@@ -16,6 +16,7 @@ var silent: bool # Whether the app should not send alerts as to bother less
 var main_screen: int # Screen for pet to be confined to, will be changed later
 var shader_on: bool # Whether the pet should use the distortion shade or not, changed in settings
 var large_hitbox: bool # Whether the pet should keep the default window-size hitbox for accesibility
+var save_game: bool # Whether the game should save data or not
 
 
 func _ready() -> void:
@@ -36,3 +37,4 @@ func _ready() -> void:
 	main_screen = config.get_value("settings", "main_screen", DisplayServer.get_primary_screen())
 	shader_on = config.get_value("settings", "shader_on", false)
 	large_hitbox = config.get_value("settings", "large_hitbox", false)
+	save_game = config.get_value("settings", "save_game", true)
