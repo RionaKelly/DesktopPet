@@ -36,7 +36,7 @@ var grab_offset: Vector2 = Vector2.ZERO
 func _process(_delta):
 	# Causes the window to follow the mouse cursor if the "handle" is held
 	if held:
-		var mouse_pos = $Control.get_global_mouse_position()
+		var mouse_pos = $Default.get_global_mouse_position()
 		window.position = Vector2(window.position) + mouse_pos - grab_offset
 		## look into window_start_drag()
 
@@ -44,21 +44,64 @@ func _process(_delta):
 # Hides the Window when the top left Close is pressed
 func _on_close_pressed():
 	window.hide()
+	_on_back_pressed()
 
 
 # Tells the main script to close the game when Exit is pressed
 func _on_exit_pressed():
 	$"..".exit()
 
+
 # Hides the window when a player tries to close the window manually
 func _on_close_requested():
 	window.hide()
 
+
 # Makes the window follow the user when they grab the "handle" at the top
 func _on_handle_button_down() -> void:
 	held = true
-	grab_offset = $Control.get_global_mouse_position()
+	grab_offset = $Default.get_global_mouse_position()
+
 
 # Stops the following when button is let go
 func _on_handle_button_up() -> void:
 	held = false
+
+# Shows the info page and hides default
+func _on_info_pressed() -> void:
+	$Default.hide()
+	$Info.show()
+	$Back.show()
+
+
+# Brings you back to the default page
+func _on_back_pressed() -> void:
+	$Default.show()
+	$Pet.hide()
+	$Shop.hide()
+	$Game.hide()
+	$Info.hide()
+	$Settings.hide()
+	$Back.hide()
+
+
+func _on_pet_pressed() -> void:
+	# Update information about pet
+	$"Pet/Pet Info".set_text(String("Name: " + $"..".nickname + 
+	"\nAge: " + str($"..".age) + 
+	"\nHappiness: " + str($"..".happiness) + "%" +
+	"\nFullness: " + str($"..".fullness) + "%" +
+	"\nMoney: " + str($"..".money) +
+	"\nType: " + ($"..".Types.keys()[$"..".type]).capitalize() +
+	"\nPattern: " + ($"..".Patterns.keys()[$"..".pattern]).capitalize() +
+	"\nPersonality: " + ($"..".Personalities.keys()[$"..".personality]).capitalize()
+	))
+	
+	$Default.hide()
+	$Pet.show()
+	$Back.show()
+
+
+# Changes the pet's nickname when text is enterred
+func _on_name_entry_text_submitted(new_name: String) -> void:
+	$"..".nickname = new_name

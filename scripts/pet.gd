@@ -2,23 +2,28 @@
 # Used this for window presets, making window around the screen, clicking through window, and performance enhancements
 # https://youtube.com/playlist?list=PLVzjdZVCXNTyVHAtpgF_uFbsz8MA8uWKO&si=FOG2BfnqTqjJTduE
 
-## TO DO
-# Work Mode
-# Anomalies from Evolution
-# Evolution Animation
+## TO DO - ASAP
 # Pet Info display
-# Shop
-# Games
 # Game Info display
 # Game settings menu
-# Happiness and Fullness changes
+# Happiness and Fullness
+# Work Mode
+# Personality Traits affecting decisions
+# Shop
+# Games
+## TO DO - AFTER
+# Taking good care of your pet gives higher chance of rare patterns and personalities
+# Waving/Getting attention animation
+# Right click to pet Pet
+# More actions for pet to do
+# More complicated decionmaking with cooldowns and stuff
+# Better Evolution Animation
 # New game start with rarity boost
 
 extends Node2D
 
 # get access to the OS Window (not just the game node)
 @onready var window : Window = get_window()
-
 @onready var sprite : AnimatedSprite2D = $PetSprite
 
 # The 'Safe Area' that the window shouldn't leave --- usable_rect() = screen area minus taskbar/docks
@@ -89,22 +94,25 @@ func _input(event):
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed == false and is_stopped:
 		if is_stopped:
 			start_stopping(false)
-			if window.position.y == taskbar_level - window.size.y:
-				# If ready to evolve, begin evolution when clicked
-				if ready_to_evolve and !in_air and !is_stopped:
-					evolution_manager()
-					return
-				# If not requesting attention for something, open Menu
-				$Menu.show()
-				# The window will move over more to the left or right if the pet is too close to the edge to avoid being cut off
-				var padding: int
-				if window.position.x + window.size.x > ((usable_rect.size.x)*0.95) + usable_rect.position.x:
-					padding = $Menu.size.x - window.size.x
-				elif window.position.x < (usable_rect.size.x * 0.05) + usable_rect.position.x:
-					padding = 0
-				else:
-					padding = $Menu.size.x/3
-				$Menu.position = Vector2i(window.position.x - padding, window.position.y - $Menu.size.y)
+		if window.position.y == taskbar_level - window.size.y:
+			# If ready to evolve, begin evolution when clicked
+			if ready_to_evolve and !in_air and !is_stopped:
+				evolution_manager()
+				return
+	
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.double_click:
+		
+		# Display Menu
+		$Menu.show()
+		# The window will move over more to the left or right if the pet is too close to the edge to avoid being cut off
+		var padding: int
+		if window.position.x + window.size.x > ((usable_rect.size.x)*0.95) + usable_rect.position.x:
+			padding = $Menu.size.x - window.size.x
+		elif window.position.x < (usable_rect.size.x * 0.05) + usable_rect.position.x:
+			padding = 0
+		else:
+			padding = $Menu.size.x/3
+		$Menu.position = Vector2i(window.position.x - padding, window.position.y - $Menu.size.y * 1.05)
 
 
 func _ready() -> void:
@@ -163,6 +171,8 @@ func _ready() -> void:
 	# Resets the usable rect if the pet is not starting on the default screen
 	if main_screen != DisplayServer.get_primary_screen():
 		change_screen()
+	# Places the Menu
+	$Menu.position = Vector2i(window.position.x - $Menu.size.x/3, window.position.y - $Menu.size.y * 1.05)
 	
 	# Start the timers for pet decision and saving
 	$DecisionTimer.start()
@@ -292,8 +302,13 @@ func _process(_delta):
 	# This is normally in update_stats() but is here for now for immediate testing
 	if ((stage == 0 and age >= 300) or (stage == 1 and age >= 900) or (stage == 2 and age >= 1800)) and !ready_to_evolve:
 		ready_to_evolve = true # Lets pet evolve when not busy
+		request_attention()
 		evolution_step = 1 # Resets the evolution step for playing animation
 		print("Ready to evolve")
+	
+	# Check if the window's name is correct and set it if not
+	if 	window.get_title() != nickname:
+		window.set_title(nickname)
 	
 	# Check for settings
 	# All shader credits in their code
@@ -379,6 +394,8 @@ func set_size():
 	
 	# Sets the Menu window and object sizes
 	$Menu.size = Vector2i(window_size * 3.125, window_size * 2.375) # multiplied by the difference in size compared to the pet
+	if $Menu.visible:
+		$Menu.position = Vector2i(window.position.x - $Menu.size.x/3, window.position.y - $Menu.size.y * 1.05)
 	
 	if debugScreen:
 		print("Window Size: ", window_size)
@@ -470,8 +487,8 @@ func set_pattern():
 		2: # Rare
 			match type:
 				0: # Bird
-					first_color = Color(0.384, 0.753, 0.843, 1.0)
-					second_color = Color(0.976, 0.718, 0.443, 1.0)
+					first_color = Color(0.317, 0.682, 0.769, 1.0)
+					second_color = Color(0.986, 0.742, 0.489, 1.0)
 				1: # Bunny
 					first_color = Color(0.867, 0.851, 0.847, 1.0)
 					second_color = Color(0.863, 0.745, 0.745, 1.0)
@@ -488,7 +505,7 @@ func set_pattern():
 					second_color = Color(0.624, 0.733, 0.463, 0.882)
 				2: # Octopus
 					first_color = Color(0.897, 0.879, 0.885, 1.0)
-					second_color = Color(0.239, 0.225, 0.224, 1.0)
+					second_color = Color(0.307, 0.29, 0.289, 1.0)
 		# Backup print if pattern is invalid
 		_:
 			print("Pattern Invalid")
@@ -638,7 +655,7 @@ func evolution_manager():
 			var rand_choice = randf()
 			var new_trait = 0 # 0 means no new trait, 1 means pattern, 2 means personality
 			# For now you are guaranteed to gain a new personality or pattern, chances will be changed in the future
-			if rand_trait < 1.5: 
+			if rand_trait < 0.5: 
 				if pattern == Patterns.NONE: # These checks make sure player doesnt already have a trait of this type
 					new_trait = 1
 				elif personality == Personalities.NONE:
@@ -650,16 +667,16 @@ func evolution_manager():
 					new_trait = 1
 			
 			match new_trait:
-				1: # 5:4:1
-					if rand_choice < 0.0:
+				1: # 6 : 3.5 : 0.5
+					if rand_choice < 0.6:
 						pattern = Patterns.UNCOMMON
-					elif rand_choice < 0.9:
+					elif rand_choice < 0.95:
 						pattern = Patterns.RARE
 					else:
 						pattern = Patterns.ULTRA_RARE
 					print ("New Pattern: ", (Patterns.keys()[pattern]).capitalize())
 					set_pattern()
-				2: # 4:3:3
+				2: # 4 : 3 : 3
 					if rand_choice < 0.4:
 						personality = Personalities.AFFECTIONATE
 					elif rand_choice < 0.7:

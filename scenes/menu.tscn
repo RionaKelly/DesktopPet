@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://dsxm7tmwmquqk" path="res://sprites/menu/menu_games.png" id="6_i6lef"]
 [ext_resource type="Texture2D" uid="uid://ca5yxsrk5uk6m" path="res://sprites/menu/menu_settings.png" id="7_70i5f"]
 [ext_resource type="Texture2D" uid="uid://cd4nffcf1eehd" path="res://sprites/menu/menu_info.png" id="8_mj5lg"]
+[ext_resource type="Texture2D" uid="uid://c4dmiu5bevuc3" path="res://sprites/menu/menu_back.png" id="10_70i5f"]
 
 [node name="Menu" type="Window" unique_id=1008188484]
 transparent_bg = true
@@ -24,44 +25,19 @@ content_scale_mode = 2
 accessibility_name = "Menu"
 script = ExtResource("1_yqeox")
 
-[node name="Control" type="Control" parent="." unique_id=1984231602]
+[node name="TextureRect" type="TextureRect" parent="." unique_id=183108371]
+texture_filter = 1
+offset_right = 500.0
+offset_bottom = 380.0
+texture = ExtResource("2_vjb58")
+
+[node name="Default" type="Control" parent="." unique_id=1984231602]
 layout_mode = 3
 anchors_preset = 0
 offset_right = 500.0
 offset_bottom = 380.0
 
-[node name="TextureRect" type="TextureRect" parent="Control" unique_id=183108371]
-texture_filter = 1
-layout_mode = 0
-offset_right = 500.0
-offset_bottom = 380.0
-texture = ExtResource("2_vjb58")
-
-[node name="Handle" type="Button" parent="Control" unique_id=389058584]
-layout_mode = 0
-offset_right = 500.0
-offset_bottom = 50.0
-theme_override_font_sizes/font_size = 24
-flat = true
-
-[node name="Close" type="Button" parent="Control" unique_id=859355270]
-texture_filter = 1
-layout_mode = 0
-offset_left = 390.0
-offset_right = 500.0
-offset_bottom = 50.0
-theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
-theme_override_colors/icon_pressed_color = Color(0.9998681, 0.26648736, 0.27391, 1)
-theme_override_colors/icon_hover_color = Color(0.87038356, 0.0002117753, 0.13675946, 1)
-theme_override_colors/icon_hover_pressed_color = Color(0.87058824, 0.38431373, 0.40392157, 1)
-theme_override_constants/icon_max_width = 90
-theme_override_font_sizes/font_size = 24
-icon = ExtResource("3_i6lef")
-flat = true
-icon_alignment = 1
-expand_icon = true
-
-[node name="Pet" type="Button" parent="Control" unique_id=1508628908]
+[node name="Pet" type="Button" parent="Default" unique_id=1508628908]
 texture_filter = 1
 layout_mode = 0
 offset_left = 20.0
@@ -74,13 +50,12 @@ theme_override_colors/icon_hover_color = Color(0.4223091, 0.19683152, 0.49723, 1
 theme_override_colors/icon_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
 theme_override_colors/icon_disabled_color = Color(0, 0, 0, 0.4)
 theme_override_font_sizes/font_size = 36
-disabled = true
 icon = ExtResource("3_con2f")
 flat = true
 icon_alignment = 1
 expand_icon = true
 
-[node name="Shop" type="Button" parent="Control" unique_id=1108782139]
+[node name="Shop" type="Button" parent="Default" unique_id=1108782139]
 texture_filter = 1
 layout_mode = 0
 offset_left = 180.0
@@ -99,7 +74,7 @@ flat = true
 icon_alignment = 1
 expand_icon = true
 
-[node name="Games" type="Button" parent="Control" unique_id=955674807]
+[node name="Games" type="Button" parent="Default" unique_id=955674807]
 texture_filter = 1
 layout_mode = 0
 offset_left = 340.0
@@ -118,7 +93,7 @@ flat = true
 icon_alignment = 1
 expand_icon = true
 
-[node name="Info" type="Button" parent="Control" unique_id=581710026]
+[node name="Info" type="Button" parent="Default" unique_id=581710026]
 texture_filter = 1
 layout_mode = 0
 offset_left = 20.0
@@ -131,13 +106,12 @@ theme_override_colors/icon_hover_color = Color(0.4223091, 0.19683152, 0.49723, 1
 theme_override_colors/icon_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
 theme_override_colors/icon_disabled_color = Color(0, 0, 0, 0.4)
 theme_override_font_sizes/font_size = 36
-disabled = true
 icon = ExtResource("8_mj5lg")
 flat = true
 icon_alignment = 1
 expand_icon = true
 
-[node name="Settings" type="Button" parent="Control" unique_id=37485018]
+[node name="Settings" type="Button" parent="Default" unique_id=37485018]
 texture_filter = 1
 layout_mode = 0
 offset_left = 180.0
@@ -156,7 +130,7 @@ flat = true
 icon_alignment = 1
 expand_icon = true
 
-[node name="Exit" type="Button" parent="Control" unique_id=53801702]
+[node name="Exit" type="Button" parent="Default" unique_id=53801702]
 texture_filter = 1
 layout_mode = 0
 offset_left = 340.0
@@ -173,8 +147,173 @@ flat = true
 icon_alignment = 1
 expand_icon = true
 
+[node name="Pet" type="Control" parent="." unique_id=2067545235]
+visible = false
+layout_mode = 3
+anchors_preset = 0
+offset_right = 500.0
+offset_bottom = 380.0
+
+[node name="Your Pet" type="Label" parent="Pet" unique_id=518272223]
+layout_mode = 0
+offset_left = 162.0
+offset_top = 51.0
+offset_right = 335.0
+offset_bottom = 109.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 42
+text = "Your Pet"
+
+[node name="Pet Info" type="Label" parent="Pet" unique_id=1177992452]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 103.0
+offset_right = 476.0
+offset_bottom = 354.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_constants/line_spacing = -3
+theme_override_font_sizes/font_size = 24
+text = "Name:
+Age:
+Happiness: 
+Fullness
+Money:
+Type:
+Pattern:
+Personality:"
+
+[node name="Nickname" type="Label" parent="Pet" unique_id=651861891]
+layout_mode = 0
+offset_left = 284.0
+offset_top = 285.0
+offset_right = 483.0
+offset_bottom = 318.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_constants/line_spacing = -3
+theme_override_font_sizes/font_size = 22
+text = "Change Nickname:"
+
+[node name="Name Entry" type="LineEdit" parent="Pet" unique_id=552188950]
+layout_mode = 0
+offset_left = 284.0
+offset_top = 317.0
+offset_right = 480.0
+offset_bottom = 358.0
+placeholder_text = "..."
+max_length = 50
+
+[node name="Shop" type="Control" parent="." unique_id=1147286665]
+visible = false
+layout_mode = 3
+anchors_preset = 0
+offset_right = 500.0
+offset_bottom = 380.0
+
+[node name="Game" type="Control" parent="." unique_id=702855869]
+visible = false
+layout_mode = 3
+anchors_preset = 0
+offset_right = 500.0
+offset_bottom = 380.0
+
+[node name="Info" type="Control" parent="." unique_id=1676204924]
+visible = false
+layout_mode = 3
+anchors_preset = 0
+offset_right = 500.0
+offset_bottom = 380.0
+
+[node name="Info" type="Label" parent="Info" unique_id=1930968484]
+layout_mode = 0
+offset_left = 209.0
+offset_top = 52.0
+offset_right = 289.0
+offset_bottom = 110.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 42
+text = "Info"
+
+[node name="Controls" type="Label" parent="Info" unique_id=313926343]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 103.0
+offset_right = 600.0
+offset_bottom = 238.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_constants/line_spacing = -3
+theme_override_font_sizes/font_size = 24
+text = "Click - Stop Pet
+Hold - Grab Pet
+Double Click - Open Menu
+Right Click - Pet (not yet)"
+
+[node name="Explanation" type="Label" parent="Info" unique_id=444362888]
+layout_mode = 0
+offset_left = 21.0
+offset_top = 237.0
+offset_right = 572.0
+offset_bottom = 368.0
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_constants/line_spacing = -3
+theme_override_font_sizes/font_size = 24
+text = "Feed and play with your pet so they
+can grow up happy and healthy, pets
+will evolve and gain new traits as
+they grow  up :)"
+
+[node name="Settings" type="Control" parent="." unique_id=1265499458]
+visible = false
+layout_mode = 3
+anchors_preset = 0
+offset_right = 500.0
+offset_bottom = 380.0
+
+[node name="Handle" type="Button" parent="." unique_id=389058584]
+offset_right = 500.0
+offset_bottom = 50.0
+theme_override_font_sizes/font_size = 24
+flat = true
+
+[node name="Close" type="Button" parent="." unique_id=859355270]
+texture_filter = 1
+offset_left = 390.0
+offset_right = 500.0
+offset_bottom = 50.0
+theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
+theme_override_colors/icon_pressed_color = Color(0.9998681, 0.26648736, 0.27391, 1)
+theme_override_colors/icon_hover_color = Color(0.87038356, 0.0002117753, 0.13675946, 1)
+theme_override_colors/icon_hover_pressed_color = Color(0.87058824, 0.38431373, 0.40392157, 1)
+theme_override_constants/icon_max_width = 90
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("3_i6lef")
+flat = true
+icon_alignment = 1
+expand_icon = true
+
+[node name="Back" type="Button" parent="." unique_id=634244591]
+visible = false
+texture_filter = 1
+offset_left = 10.0
+offset_top = 50.0
+offset_right = 93.73134
+offset_bottom = 116.0
+theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
+theme_override_colors/icon_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_colors/icon_hover_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
+theme_override_colors/icon_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_constants/icon_max_width = 90
+theme_override_font_sizes/font_size = 24
+icon = ExtResource("10_70i5f")
+flat = true
+icon_alignment = 1
+expand_icon = true
+
 [connection signal="close_requested" from="." to="." method="_on_close_requested"]
-[connection signal="button_down" from="Control/Handle" to="." method="_on_handle_button_down"]
-[connection signal="button_up" from="Control/Handle" to="." method="_on_handle_button_up"]
-[connection signal="pressed" from="Control/Close" to="." method="_on_close_pressed"]
-[connection signal="pressed" from="Control/Exit" to="." method="_on_exit_pressed"]
+[connection signal="pressed" from="Default/Pet" to="." method="_on_pet_pressed"]
+[connection signal="pressed" from="Default/Info" to="." method="_on_info_pressed"]
+[connection signal="pressed" from="Default/Exit" to="." method="_on_exit_pressed"]
+[connection signal="text_submitted" from="Pet/Name Entry" to="." method="_on_name_entry_text_submitted"]
+[connection signal="button_down" from="Handle" to="." method="_on_handle_button_down"]
+[connection signal="button_up" from="Handle" to="." method="_on_handle_button_up"]
+[connection signal="pressed" from="Close" to="." method="_on_close_pressed"]
+[connection signal="pressed" from="Back" to="." method="_on_back_pressed"]
