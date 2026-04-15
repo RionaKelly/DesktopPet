@@ -40,7 +40,7 @@ wait_time = 60.0
 autostart = true
 
 [node name="AttentionTimer" type="Timer" parent="." unique_id=1330001196]
-wait_time = 2.0
+wait_time = 5.0
 autostart = true
 
 [node name="Menu" parent="." unique_id=1008188484 instance=ExtResource("4_hmkkh")]

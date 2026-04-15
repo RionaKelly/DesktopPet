@@ -35,23 +35,24 @@ var OS_base_color: Color = DisplayServer.get_base_color() # Find the computer's 
 var OS_accent_color: Color = DisplayServer.get_accent_color() # Find the computer's chosen accent colour
 var grab_offset: Vector2 = Vector2.ZERO
 var in_air: bool = false # if the pet is in the air or not
-var is_stopped: bool = false # bool to stop functions when pet is lifted
 var out_of_bounds: int = 0 # counter for how long pet has been out of bounds
 
-# Pet Stats
+# Pet Variables
 var move_speed = usable_rect.size.x * 0.0008 # Pet speed based on the size of the screen
 var direction = Vector2(0, 0) # Direction that the pet will move in and is facing
 var velocity = Vector2(0, 0) # Velocity of the pet while falling/being thrown
 enum Activities {EVOLVING, FALLING, GRABBED, GREETING, IDLE, SITTING, SLEEPING, STARING, STOPPED, WALKING, WORKING} # Possible states for Pet
 var activity:  Activities = Activities.IDLE # Current state of Pet (idle set as starting default)
 enum Types {BIRD, BUNNY, OCTOPUS} # Possible species that the pet can be
-enum Patterns {NONE, UNCOMMON, RARE, EPIC, LEGENDARY} # Possible patterns the Pet can have
-enum Personalities {NONE, AFFECTIONATE, ENERGETIC, SlEEPY} # Possible personalities the Pet can have
+enum Patterns {NONE, UNCOMMON, RARE, ULTRA_RARE} # Possible patterns the Pet can have
+enum Personalities {NONE, AFFECTIONATE, ENERGETIC, SLEEPY} # Possible personalities the Pet can have
 var pet_scale: float = 1.0 # Ccale for the pet to resized with in set_size()
 var sad_count: int = 0 # Counter to keep track of how much happiness should be lost during update based on what has happened
 var hungry_count: int = 0 # Counter to keep track of how much fullness should be lost during update based on what has happened
-var ready_to_evolve: bool = false # Whether the pet is ready to evolve and should alert the player
 var work_mode: bool = false # When work mode is on, pet will not disturb player at all
+var is_stopped: bool = false # bool to stop functions when pet is lifted
+var is_evolving: bool = false # bool to play evolution animation and stop functions if pet is evolving
+var ready_to_evolve: bool = false # Whether the pet is ready to evolve and should alert the player
 
 # Bug-Testing 
 var debugMovement = false
@@ -90,8 +91,8 @@ func _input(event):
 			start_stopping(false)
 			if window.position.y == taskbar_level - window.size.y:
 				# If ready to evolve, begin evolution when clicked
-				if ready_to_evolve:
-					evolve()
+				if ready_to_evolve and !in_air and !is_stopped:
+					start_evolution()
 					return
 				# If not requesting attention for something, open Menu
 				$Menu.show()
@@ -135,7 +136,7 @@ func _ready() -> void:
 	# Sets the window and pet's size
 	set_size()
 	# Sets the pet's appearance to match their type, either from save data or randomised in data.gd
-	set_sprite_type() 
+	set_type() 
 	
 	## Window settings are set here as well as in the project just in case
 	# We enable transparency for both the Godot Viewport and OS Window
@@ -184,11 +185,14 @@ func _ready() -> void:
 	# Finally, saves the game with the assigned data just in case
 	save() 
 
-var shader_progress: float = 0.0
 var last_window_pos : Vector2 = Vector2.ZERO
 func _process(_delta):
-	# If we are stopped then return and stop reading code
-	if is_stopped: 
+	# If Pet is Evolving then run evolution function and skip everything else
+	if is_evolving:
+		evolve()
+		return
+	# If Pet is Stopped then follow mouse position, track velocity, skip everything else
+	if is_stopped:
 		var mouse_pos = get_global_mouse_position()
 		window.position = Vector2(window.position) + mouse_pos - grab_offset
 		velocity = (velocity + (Vector2(window.position) - last_window_pos))/3
@@ -200,11 +204,8 @@ func _process(_delta):
 			print("")
 		last_window_pos = window.position
 		return
-	if activity == Activities.EVOLVING:
-		shader_progress += 0.01
-		sprite.get_material().set_shader_parameter("progress", shader_progress)
 	
-	# Vector2i used to tell Windows to move to an exact pixel coordinate (integer)
+	# Vector2i used to tell Window to move to an exact pixel coordinate
 	var move_vector = Vector2i(direction * move_speed) # How Pet will move around screen
 	
 	# Checks if pet is in the air for throwing physics
@@ -284,11 +285,12 @@ func _process(_delta):
 			print("Pet Found on Screen ", window.current_screen)
 			change_screen()
 	
-	# Check if the pet is old enough to begin evolution (after 5, 15, and 30 hours)
-	if (stage == 0 and age >= 300) or (stage == 1 and age >= 900) or (stage == 2 and age >= 1800):
-		ready_to_evolve = true
-	else:
-		ready_to_evolve = false
+	# This is normally in update_stats() but is here for now for immediate testing
+	if ((stage == 0 and age >= 300) or (stage == 1 and age >= 900) or (stage == 2 and age >= 1800)) and !ready_to_evolve:
+		ready_to_evolve = true # Lets pet evolve when not busy
+		evolution_step = 1 # Resets the evolution step for playing animation
+		print("Ready to evolve")
+	
 	
 	# Check for settings
 	# Shader by enekoassets at https://godotshaders.com/shader/random-displacement-animation-easy-ui-animation/
@@ -410,7 +412,7 @@ func set_sprite():
 
 
 # Changes Pet's sprite to match the set type
-func set_sprite_type():
+func set_type():
 	match (Types.keys()[type]).capitalize():
 		"Bird":
 			sprite.set_sprite_frames(load("res://sprite_frames/bird.tres"))
@@ -539,37 +541,109 @@ func change_screen():
 
 # Called every minute to update the Pet's stats (age, fullness, happiness, etc.), also calls save()
 func update_stats():
-	# Increases the pet's age by 1 every 60 seconds and evolves after 10, 20, and 30 hours
+	# Increases the pet's age by 1 every 60 seconds
 	age += 1 
-
-# Evolves the pet
-func evolve():
-	# Leave and evolve later if not in ground
-	if in_air or is_stopped:
-		return
 	
+	## Check if the pet is old enough to begin evolution (after 5, 15, and 30 hours)
+	#if (stage == 0 and age >= 300) or (stage == 1 and age >= 900) or (stage == 2 and age >= 1800):
+		#ready_to_evolve = true # Lets pet evolve when not busy
+		#evolution_step = 0 # Resets the evolution step for playing animation
+	#else:
+		#ready_to_evolve = false
+
+# Starts the Evolution process for the Pet
+func start_evolution():
 	# Begin animation
+	is_evolving = true
 	$DecisionTimer.stop()
 	activity = Activities.EVOLVING
 	
-	await get_tree().create_timer(1.5).timeout
+	print("Timer 1 Starting")
+	await get_tree().create_timer(1.8).timeout
+	print("Timer 1 Finished")
 	
 	# Increase stage and set new size
 	print("Evolving from Stage ", stage, " to ", stage + 1, "...")
 	stage += 1
 	set_size()
 	_update_click_polygon()
+	window.position = Vector2i(window.position.x, taskbar_level - window.size.y)
 	
-	# Randomise whether pet should gain an anomaly (new personality or pattern)
+	# Randomise whether pet should gain a trait (new personality or pattern)
+	var rand_trait = randf()
+	var rand_choice = randf()
+	var new_trait = 0 # 0 means no new trait, 1 means pattern, 2 means personality
+	# For now you are guaranteed to gain a new personality or pattern, chances will be changed in the future
+	if rand_trait < 0.5: 
+		if pattern == Patterns.NONE: # These checks make sure player doesnt already have a trait of this type
+			new_trait = 1
+		elif personality == Personalities.NONE:
+			new_trait = 2
+	elif rand_trait < 1.0:
+		if personality == Personalities.NONE:
+			new_trait = 2
+		elif pattern == Patterns.NONE:
+			new_trait = 1
 	
+	match new_trait:
+		1: # 6:3:1
+			if rand_choice < 0.6:
+				pattern = Patterns.UNCOMMON
+			elif rand_choice < 0.9:
+				pattern = Patterns.RARE
+			else:
+				pattern = Patterns.ULTRA_RARE
+			print ("New Pattern: ", (Patterns.keys()[pattern]).capitalize())
+		2: # 4:3:3
+			if rand_choice < 0.4:
+				personality = Personalities.AFFECTIONATE
+			elif rand_choice < 0.7:
+				personality = Personalities.ENERGETIC
+			else:
+				personality = Personalities.SLEEPY
+			print ("New Personality: ", (Personalities.keys()[personality]).capitalize())
+		_:
+			print ("No New Traits, Code: ", new_trait)
+			print ("Current Traits: ",(Patterns.keys()[pattern]).capitalize(), 
+			" & ", (Personalities.keys()[personality]).capitalize())
 	
-	# Wait for animation to play and pet to stand for a second
-	await get_tree().create_timer(1.0).timeout
+	# Wait for animation to play and pet to stand for 2 seconds
+	print("Timer 2 Starting")
+	await get_tree().create_timer(2.0).timeout
+	print("Timer 2 Finished")
 	
-	# Continue pet's decisionmaking after 2 seconds
+	# Continue pet's decisionmaking after 3 seconds
+	ready_to_evolve = false
 	sprite.get_material().set_shader_parameter("progress", 0.0)
 	activity = Activities.IDLE
-	$DecisionTimer.start(2.0)
+	set_sprite()
+	$DecisionTimer.start(3.0)
+	is_evolving = false
+
+
+# Manages the animation and real_time process for the Pet's Evolution
+var shader_progress: float = 0.0
+var evolution_step: int = 1 # The current step of the evolution animation that the pet is on for tracking
+func evolve():
+	match evolution_step:
+		1:
+			if shader_progress <= 1:
+				shader_progress += 0.01
+		2:
+			if shader_progress >= 0 :
+				shader_progress -= 0.01
+		3:
+			pass
+		_:
+			print("Evolution Step '", evolution_step, "' outside of range")
+	
+	# Check to start stage 2
+	if shader_progress >= 1 and evolution_step == 1:
+		evolution_step = 2
+	
+	# Sets the shader to the correct progress for playing animation and prints information for testing
+	sprite.get_material().set_shader_parameter("progress", shader_progress)
+	#print("Evolution Step: ", evolution_step, " - Shader Progress: ", sprite.get_material().get_shader_parameter("progress"))
 
 # Saves the game's progress when called
 func save() -> void:
