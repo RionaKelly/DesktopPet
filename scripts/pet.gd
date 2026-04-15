@@ -459,27 +459,33 @@ func set_pattern():
 		1: # Uncommon
 			match type:
 				0: # Bird
-					pass
+					first_color = Color(0.914, 0.451, 0.62, 1.0)
+					second_color = Color(0.984, 0.773, 0.259, 1.0)
 				1: # Bunny
-					pass
+					first_color = Color(0.918, 0.612, 0.486, 1.0)
+					second_color = Color(0.929, 0.545, 0.69, 1.0)
 				2: # Octopus
 					first_color = Color(0.404, 0.675, 0.686, 1.0)
 					second_color = Color(0.757, 0.518, 0.682, 1.0)
 		2: # Rare
 			match type:
 				0: # Bird
-					pass
+					first_color = Color(0.384, 0.753, 0.843, 1.0)
+					second_color = Color(0.976, 0.718, 0.443, 1.0)
 				1: # Bunny
-					pass
+					first_color = Color(0.867, 0.851, 0.847, 1.0)
+					second_color = Color(0.863, 0.745, 0.745, 1.0)
 				2: # Octopus
 					first_color = Color(0.973, 0.671, 0.392, 1.0)
 					second_color = Color(0.961, 0.49, 0.365, 1.0)
 		3: # Ultra Rare
 			match type:
 				0: # Bird
-					pass
+					first_color = Color(0.333, 0.302, 0.384, 1.0)
+					second_color = Color(0.98, 0.482, 0.329, 1.0)
 				1: # Bunny
-					pass
+					first_color = Color(0.427, 0.737, 0.427, 0.882)
+					second_color = Color(0.624, 0.733, 0.463, 0.882)
 				2: # Octopus
 					first_color = Color(0.897, 0.879, 0.885, 1.0)
 					second_color = Color(0.239, 0.225, 0.224, 1.0)
@@ -632,7 +638,7 @@ func evolution_manager():
 			var rand_choice = randf()
 			var new_trait = 0 # 0 means no new trait, 1 means pattern, 2 means personality
 			# For now you are guaranteed to gain a new personality or pattern, chances will be changed in the future
-			if rand_trait < 0.5: 
+			if rand_trait < 1.5: 
 				if pattern == Patterns.NONE: # These checks make sure player doesnt already have a trait of this type
 					new_trait = 1
 				elif personality == Personalities.NONE:
@@ -644,8 +650,8 @@ func evolution_manager():
 					new_trait = 1
 			
 			match new_trait:
-				1: # 6:3:1
-					if rand_choice < 6.0:
+				1: # 5:4:1
+					if rand_choice < 0.0:
 						pattern = Patterns.UNCOMMON
 					elif rand_choice < 0.9:
 						pattern = Patterns.RARE
