@@ -1,4 +1,4 @@
-// Shaders designed by enekoassets
+// Shaders by enekoassets
 // https://godotshaders.com/shader/random-displacement-animation-easy-ui-animation/
 
 shader_type canvas_item;

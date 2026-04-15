@@ -1,0 +1,20 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://c62o4n86nrarl"]
+
+[ext_resource type="Shader" uid="uid://b5lcp5tx5g7pr" path="res://shaders/pet.gdshader" id="1_jcryy"]
+
+[resource]
+shader = ExtResource("1_jcryy")
+shader_parameter/progress = 0.0
+shader_parameter/meltiness = 2.000000095
+shader_parameter/change_color = false
+shader_parameter/primary_color = Color(0, 0, 0, 1)
+shader_parameter/primary_replace_color = Color(0, 0, 0, 1)
+shader_parameter/secondary_color = Color(0, 0, 0, 1)
+shader_parameter/secondary_replace_color = Color(0, 0, 0, 1)
+shader_parameter/color_threshold = 0.10000000475
+shader_parameter/baba_shader_on = false
+shader_parameter/interval = 1.0
+shader_parameter/timeDelay = 0.0
+shader_parameter/intensityX = 0.5
+shader_parameter/intensityY = 0.1
+shader_parameter/seed = 42.0

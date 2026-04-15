@@ -1,0 +1,18 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://dnrxh2xhutm2n"]
+
+[ext_resource type="Shader" uid="uid://plp05037823y" path="res://shaders/colour_replacer.gdshader" id="1_whuce"]
+
+[resource]
+shader = ExtResource("1_whuce")
+shader_parameter/hat_color = Color(0, 0, 0, 1)
+shader_parameter/hat_replace_color = Color(0, 0, 0, 1)
+shader_parameter/hat_color_threshold = 0.0
+shader_parameter/hair_color = Color(0, 0, 0, 1)
+shader_parameter/hair_replace_color = Color(0, 0, 0, 1)
+shader_parameter/hair_color_threshold = 0.0
+shader_parameter/skin_color = Color(0, 0, 0, 1)
+shader_parameter/skin_replace_color = Color(0, 0, 0, 1)
+shader_parameter/skin_color_threshold = 0.0
+shader_parameter/clothes_color = Color(0, 0, 0, 1)
+shader_parameter/clothes_replace_color = Color(0, 0, 0, 1)
+shader_parameter/clothes_color_threshold = 0.0

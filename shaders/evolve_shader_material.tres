@@ -5,4 +5,4 @@
 [resource]
 shader = ExtResource("1_ewvbh")
 shader_parameter/progress = 0.0
-shader_parameter/meltiness = 0.2000000095
+shader_parameter/meltiness = 0.50000002375

@@ -21,8 +21,6 @@ extends Node2D
 
 @onready var sprite : AnimatedSprite2D = $PetSprite
 
-# @onready var _ClickPolygon: CollisionPolygon2D = $PetSprite/ClickArea/ClickPolygon
-
 # The 'Safe Area' that the window shouldn't leave --- usable_rect() = screen area minus taskbar/docks
 var usable_rect = DisplayServer.screen_get_usable_rect()
 # var screen_size = DisplayServer.screen_get_size(DisplayServer.window_get_current_screen())
@@ -53,6 +51,8 @@ var work_mode: bool = false # When work mode is on, pet will not disturb player 
 var is_stopped: bool = false # bool to stop functions when pet is lifted
 var is_evolving: bool = false # bool to play evolution animation and stop functions if pet is evolving
 var ready_to_evolve: bool = false # Whether the pet is ready to evolve and should alert the player
+var evolution_step: int = 1 # The current step of the evolution animation that the pet is on for tracking
+var sprite_material: ShaderMaterial = load("res://shaders/pet_shader_material.tres")# The sprite's Shader Material
 
 # Bug-Testing 
 var debugMovement = false
@@ -92,7 +92,7 @@ func _input(event):
 			if window.position.y == taskbar_level - window.size.y:
 				# If ready to evolve, begin evolution when clicked
 				if ready_to_evolve and !in_air and !is_stopped:
-					start_evolution()
+					evolution_manager()
 					return
 				# If not requesting attention for something, open Menu
 				$Menu.show()
@@ -133,10 +133,14 @@ func _ready() -> void:
 		print("Operating System: ", DisplayServer.get_name())
 		print("")
 	
+	# Apply Shader, done here so that set_type() can modify variables
+	sprite.set_material(sprite_material)
+	
 	# Sets the window and pet's size
 	set_size()
 	# Sets the pet's appearance to match their type, either from save data or randomised in data.gd
 	set_type() 
+	set_pattern()
 	
 	## Window settings are set here as well as in the project just in case
 	# We enable transparency for both the Godot Viewport and OS Window
@@ -291,12 +295,10 @@ func _process(_delta):
 		evolution_step = 1 # Resets the evolution step for playing animation
 		print("Ready to evolve")
 	
-	
 	# Check for settings
-	# Shader by enekoassets at https://godotshaders.com/shader/random-displacement-animation-easy-ui-animation/
+	# All shader credits in their code
 	if shader_on:
-		sprite.set_material(load("res://shaders/baba_shader_material.tres"))
-	sprite.set_material(load("res://shaders/evolve_shader_material.tres"))
+		sprite.get_material().set_shader_parameter("baba_shader_on", true)
 
 
 # Creates area of the window that can be clicked through
@@ -413,29 +415,84 @@ func set_sprite():
 
 # Changes Pet's sprite to match the set type
 func set_type():
-	match (Types.keys()[type]).capitalize():
-		"Bird":
+	match type:
+		0: # Bird
 			sprite.set_sprite_frames(load("res://sprite_frames/bird.tres"))
-		"Bunny":
+			sprite_material.set_shader_parameter("primary_color", Color(0.729, 0.243, 0.243, 1.0))
+			sprite_material.set_shader_parameter("secondary_color", Color(0.984, 0.882, 0.345, 1.0))
+		1: # Bunny
 			sprite.set_sprite_frames(load("res://sprite_frames/bunny.tres"))
-		"Octopus":
+			sprite_material.set_shader_parameter("primary_color", Color(0.831, 0.616, 0.765, 1.0))
+			sprite_material.set_shader_parameter("secondary_color", Color(0.867, 0.549, 0.616, 1.0))
+		2: # Octopus
 			sprite.set_sprite_frames(load("res://sprite_frames/octopus.tres"))
-		# Backup to choos a random pet using a random integer from a range if no valid type is found
+			sprite_material.set_shader_parameter("primary_color", Color(0.447, 0.576, 0.749, 1.0))
+			sprite_material.set_shader_parameter("secondary_color", Color(0.604, 0.482, 0.769, 1.0))
+		# Backup to choos a random pet and run function again if no valid type is found
 		_:
-			print("No Valid Type Found, Sprite Randomised")
+			print("Type Invalid, Sprite Randomised")
 			match randi_range(0, 2):
 				0:
 					type = Types.BIRD
-					sprite.set_sprite_frames(load("res://sprite_frames/bird.tres"))
+					set_type()
 				1:
 					type = Types.BUNNY
-					sprite.set_sprite_frames(load("res://sprite_frames/bunny.tres"))
+					set_type()
 				2:
 					type = Types.OCTOPUS
-					sprite.set_sprite_frames(load("res://sprite_frames/octopus.tres"))
+					set_type()
 	# Prints the selected pet in an easily readable format
 	print ("Pet: ", (Types.keys()[type]).capitalize())
 
+
+# Changes the Pet's sprite's pattern to match the set pattern
+func set_pattern():
+	# Exit function if the pet has no pattern
+	if pattern == 0: # None
+		sprite_material.set_shader_parameter("change_color", false)
+		return
+	sprite_material.set_shader_parameter("change_color", true)
+	
+	var first_color: Color
+	var second_color: Color
+	match pattern:
+		1: # Uncommon
+			match type:
+				0: # Bird
+					pass
+				1: # Bunny
+					pass
+				2: # Octopus
+					first_color = Color(0.404, 0.675, 0.686, 1.0)
+					second_color = Color(0.757, 0.518, 0.682, 1.0)
+		2: # Rare
+			match type:
+				0: # Bird
+					pass
+				1: # Bunny
+					pass
+				2: # Octopus
+					first_color = Color(0.973, 0.671, 0.392, 1.0)
+					second_color = Color(0.961, 0.49, 0.365, 1.0)
+		3: # Ultra Rare
+			match type:
+				0: # Bird
+					pass
+				1: # Bunny
+					pass
+				2: # Octopus
+					first_color = Color(0.897, 0.879, 0.885, 1.0)
+					second_color = Color(0.239, 0.225, 0.224, 1.0)
+		# Backup print if pattern is invalid
+		_:
+			print("Pattern Invalid")
+
+		
+	# Applies the colour given
+	sprite_material.set_shader_parameter("primary_replace_color", first_color)
+	sprite_material.set_shader_parameter("secondary_replace_color", second_color)
+	# Prints the applied pattern in an easily readable format
+	print ("Applied Pattern: ", (Patterns.keys()[pattern]).capitalize())
 
 # Handles all of the decision making for the Pet
 func brain():
@@ -504,32 +561,6 @@ func brain():
 	set_sprite() # changes the Pet's sprite to match what they're doing
 
 
-# Tells the Pet to stop
-func start_stopping(stop):
-	if stop: # stops events and s
-		is_stopped = true
-		#gravity = false
-		grab_offset = get_global_mouse_position()
-		activity = Activities.STOPPED
-		set_sprite()
-		#sprite.set_self_modulate(OS_accent_color)
-		#sprite.set_speed_scale(0.0)
-		$DecisionTimer.stop()
-		print("Pet Stopped")
-	
-	else:
-		print("Pet Continuing")
-		#gravity = true
-		grab_offset = Vector2.ZERO
-		is_stopped = false
-		#sprite.set_self_modulate(Color(1.0, 1.0, 1.0))
-		#sprite.set_speed_scale(1.0)
-		if window.position.y == taskbar_level - window.size.y:
-			activity = Activities.SITTING
-			brain()
-		else:
-			activity = Activities.FALLING
-
 
 # Recalculates the Pet's usable screen area when called, normally for when screen the Pet is on changes
 func change_screen():
@@ -551,99 +582,121 @@ func update_stats():
 	#else:
 		#ready_to_evolve = false
 
+
+# Tells the Pet to stop
+func start_stopping(stop):
+	if stop: # stops events and s
+		is_stopped = true
+		#gravity = false
+		grab_offset = get_global_mouse_position()
+		activity = Activities.STOPPED
+		set_sprite()
+		#sprite.set_self_modulate(OS_accent_color)
+		#sprite.set_speed_scale(0.0)
+		$DecisionTimer.stop()
+		print("Pet Stopped")
+	
+	else:
+		print("Pet Continuing")
+		#gravity = true
+		grab_offset = Vector2.ZERO
+		is_stopped = false
+		#sprite.set_self_modulate(Color(1.0, 1.0, 1.0))
+		#sprite.set_speed_scale(1.0)
+		if window.position.y == taskbar_level - window.size.y:
+			if !ready_to_evolve: # Don't change animation when ready to evolve to let evolution animation play better
+				activity = Activities.SITTING
+			brain()
+		else:
+			activity = Activities.FALLING
+
+
 # Starts the Evolution process for the Pet
-func start_evolution():
+func evolution_manager():
 	# Begin animation
-	is_evolving = true
-	$DecisionTimer.stop()
-	activity = Activities.EVOLVING
-	
-	print("Timer 1 Starting")
-	await get_tree().create_timer(1.8).timeout
-	print("Timer 1 Finished")
-	
-	# Increase stage and set new size
-	print("Evolving from Stage ", stage, " to ", stage + 1, "...")
-	stage += 1
-	set_size()
-	_update_click_polygon()
-	window.position = Vector2i(window.position.x, taskbar_level - window.size.y)
-	
-	# Randomise whether pet should gain a trait (new personality or pattern)
-	var rand_trait = randf()
-	var rand_choice = randf()
-	var new_trait = 0 # 0 means no new trait, 1 means pattern, 2 means personality
-	# For now you are guaranteed to gain a new personality or pattern, chances will be changed in the future
-	if rand_trait < 0.5: 
-		if pattern == Patterns.NONE: # These checks make sure player doesnt already have a trait of this type
-			new_trait = 1
-		elif personality == Personalities.NONE:
-			new_trait = 2
-	elif rand_trait < 1.0:
-		if personality == Personalities.NONE:
-			new_trait = 2
-		elif pattern == Patterns.NONE:
-			new_trait = 1
-	
-	match new_trait:
-		1: # 6:3:1
-			if rand_choice < 0.6:
-				pattern = Patterns.UNCOMMON
-			elif rand_choice < 0.9:
-				pattern = Patterns.RARE
-			else:
-				pattern = Patterns.ULTRA_RARE
-			print ("New Pattern: ", (Patterns.keys()[pattern]).capitalize())
-		2: # 4:3:3
-			if rand_choice < 0.4:
-				personality = Personalities.AFFECTIONATE
-			elif rand_choice < 0.7:
-				personality = Personalities.ENERGETIC
-			else:
-				personality = Personalities.SLEEPY
-			print ("New Personality: ", (Personalities.keys()[personality]).capitalize())
-		_:
-			print ("No New Traits, Code: ", new_trait)
-			print ("Current Traits: ",(Patterns.keys()[pattern]).capitalize(), 
-			" & ", (Personalities.keys()[personality]).capitalize())
-	
-	# Wait for animation to play and pet to stand for 2 seconds
-	print("Timer 2 Starting")
-	await get_tree().create_timer(2.0).timeout
-	print("Timer 2 Finished")
-	
-	# Continue pet's decisionmaking after 3 seconds
-	ready_to_evolve = false
-	sprite.get_material().set_shader_parameter("progress", 0.0)
-	activity = Activities.IDLE
-	set_sprite()
-	$DecisionTimer.start(3.0)
-	is_evolving = false
+	match evolution_step:
+		1:
+			print("Evolving from Stage ", stage, " to ", stage + 1, "...")
+			is_evolving = true
+			$DecisionTimer.stop()
+			activity = Activities.EVOLVING
+		2: 
+			# Increase stage and set new size
+			stage += 1
+			set_size()
+			_update_click_polygon()
+			window.position = Vector2i(window.position.x, taskbar_level - window.size.y)
+			
+			# Randomise whether pet should gain a trait (new personality or pattern)
+			var rand_trait = randf()
+			var rand_choice = randf()
+			var new_trait = 0 # 0 means no new trait, 1 means pattern, 2 means personality
+			# For now you are guaranteed to gain a new personality or pattern, chances will be changed in the future
+			if rand_trait < 0.5: 
+				if pattern == Patterns.NONE: # These checks make sure player doesnt already have a trait of this type
+					new_trait = 1
+				elif personality == Personalities.NONE:
+					new_trait = 2
+			elif rand_trait < 1.0:
+				if personality == Personalities.NONE:
+					new_trait = 2
+				elif pattern == Patterns.NONE:
+					new_trait = 1
+			
+			match new_trait:
+				1: # 6:3:1
+					if rand_choice < 6.0:
+						pattern = Patterns.UNCOMMON
+					elif rand_choice < 0.9:
+						pattern = Patterns.RARE
+					else:
+						pattern = Patterns.ULTRA_RARE
+					print ("New Pattern: ", (Patterns.keys()[pattern]).capitalize())
+					set_pattern()
+				2: # 4:3:3
+					if rand_choice < 0.4:
+						personality = Personalities.AFFECTIONATE
+					elif rand_choice < 0.7:
+						personality = Personalities.ENERGETIC
+					else:
+						personality = Personalities.SLEEPY
+					print ("New Personality: ", (Personalities.keys()[personality]).capitalize())
+				_:
+					print ("No New Traits, Code: ", new_trait)
+					print ("Current Traits: ",(Patterns.keys()[pattern]).capitalize(), 
+					" & ", (Personalities.keys()[personality]).capitalize())
+		3:
+			# Reset pet and continue decision-making after 3 seconds
+			ready_to_evolve = false
+			sprite_material.set_shader_parameter("progress", 0.0) # reset just in case for future animations
+			activity = Activities.IDLE
+			set_sprite()
+			$DecisionTimer.start(3.0)
+			is_evolving = false
 
 
 # Manages the animation and real_time process for the Pet's Evolution
-var shader_progress: float = 0.0
-var evolution_step: int = 1 # The current step of the evolution animation that the pet is on for tracking
 func evolve():
+	# The current progress of the shader between 0 and 1, 1 being complete with the pet invisible
+	var shader_progress: float = sprite_material.get_shader_parameter("progress")
 	match evolution_step:
-		1:
+		1: # First slowly increase shader progress to make pet disappear
 			if shader_progress <= 1:
 				shader_progress += 0.01
-		2:
+		2: # Them slowly decrease shader progress to make pet reappear after changes
 			if shader_progress >= 0 :
 				shader_progress -= 0.01
-		3:
-			pass
-		_:
-			print("Evolution Step '", evolution_step, "' outside of range")
 	
 	# Check to start stage 2
 	if shader_progress >= 1 and evolution_step == 1:
 		evolution_step = 2
+		evolution_manager()
+	if shader_progress <= 0 and evolution_step == 2:
+		evolution_step = 3
+		evolution_manager()
 	
 	# Sets the shader to the correct progress for playing animation and prints information for testing
-	sprite.get_material().set_shader_parameter("progress", shader_progress)
-	#print("Evolution Step: ", evolution_step, " - Shader Progress: ", sprite.get_material().get_shader_parameter("progress"))
+	sprite_material.set_shader_parameter("progress", shader_progress)
 
 # Saves the game's progress when called
 func save() -> void:
