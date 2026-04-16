@@ -25,14 +25,16 @@ var windows10: bool = false
 
 func _ready() -> void:
 	# Set checkboxes to how they should look
-	if $"..".saveGame:
+	if Data.save_game:
 		$Settings/Saving.button_pressed = true
-	if $"..".silent:
+	if Data.silent:
 		$Settings/Silent.button_pressed = true
-	if $"..".large_hitbox:
+	if Data.large_hitbox:
 		$Settings/Hitbox.button_pressed = true
-	if $"..".shader_on:
+	if Data.shader_on:
 		$Settings/Shader.button_pressed = true
+	if Data.open_menu:
+		$Settings/Menu.button_pressed = true
 	print(system, " version ", version)
 	if system == "Windows" and version[1] == "0" :
 		windows10 = true
@@ -162,6 +164,13 @@ func _on_shader_toggled(toggled_on):
 		$"..".shader_on = false
 		$"..".sprite_material.set_shader_parameter("baba_shader_on", false)
 		print("Shader Off")
+func _on_menu_toggled(toggled_on: bool) -> void:
+	if toggled_on:
+		$"..".open_menu = true
+		print("Open Menu On")
+	else:
+		$"..".open_menu = false
+		print("Open Menu Off")
 
 
 # Deletes the current data for the pet, saving must also be turned off if player wants to restart next boot

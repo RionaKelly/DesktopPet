@@ -82,7 +82,8 @@ var silent: bool = false # Whether the app should not send alerts as to bother l
 var main_screen: int = DisplayServer.get_primary_screen() # Screen for pet to be confined to, will be changed later
 var shader_on: bool = false # Whether the pet should use the distortion shade or not, changed in settings
 var large_hitbox: bool = false # Whether the pet should keep the default window-size hitbox for accesibility
-var saveGame: bool = true
+var open_menu: bool = true # Whether the menu should open automatically on start
+var saveGame: bool = true # Whether the game should save
 
 # Check for inputs
 func _input(event):
@@ -130,6 +131,7 @@ func _ready() -> void:
 	main_screen = Data.main_screen
 	shader_on = Data.shader_on
 	large_hitbox = Data.large_hitbox
+	open_menu = Data.open_menu
 	saveGame = Data.save_game
 	
 	# Prints to test issues with getting screen data
@@ -178,8 +180,10 @@ func _ready() -> void:
 	# Resets the usable rect if the pet is not starting on the default screen
 	if main_screen != DisplayServer.get_primary_screen():
 		change_screen()
-	# Places the Menu
-	$Menu.position = Vector2i(window.position.x - $Menu.size.x/3, window.position.y - $Menu.size.y * 1.05)
+	# Places the Menu if told to open on start
+	if open_menu:
+		$Menu.position = Vector2i(window.position.x - $Menu.size.x/3, window.position.y - $Menu.size.y * 1.05)
+		$Menu.show()
 	
 	# Start the timers for pet decision and saving
 	$DecisionTimer.start()
@@ -789,6 +793,7 @@ func save() -> void:
 	config.set_value("settings", "main_screen", main_screen)
 	config.set_value("settings", "shader_on", shader_on)
 	config.set_value("settings", "large_hitbox", large_hitbox)
+	config.set_value("settings", "open_menu", open_menu)
 	config.set_value("settings", "save_game", saveGame)
 	
 	# Saves the data as a config file

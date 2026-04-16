@@ -44,6 +44,7 @@ wait_time = 5.0
 autostart = true
 
 [node name="Menu" parent="." unique_id=1008188484 instance=ExtResource("4_hmkkh")]
+visible = false
 
 [connection signal="timeout" from="DecisionTimer" to="." method="brain"]
 [connection signal="timeout" from="UpdateTimer" to="." method="update_stats"]
