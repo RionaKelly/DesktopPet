@@ -47,7 +47,8 @@ var velocity = Vector2(0, 0) # Velocity of the pet while falling/being thrown
 enum Activities {EVOLVING, FALLING, GRABBED, GREETING, IDLE, SITTING, SLEEPING, STARING, STOPPED, WALKING, WORKING} # Possible states for Pet
 var activity:  Activities = Activities.IDLE # Current state of Pet (idle set as starting default)
 enum Types {BIRD, BUNNY, OCTOPUS} # Possible species that the pet can be
-enum Patterns {NONE, UNCOMMON, RARE, ULTRA_RARE} # Possible patterns the Pet can have
+#enum Patterns {NONE, UNCOMMON, RARE, ULTRA_RARE} # Old possible patterns the Pet can have
+enum Patterns {NONE, WARM, COLD, NATURAL, NEON, DARK, SPECIAL} # Possible patterns the Pet can have
 enum Personalities {NONE, AFFECTIONATE, ENERGETIC, SLEEPY} # Possible personalities the Pet can have
 var pet_scale: float = 1.0 # Ccale for the pet to resized with in set_size()
 var sad_count: int = 0 # Counter to keep track of how much happiness should be lost during update based on what has happened
@@ -440,6 +441,7 @@ func set_type():
 			sprite.set_sprite_frames(load("res://sprite_frames/bird.tres"))
 			sprite_material.set_shader_parameter("primary_color", Color(0.729, 0.243, 0.243, 1.0))
 			sprite_material.set_shader_parameter("secondary_color", Color(0.984, 0.882, 0.345, 1.0))
+			sprite_material.set_shader_parameter("make_transparent", true) # Hides white pixels used for hitbox
 		1: # Bunny
 			sprite.set_sprite_frames(load("res://sprite_frames/bunny.tres"))
 			sprite_material.set_shader_parameter("primary_color", Color(0.831, 0.616, 0.765, 1.0))
@@ -476,36 +478,70 @@ func set_pattern():
 	var first_color: Color
 	var second_color: Color
 	match pattern:
-		1: # Uncommon
+		1: # Warm
 			match type:
 				0: # Bird
-					first_color = Color(0.914, 0.451, 0.62, 1.0)
-					second_color = Color(0.984, 0.773, 0.259, 1.0)
+					first_color = Color(0.951, 0.662, 0.213, 1.0)
+					second_color = Color(0.97, 0.624, 0.347, 1.0)
 				1: # Bunny
-					first_color = Color(0.918, 0.612, 0.486, 1.0)
-					second_color = Color(0.929, 0.545, 0.69, 1.0)
+					first_color = Color(0.988, 0.584, 0.49, 1.0)
+					second_color = Color(0.945, 0.467, 0.439, 1.0)
 				2: # Octopus
-					first_color = Color(0.404, 0.675, 0.686, 1.0)
-					second_color = Color(0.757, 0.518, 0.682, 1.0)
-		2: # Rare
+					first_color = Color(0.933, 0.431, 0.349, 1.0)
+					second_color = Color(0.953, 0.525, 0.314, 1.0)
+		2: # Cold
 			match type:
 				0: # Bird
-					first_color = Color(0.317, 0.682, 0.769, 1.0)
-					second_color = Color(0.986, 0.742, 0.489, 1.0)
+					first_color = Color(0.306, 0.706, 0.812, 1.0)
+					second_color = Color(0.369, 0.757, 0.549, 1.0)
 				1: # Bunny
-					first_color = Color(0.867, 0.851, 0.847, 1.0)
-					second_color = Color(0.863, 0.745, 0.745, 1.0)
+					first_color = Color(0.506, 0.729, 0.961, 1.0)
+					second_color = Color(0.545, 0.659, 0.867, 1.0)
 				2: # Octopus
-					first_color = Color(0.973, 0.671, 0.392, 1.0)
-					second_color = Color(0.961, 0.49, 0.365, 1.0)
-		3: # Ultra Rare
+					first_color = Color(0.553, 0.561, 0.973, 1.0)
+					second_color = Color(0.49, 0.69, 0.859, 1.0)
+		3: # Natural
 			match type:
 				0: # Bird
-					first_color = Color(0.333, 0.302, 0.384, 1.0)
-					second_color = Color(0.98, 0.482, 0.329, 1.0)
+					first_color = Color(0.451, 0.271, 0.204, 1.0)
+					second_color = Color(0.773, 0.537, 0.38, 1.0)
 				1: # Bunny
-					first_color = Color(0.427, 0.737, 0.427, 0.882)
-					second_color = Color(0.624, 0.733, 0.463, 0.882)
+					first_color = Color(0.875, 0.863, 0.847, 1.0)
+					second_color = Color(0.965, 0.749, 0.78, 1.0)
+				2: # Octopus
+					first_color = Color(0.859, 0.553, 0.247, 1.0)
+					second_color = Color(0.861, 0.634, 0.781, 1.0)
+		4: # Neon
+			match type:
+				0: # Bird
+					first_color = Color(0.345, 0.824, 0.0, 1.0)
+					second_color = Color(0.749, 0.886, 0.0, 1.0)
+				1: # Bunny
+					first_color = Color(1.0, 0.475, 0.878, 1.0)
+					second_color = Color(0.969, 0.4, 0.478, 1.0)
+				2: # Octopus
+					first_color = Color(0.243, 0.718, 0.651, 1.0)
+					second_color = Color(1.0, 0.333, 0.718, 1.0)
+		5: # Dark
+			match type:
+				0: # Bird
+					first_color = Color(0.231, 0.231, 0.231, 1.0)
+					second_color = Color(0.952, 0.573, 0.147, 1.0)
+				1: # Bunny
+					first_color = Color(0.286, 0.286, 0.286, 1.0)
+					second_color = Color(0.749, 0.412, 0.6, 1.0)
+				2: # Octopus
+					first_color = Color(0.231, 0.231, 0.231, 1.0)
+					second_color = Color(0.98, 0.482, 0.729, 1.0)
+		6: # Special
+			match type:
+				0: # Bird
+					first_color = Color(0.82, 0.925, 0.165, 1.0)
+					second_color = Color(0.816, 0.929, 0.165, 1.0)
+					sprite_material.set_shader_parameter("line_replace_color", Color(0.11, 0.196, 0.388, 1.0))
+				1: # Bunny
+					first_color = Color(0.427, 0.737, 0.427, 0.8)
+					second_color = Color(0.624, 0.733, 0.463, 0.8)
 				2: # Octopus
 					first_color = Color(0.897, 0.879, 0.885, 1.0)
 					second_color = Color(0.307, 0.29, 0.289, 1.0)
@@ -513,8 +549,7 @@ func set_pattern():
 		_:
 			print("Pattern Invalid")
 
-		
-	# Applies the colour given
+
 	sprite_material.set_shader_parameter("primary_replace_color", first_color)
 	sprite_material.set_shader_parameter("secondary_replace_color", second_color)
 	# Prints the applied pattern in an easily readable format
@@ -670,13 +705,19 @@ func evolution_manager():
 					new_trait = 1
 			
 			match new_trait:
-				1: # 6 : 3.5 : 0.5
-					if rand_choice < 0.6:
-						pattern = Patterns.UNCOMMON
+				1: # 5 : 5 : 3 : 3 : 2 : 1
+					if rand_choice < 0.25:
+						pattern = Patterns.WARM
+					elif rand_choice < 0.5:
+						pattern = Patterns.COLD
+					elif rand_choice < 0.65:
+						pattern = Patterns.NATURAL
+					elif rand_choice < 0.85:
+						pattern = Patterns.NEON
 					elif rand_choice < 0.95:
-						pattern = Patterns.RARE
+						pattern = Patterns.DARK
 					else:
-						pattern = Patterns.ULTRA_RARE
+						pattern = Patterns.SPECIAL
 					print ("New Pattern: ", (Patterns.keys()[pattern]).capitalize())
 					set_pattern()
 				2: # 4 : 3 : 3

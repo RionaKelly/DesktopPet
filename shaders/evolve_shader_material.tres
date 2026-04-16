@@ -1,8 +1,0 @@
-[gd_resource type="ShaderMaterial" format=3 uid="uid://dffhhcor3o7tq"]
-
-[ext_resource type="Shader" uid="uid://fp0nv33eblwe" path="res://shaders/evolve.gdshader" id="1_ewvbh"]
-
-[resource]
-shader = ExtResource("1_ewvbh")
-shader_parameter/progress = 0.0
-shader_parameter/meltiness = 0.50000002375

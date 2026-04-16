@@ -10,6 +10,9 @@ var menu_scale: float = 1.0 # scale for the pet to resized with in set_size()
 var shader_on: bool = false # Whether the pet should use the distortion shade or not, changed in settings
 var held: bool = false
 var grab_offset: Vector2 = Vector2.ZERO
+var system: String = OS.get_name()
+var version: String = OS.get_version_alias()
+var windows10: bool = false
 
 #func _input(event):
 	## Check for Left Mouse Button Press
@@ -30,15 +33,27 @@ func _ready() -> void:
 		$Settings/Hitbox.button_pressed = true
 	if $"..".shader_on:
 		$Settings/Shader.button_pressed = true
+	print(system, " version ", version)
+	if system == "Windows" and version[1] == "0" :
+		windows10 = true
+		print("Windows 10 Dragging set up")
+	
+
 
 func _process(_delta):
 	# Causes the window to follow the mouse cursor if the "handle" is held
-	if held:
-		var new_pos: Vector2i = Vector2i($"..".get_global_mouse_position()) + Vector2i($"..".window.position) - Vector2i(grab_offset)
+	var new_pos: Vector2i
+	if  held:
+		# Check if the player is using Windows 10 to execute code differently as there were issues on that version
+		if windows10:
+				new_pos = Vector2i($"..".get_global_mouse_position()) + Vector2i($"..".window.position) - Vector2i(grab_offset)
+				window.position = new_pos
+				print("M: ", Vector2i($"..".get_global_mouse_position()), "W: ", Vector2i($"..".window.position), "G: ", grab_offset, "S: ", window.size.x)
+				## look into window_start_drag()
+		else: # Regular dragging setup for otherwise
+				new_pos = Vector2(window.position) + $Default.get_global_mouse_position() - grab_offset
+				print("M: ", Vector2i($Default.get_global_mouse_position()), "W: ", Vector2i(window.position), "G: ", grab_offset, "S: ", window.size.x)
 		window.position = new_pos
-		print("M: ", Vector2i($"..".get_global_mouse_position()), "W: ", Vector2i($"..".window.position), "G: ", grab_offset, "S: ", window.size.x)
-		## look into window_start_drag()
-
 
 # Hides the Window when the top left Close is pressed
 func _on_close_pressed():
@@ -59,8 +74,10 @@ func _on_close_requested():
 # Makes the window follow the user when they grab the "handle" at the top
 func _on_handle_button_down() -> void:
 	held = true
-	grab_offset = $Default.get_global_mouse_position()/2.16
-	# I have no idea why this offset needs to be multiplied by 2.16 but it is incorrect without it 
+	grab_offset = $Default.get_global_mouse_position()
+	# I have no idea why this offset needs to be multiplied by 2.16 but it is incorrect without it
+	if windows10:
+		grab_offset = grab_offset/2.16
 
 
 # Stops the following when button is let go
