@@ -144,6 +144,11 @@ func _ready() -> void:
 	
 	# Apply Shader, done here so that set_type() can modify variables
 	sprite.set_material(sprite_material)
+	# Enable/disable wobbly shader based on saved data
+	if shader_on:
+		sprite_material.set_shader_parameter("baba_shader_on", true)
+	elif !shader_on:
+		sprite_material.set_shader_parameter("baba_shader_on", false)
 	
 	# Sets the window and pet's size
 	set_size()
@@ -310,11 +315,6 @@ func _process(_delta):
 	# Check if the window's name is correct and set it if not
 	if 	window.get_title() != nickname:
 		window.set_title(nickname)
-	
-	# Check for settings
-	# All shader credits in their code
-	if shader_on:
-		sprite.get_material().set_shader_parameter("baba_shader_on", true)
 
 
 # Creates area of the window that can be clicked through

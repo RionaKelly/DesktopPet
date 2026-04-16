@@ -139,9 +139,11 @@ func _on_hitbox_toggled(toggled_on):
 func _on_shader_toggled(toggled_on):
 	if toggled_on:
 		$"..".shader_on = true
+		$"..".sprite_material.set_shader_parameter("baba_shader_on", true)
 		print("Shader On")
 	else:
 		$"..".shader_on = false
+		$"..".sprite_material.set_shader_parameter("baba_shader_on", false)
 		print("Shader Off")
 
 
