@@ -11,6 +11,7 @@
 # Personality Traits affecting decisions
 # Shop
 # Games
+# Fix walking wrong direction cutout first frame
 ## TO DO - AFTER
 # Taking good care of your pet gives higher chance of rare patterns and personalities
 # Waving/Getting attention animation
@@ -48,7 +49,7 @@ enum Activities {EVOLVING, FALLING, GRABBED, GREETING, IDLE, SITTING, SLEEPING, 
 var activity:  Activities = Activities.IDLE # Current state of Pet (idle set as starting default)
 enum Types {BIRD, BUNNY, OCTOPUS} # Possible species that the pet can be
 #enum Patterns {NONE, UNCOMMON, RARE, ULTRA_RARE} # Old possible patterns the Pet can have
-enum Patterns {NONE, WARM, COLD, NATURAL, NEON, DARK, SPECIAL} # Possible patterns the Pet can have
+enum Patterns {NONE, WARM, COLD, NATURAL, NEON, DARK, RETRO, SPECIAL} # Possible patterns the Pet can have
 enum Personalities {NONE, AFFECTIONATE, ENERGETIC, SLEEPY} # Possible personalities the Pet can have
 var pet_scale: float = 1.0 # Ccale for the pet to resized with in set_size()
 var sad_count: int = 0 # Counter to keep track of how much happiness should be lost during update based on what has happened
@@ -478,6 +479,7 @@ func set_pattern():
 		sprite_material.set_shader_parameter("change_color", false)
 		return
 	sprite_material.set_shader_parameter("change_color", true)
+	sprite_material.set_shader_parameter("line_replace_color", Color(0.0, 0.0, 0.0, 1.0))
 	
 	var first_color: Color
 	var second_color: Color
@@ -537,18 +539,32 @@ func set_pattern():
 				2: # Octopus
 					first_color = Color(0.231, 0.231, 0.231, 1.0)
 					second_color = Color(0.98, 0.482, 0.729, 1.0)
-		6: # Special
+		6: # Retro
 			match type:
 				0: # Bird
-					first_color = Color(0.82, 0.925, 0.165, 1.0)
-					second_color = Color(0.816, 0.929, 0.165, 1.0)
-					sprite_material.set_shader_parameter("line_replace_color", Color(0.11, 0.196, 0.388, 1.0))
+					first_color = Color(0.671, 0.8, 0.129, 1.0)
+					second_color = Color(0.671, 0.8, 0.129, 1.0)
+					sprite_material.set_shader_parameter("line_replace_color", Color(0.11, 0.294, 0.514, 1.0))
+				1: # Bunny
+					first_color = Color(0.969, 0.992, 0.525, 1.0)
+					second_color = Color(0.875, 0.647, 0.576, 1.0)
+					sprite_material.set_shader_parameter("line_replace_color", Color(0.11, 0.294, 0.514, 1.0))
+				2: # Octopus
+					first_color = Color(0.953, 0.722, 0.141, 1.0)
+					second_color = Color(0.894, 0.498, 0.129, 1.0)
+					sprite_material.set_shader_parameter("line_replace_color", Color(0.11, 0.294, 0.514, 1.0))
+		7: # Special
+			match type:
+				0: # Bird
+					first_color = Color(0.353, 0.749, 0.753, 1.0)
+					second_color = Color(0.122, 0.102, 0.647, 1.0)
+					sprite_material.set_shader_parameter("line_replace_color", Color(0.94, 0.94, 0.94, 1.0))
 				1: # Bunny
 					first_color = Color(0.427, 0.737, 0.427, 0.8)
 					second_color = Color(0.624, 0.733, 0.463, 0.8)
 				2: # Octopus
-					first_color = Color(0.897, 0.879, 0.885, 1.0)
-					second_color = Color(0.307, 0.29, 0.289, 1.0)
+					first_color = Color(0.94, 0.94, 0.94, 1.0)
+					second_color = Color(0.23, 0.23, 0.23, 1.0)
 		# Backup print if pattern is invalid
 		_:
 			print("Pattern Invalid")
@@ -709,17 +725,19 @@ func evolution_manager():
 					new_trait = 1
 			
 			match new_trait:
-				1: # 5 : 5 : 3 : 3 : 2 : 1
+				1: # 25 : 25 : 20 : 15 : 10 : 4 : 1
 					if rand_choice < 0.25:
 						pattern = Patterns.WARM
 					elif rand_choice < 0.5:
 						pattern = Patterns.COLD
-					elif rand_choice < 0.65:
+					elif rand_choice < 0.70:
 						pattern = Patterns.NATURAL
 					elif rand_choice < 0.85:
 						pattern = Patterns.NEON
 					elif rand_choice < 0.95:
 						pattern = Patterns.DARK
+					elif rand_choice < 0.99:
+						pattern = Patterns.RETRO
 					else:
 						pattern = Patterns.SPECIAL
 					print ("New Pattern: ", (Patterns.keys()[pattern]).capitalize())
