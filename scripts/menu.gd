@@ -13,6 +13,7 @@ var grab_offset: Vector2 = Vector2.ZERO
 var system: String = OS.get_name()
 var version: String = OS.get_version_alias()
 var windows10: bool = false
+var menu_material: ShaderMaterial = load("res://shaders/menu_shader_material.tres")# The sprite's Shader Material
 
 #func _input(event):
 	## Check for Left Mouse Button Press
@@ -40,6 +41,11 @@ func _ready() -> void:
 		windows10 = true
 		print("Windows 10 Dragging set up")
 	
+	$TextureRect.set_material(menu_material)
+	menu_material.set_shader_parameter("primary_color", Color(0.98, 0.878, 0.898, 1.0))
+	menu_material.set_shader_parameter("secondary_color", Color(0.835, 0.651, 0.902, 1.0))
+	menu_material.set_shader_parameter("line_color", Color(0.0, 0.0, 0.0, 1.0))
+	menu_material.set_shader_parameter("make_transparent", true)
 
 
 func _process(_delta):

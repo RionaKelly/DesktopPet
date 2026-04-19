@@ -49,7 +49,7 @@ enum Activities {EVOLVING, FALLING, GRABBED, GREETING, IDLE, SITTING, SLEEPING, 
 var activity:  Activities = Activities.IDLE # Current state of Pet (idle set as starting default)
 enum Types {BIRD, BUNNY, OCTOPUS} # Possible species that the pet can be
 #enum Patterns {NONE, UNCOMMON, RARE, ULTRA_RARE} # Old possible patterns the Pet can have
-enum Patterns {NONE, WARM, COLD, NATURAL, NEON, DARK, RETRO, SPECIAL} # Possible patterns the Pet can have
+enum Patterns {NONE, WARM, COLD, NATURAL, NEON, DARK, RETRO_A, RETRO_B, SPECIAL} # Possible patterns the Pet can have
 enum Personalities {NONE, AFFECTIONATE, ENERGETIC, SLEEPY} # Possible personalities the Pet can have
 var pet_scale: float = 1.0 # Ccale for the pet to resized with in set_size()
 var sad_count: int = 0 # Counter to keep track of how much happiness should be lost during update based on what has happened
@@ -60,6 +60,8 @@ var is_evolving: bool = false # bool to play evolution animation and stop functi
 var ready_to_evolve: bool = false # Whether the pet is ready to evolve and should alert the player
 var evolution_step: int = 1 # The current step of the evolution animation that the pet is on for tracking
 var sprite_material: ShaderMaterial = load("res://shaders/pet_shader_material.tres")# The sprite's Shader Material
+var menu_material: ShaderMaterial = load("res://shaders/menu_shader_material.tres")# The sprite's Shader Material
+var menu_theme: Theme= load("res://other/menu_theme.tres")
 
 # Bug-Testing 
 var debugMovement = false
@@ -494,7 +496,7 @@ func set_pattern():
 					second_color = Color(0.945, 0.467, 0.439, 1.0)
 				2: # Octopus
 					first_color = Color(0.933, 0.431, 0.349, 1.0)
-					second_color = Color(0.953, 0.525, 0.314, 1.0)
+					second_color = Color(0.95, 0.616, 0.147, 1.0)
 		2: # Cold
 			match type:
 				0: # Bird
@@ -539,21 +541,31 @@ func set_pattern():
 				2: # Octopus
 					first_color = Color(0.231, 0.231, 0.231, 1.0)
 					second_color = Color(0.98, 0.482, 0.729, 1.0)
-		6: # Retro
+		6: # Retro A
 			match type:
 				0: # Bird
-					first_color = Color(0.671, 0.8, 0.129, 1.0)
-					second_color = Color(0.671, 0.8, 0.129, 1.0)
-					sprite_material.set_shader_parameter("line_replace_color", Color(0.11, 0.294, 0.514, 1.0))
+					first_color = Color(0.667, 0.804, 0.024, 1.0)
+					second_color = Color(0.667, 0.804, 0.024, 1.0)
 				1: # Bunny
-					first_color = Color(0.969, 0.992, 0.525, 1.0)
-					second_color = Color(0.875, 0.647, 0.576, 1.0)
-					sprite_material.set_shader_parameter("line_replace_color", Color(0.11, 0.294, 0.514, 1.0))
+					first_color = Color(1.0, 0.973, 0.62, 1.0)
+					second_color = Color(0.961, 0.706, 0.682, 1.0)
 				2: # Octopus
-					first_color = Color(0.953, 0.722, 0.141, 1.0)
-					second_color = Color(0.894, 0.498, 0.129, 1.0)
-					sprite_material.set_shader_parameter("line_replace_color", Color(0.11, 0.294, 0.514, 1.0))
-		7: # Special
+					first_color = Color(0.333, 0.761, 0.937, 1.0)
+					second_color = Color(0.91, 0.431, 0.639, 1.0)
+			sprite_material.set_shader_parameter("line_replace_color", Color(0.0, 0.29, 0.565, 1.0))
+		7: # Retro B
+			match type:
+				0: # Bird
+					first_color = Color(0.0, 0.616, 0.827, 1.0)
+					second_color = Color(1.0, 0.859, 0.239, 1.0)
+				1: # Bunny
+					first_color = Color(1.0, 1.0, 1.0, 1.0)
+					second_color = Color(0.98, 0.839, 0.796, 1.0)
+				2: # Octopus
+					first_color = Color(0.925, 0.427, 0.424, 1.0)
+					second_color = Color(1.0, 0.859, 0.239, 1.0)
+			sprite_material.set_shader_parameter("line_replace_color", Color(0.0, 0.29, 0.565, 1.0))
+		8: # Special
 			match type:
 				0: # Bird
 					first_color = Color(0.353, 0.749, 0.753, 1.0)
@@ -574,6 +586,108 @@ func set_pattern():
 	sprite_material.set_shader_parameter("secondary_replace_color", second_color)
 	# Prints the applied pattern in an easily readable format
 	print ("Applied Pattern: ", (Patterns.keys()[pattern]).capitalize())
+	
+	set_menu_theme() # here temporarily
+
+
+# Changes the colours for the menu based on pet pattern
+func set_menu_theme():
+	var first_color: Color
+	var second_color: Color
+	var hover_color: Color
+	var press_color: Color
+	var line_color: Color
+	$Menu/Close.add_theme_color_override("icon_normal_color", Color())
+	$Menu/Close.add_theme_color_override("icon_hover_color", Color(0.202, 0.202, 0.202, 1.0))
+	$Menu/Close.add_theme_color_override("icon_pressed_color", Color(0.37, 0.37, 0.37, 1.0))
+			
+	# Changes outline and text/icon colour accordingly
+	if pattern == 8: # Special
+		line_color = Color(1.0, 1.0, 1.0, 1.0)
+		$Menu/Close.add_theme_color_override("icon_normal_color", Color())
+		$Menu/Close.add_theme_color_override("icon_hover_color", Color(0.202, 0.202, 0.202, 1.0))
+		$Menu/Close.add_theme_color_override("icon_pressed_color", Color(0.37, 0.37, 0.37, 1.0))
+	elif pattern >= 6: # Retro
+		line_color =  Color(0.0, 0.29, 0.565, 1.0)
+		menu_material.set_shader_parameter("line_replace_color", line_color)
+		$Menu/Close.remove_theme_color_override("icon_normal_color")
+		$Menu/Close.remove_theme_color_override("icon_hover_color")
+		$Menu/Close.remove_theme_color_override("icon_pressed_color")
+	else:
+		line_color =  Color(0.0, 0.0, 0.0, 1.0)
+		$Menu/Close.remove_theme_color_override("icon_normal_color")
+		$Menu/Close.remove_theme_color_override("icon_hover_color")
+		$Menu/Close.remove_theme_color_override("icon_pressed_color")
+	menu_theme.set_color("icon_normal_color", "Button", line_color)
+	menu_theme.set_color("font_color", "Label", line_color)
+	menu_theme.set_color("font_color", "CheckBox", line_color)
+	
+	if pattern == 0: # None - Exits function after setting default
+		menu_material.set_shader_parameter("change_color", false)
+		menu_theme.set_color("icon_hover_color", "Button", Color(0.424, 0.196, 0.498, 1.0))
+		menu_theme.set_color("icon_pressed_color", "Button", Color(0.835, 0.651, 0.902, 1.0))
+		menu_theme.set_color("font_pressed_color", "CheckBox", Color(0.424, 0.196, 0.498, 1.0))
+		menu_theme.set_color("font_hover_color", "CheckBox", Color(0.424, 0.196, 0.498, 1.0))
+		menu_theme.set_color("font_hover_press_color", "CheckBox", Color(0.424, 0.196, 0.498, 1.0))
+		print("Menu set to Default")
+		return
+	else:
+		menu_material.set_shader_parameter("change_color", true)
+	
+	match pattern:
+		1: # Warm
+			first_color = Color(0.996, 0.719, 0.442, 1.0)
+			second_color = Color(0.933, 0.431, 0.349, 1.0)
+			hover_color = Color(0.844, 0.377, 0.173, 1.0)
+			press_color = Color(0.932, 0.549, 0.253, 1.0)
+		2: # Cold
+			first_color = Color(0.627, 0.816, 0.981, 1.0)
+			second_color = Color(0.445, 0.528, 0.976, 1.0)
+			hover_color = Color(0.082, 0.397, 0.756, 1.0)
+			press_color = Color(0.312, 0.496, 0.921, 1.0)
+		3: # Natural
+			first_color = Color(0.485, 0.329, 0.171, 1.0)
+			second_color = Color(0.313, 0.751, 0.334, 1.0)
+			hover_color = Color(0.186, 0.127, 0.066, 1.0)
+			press_color = Color(0.281, 0.179, 0.097, 1.0)
+		4: # Neon
+			first_color = Color(0.0, 0.986, 0.493, 1.0)
+			second_color = Color(0.929, 0.0, 0.674, 1.0)
+			hover_color = Color(0.0, 0.427, 0.016, 1.0)
+			press_color = Color(0.0, 0.512, 0.087, 1.0)
+		5: # Dark
+			first_color = Color(0.202, 0.202, 0.202, 1.0)
+			second_color = Color(0.631, 0.11, 0.202, 1.0)
+			hover_color = Color(0.165, 0.0, 0.013, 1.0)
+			press_color = Color(0.352, 0.015, 0.032, 1.0)
+		6: # Retro A
+			first_color = Color(0.949, 0.624, 0.761, 1.0)
+			second_color = Color(0.914, 0.322, 0.514, 1.0)
+			hover_color = Color(0.382, 0.381, 0.756, 1.0)
+			press_color = Color(0.485, 0.46, 0.766, 1.0)
+		7: # Retro B
+			first_color = Color(0.447, 0.784, 0.839, 1.0)
+			second_color = Color(0.514, 0.757, 0.259, 1.0)
+			hover_color = Color(0.091, 0.481, 0.696, 1.0)
+			press_color = Color(0.213, 0.568, 0.752, 1.0)
+		8: # Special
+			first_color = Color(0.0, 0.51, 0.51, 1.0)
+			second_color = Color(0.765, 0.765, 0.765, 1.0)
+			hover_color = Color(0.83, 0.95, 0.946, 1.0)
+			press_color = Color(0.694, 0.91, 0.902, 1.0)
+			$Menu/Close.add_theme_color_override("icon_normal_color", Color())
+			$Menu/Close.add_theme_color_override("icon_hover_color", Color(0.202, 0.202, 0.202, 1.0))
+			$Menu/Close.add_theme_color_override("icon_pressed_color", Color(0.37, 0.37, 0.37, 1.0))
+
+	
+	menu_material.set_shader_parameter("primary_replace_color", first_color)
+	menu_material.set_shader_parameter("secondary_replace_color", second_color)
+	menu_theme.set_color("icon_hover_color", "Button", hover_color)
+	menu_theme.set_color("icon_pressed_color", "Button", press_color)
+	menu_theme.set_color("font_hover_color", "CheckBox", hover_color)
+	menu_theme.set_color("font_pressed_color", "CheckBox", hover_color)
+	menu_theme.set_color("font_hover_pressed_color", "CheckBox", press_color)
+	print ("Menu set to ", (Patterns.keys()[pattern]).capitalize())
 
 # Handles all of the decision making for the Pet
 func brain():
@@ -709,51 +823,55 @@ func evolution_manager():
 			window.position = Vector2i(window.position.x, taskbar_level - window.size.y)
 			
 			# Randomise whether pet should gain a trait (new personality or pattern)
-			var rand_trait = randf()
+			#var rand_trait = randf()
 			var rand_choice = randf()
-			var new_trait = 0 # 0 means no new trait, 1 means pattern, 2 means personality
-			# For now you are guaranteed to gain a new personality or pattern, chances will be changed in the future
-			if rand_trait < 0.5: 
-				if pattern == Patterns.NONE: # These checks make sure player doesnt already have a trait of this type
-					new_trait = 1
-				elif personality == Personalities.NONE:
-					new_trait = 2
-			elif rand_trait < 1.0:
-				if personality == Personalities.NONE:
-					new_trait = 2
-				elif pattern == Patterns.NONE:
-					new_trait = 1
-			
-			match new_trait:
-				1: # 25 : 25 : 20 : 15 : 10 : 4 : 1
-					if rand_choice < 0.25:
-						pattern = Patterns.WARM
-					elif rand_choice < 0.5:
-						pattern = Patterns.COLD
-					elif rand_choice < 0.70:
-						pattern = Patterns.NATURAL
-					elif rand_choice < 0.85:
-						pattern = Patterns.NEON
-					elif rand_choice < 0.95:
-						pattern = Patterns.DARK
-					elif rand_choice < 0.99:
-						pattern = Patterns.RETRO
-					else:
-						pattern = Patterns.SPECIAL
-					print ("New Pattern: ", (Patterns.keys()[pattern]).capitalize())
-					set_pattern()
-				2: # 4 : 3 : 3
-					if rand_choice < 0.4:
-						personality = Personalities.AFFECTIONATE
-					elif rand_choice < 0.7:
-						personality = Personalities.ENERGETIC
-					else:
-						personality = Personalities.SLEEPY
-					print ("New Personality: ", (Personalities.keys()[personality]).capitalize())
-				_:
-					print ("No New Traits, Code: ", new_trait)
-					print ("Current Traits: ",(Patterns.keys()[pattern]).capitalize(), 
-					" & ", (Personalities.keys()[personality]).capitalize())
+			## Code changed to boost odds on second rolls until i finish personalities
+			print("Num: ", rand_choice, " + Bonus: ", (pattern*(0.04*(stage-1))))
+			rand_choice = rand_choice + (pattern*(0.04*(stage-1)))
+			#var new_trait = 0 # 0 means no new trait, 1 means pattern, 2 means personality
+			## For now you are guaranteed to gain a new pattern, chances will be changed in the future
+			#if rand_trait < 1.0: 
+				#if pattern == Patterns.NONE: # These checks make sure player doesnt already have a trait of this type
+					#new_trait = 1
+				#elif personality == Personalities.NONE:
+					#new_trait = 2
+			#elif rand_trait < 1.0:
+				#if personality == Personalities.NONE:
+					#new_trait = 2
+				#elif pattern == Patterns.NONE:
+					#new_trait = 1
+			#match new_trait:
+				#1: # 25 : 25 : 20 : 15 : 10 : 4 : 1
+			if rand_choice < 0.25:
+				pattern = Patterns.WARM
+			elif rand_choice < 0.5:
+				pattern = Patterns.COLD
+			elif rand_choice < 0.70:
+				pattern = Patterns.NATURAL
+			elif rand_choice < 0.85:
+				pattern = Patterns.NEON
+			elif rand_choice < 0.95:
+				pattern = Patterns.DARK
+			elif rand_choice < 0.99:
+				pattern = Patterns.RETRO_A
+			elif rand_choice < 1.0:
+				pattern = Patterns.RETRO_B
+			else: # This pattern is only obtainable with a bonus to the random number
+				pattern = Patterns.SPECIAL
+			print ("New Pattern: ", (Patterns.keys()[pattern]).capitalize())
+			set_pattern()
+				#2: # 4 : 3 : 3
+					#if rand_choice < 0.4:
+						#personality = Personalities.AFFECTIONATE
+					#elif rand_choice < 0.7:
+						#personality = Personalities.ENERGETIC
+					#else:
+						#personality = Personalities.SLEEPY
+					#print ("New Personality: ", (Personalities.keys()[personality]).capitalize())
+				#_:
+					#print ("No New Traits, Code: ", new_trait)
+					#print ("Current Traits: ",(Patterns.keys()[pattern]).capitalize(), 
+					#" & ", (Personalities.keys()[personality]).capitalize())
 		3:
 			# Reset pet and continue decision-making after 3 seconds
 			ready_to_evolve = false

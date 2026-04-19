@@ -1,9 +1,10 @@
-[gd_scene format=3 uid="uid://b7lo7xmarfae7"]
+[gd_scene format=3 uid="uid://bdlc16jgqtk22"]
 
 [ext_resource type="Script" uid="uid://cwnsdt0oc4q7d" path="res://scripts/menu.gd" id="1_yqeox"]
 [ext_resource type="Texture2D" uid="uid://ysks1eywj4jk" path="res://sprites/menu/window_back.png" id="2_vjb58"]
 [ext_resource type="Texture2D" uid="uid://dec1g4apoieb4" path="res://sprites/menu/menu_egg.png" id="3_con2f"]
 [ext_resource type="Texture2D" uid="uid://bomhdlwkbd57k" path="res://sprites/menu/menu_close.png" id="3_i6lef"]
+[ext_resource type="Theme" uid="uid://dviv1t3hlh01p" path="res://other/menu_theme.tres" id="3_mj5lg"]
 [ext_resource type="Texture2D" uid="uid://b251u8ht4cncj" path="res://sprites/menu/menu_exit.png" id="4_mhnvy"]
 [ext_resource type="Texture2D" uid="uid://dyo7wfo68pwui" path="res://sprites/menu/menu_shop.png" id="5_13sgg"]
 [ext_resource type="Texture2D" uid="uid://dsxm7tmwmquqk" path="res://sprites/menu/menu_games.png" id="6_i6lef"]
@@ -23,6 +24,7 @@ transparent = true
 content_scale_size = Vector2i(500, 380)
 content_scale_mode = 2
 accessibility_name = "Menu"
+theme = ExtResource("3_mj5lg")
 script = ExtResource("1_yqeox")
 
 [node name="TextureRect" type="TextureRect" parent="." unique_id=183108371]
@@ -44,12 +46,6 @@ offset_left = 10.0
 offset_top = 50.0
 offset_right = 170.0
 offset_bottom = 210.0
-theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
-theme_override_colors/icon_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/icon_hover_color = Color(0.4223091, 0.19683152, 0.49723, 1)
-theme_override_colors/icon_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/icon_disabled_color = Color(0, 0, 0, 0.4)
-theme_override_font_sizes/font_size = 36
 icon = ExtResource("3_con2f")
 flat = true
 icon_alignment = 1
@@ -62,12 +58,6 @@ offset_left = 170.0
 offset_top = 50.0
 offset_right = 330.0
 offset_bottom = 210.0
-theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
-theme_override_colors/icon_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/icon_hover_color = Color(0.4223091, 0.19683152, 0.49723, 1)
-theme_override_colors/icon_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/icon_disabled_color = Color(0, 0, 0, 0.4)
-theme_override_font_sizes/font_size = 36
 disabled = true
 icon = ExtResource("5_13sgg")
 flat = true
@@ -81,12 +71,6 @@ offset_left = 330.0
 offset_top = 50.0
 offset_right = 490.0
 offset_bottom = 210.0
-theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
-theme_override_colors/icon_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/icon_hover_color = Color(0.4223091, 0.19683152, 0.49723, 1)
-theme_override_colors/icon_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/icon_disabled_color = Color(0, 0, 0, 0.4)
-theme_override_font_sizes/font_size = 36
 disabled = true
 icon = ExtResource("6_i6lef")
 flat = true
@@ -100,12 +84,6 @@ offset_left = 10.0
 offset_top = 210.0
 offset_right = 170.0
 offset_bottom = 370.0
-theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
-theme_override_colors/icon_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/icon_hover_color = Color(0.4223091, 0.19683152, 0.49723, 1)
-theme_override_colors/icon_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/icon_disabled_color = Color(0, 0, 0, 0.4)
-theme_override_font_sizes/font_size = 36
 icon = ExtResource("8_mj5lg")
 flat = true
 icon_alignment = 1
@@ -118,12 +96,6 @@ offset_left = 170.0
 offset_top = 210.0
 offset_right = 330.0
 offset_bottom = 370.0
-theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
-theme_override_colors/icon_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/icon_hover_color = Color(0.4223091, 0.19683152, 0.49723, 1)
-theme_override_colors/icon_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/icon_disabled_color = Color(0, 0, 0, 0.4)
-theme_override_font_sizes/font_size = 36
 icon = ExtResource("7_70i5f")
 flat = true
 icon_alignment = 1
@@ -136,11 +108,6 @@ offset_left = 330.0
 offset_top = 210.0
 offset_right = 490.0
 offset_bottom = 370.0
-theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
-theme_override_colors/icon_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/icon_hover_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
-theme_override_colors/icon_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_font_sizes/font_size = 36
 icon = ExtResource("4_mhnvy")
 flat = true
 icon_alignment = 1
@@ -159,7 +126,6 @@ offset_left = 162.0
 offset_top = 51.0
 offset_right = 335.0
 offset_bottom = 109.0
-theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 42
 text = "Your Pet"
 
@@ -169,7 +135,6 @@ offset_left = 22.0
 offset_top = 103.0
 offset_right = 476.0
 offset_bottom = 354.0
-theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_constants/line_spacing = -3
 theme_override_font_sizes/font_size = 24
 text = "Name:
@@ -187,7 +152,6 @@ offset_left = 284.0
 offset_top = 208.0
 offset_right = 483.0
 offset_bottom = 241.0
-theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_constants/line_spacing = -3
 theme_override_font_sizes/font_size = 22
 text = "Change Nickname:"
@@ -228,7 +192,6 @@ offset_left = 209.0
 offset_top = 52.0
 offset_right = 289.0
 offset_bottom = 110.0
-theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 42
 text = "Info"
 
@@ -238,7 +201,6 @@ offset_left = 22.0
 offset_top = 103.0
 offset_right = 600.0
 offset_bottom = 238.0
-theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_constants/line_spacing = -3
 theme_override_font_sizes/font_size = 24
 text = "Click - Stop Pet
@@ -252,7 +214,6 @@ offset_left = 21.0
 offset_top = 237.0
 offset_right = 572.0
 offset_bottom = 368.0
-theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_constants/line_spacing = -3
 theme_override_font_sizes/font_size = 24
 text = "Feed and play with your pet so they
@@ -273,7 +234,6 @@ offset_left = 169.0
 offset_top = 52.0
 offset_right = 332.0
 offset_bottom = 110.0
-theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 42
 text = "Settings"
 
@@ -283,10 +243,6 @@ offset_left = 30.0
 offset_top = 107.0
 offset_right = 232.0
 offset_bottom = 154.0
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/font_hover_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
-theme_override_colors/font_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
 theme_override_font_sizes/font_size = 28
 text = "Game Saving"
 
@@ -296,10 +252,6 @@ offset_left = 267.0
 offset_top = 108.0
 offset_right = 451.0
 offset_bottom = 155.0
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/font_hover_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
-theme_override_colors/font_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
 theme_override_font_sizes/font_size = 28
 text = "Silent"
 
@@ -309,11 +261,9 @@ offset_left = 29.0
 offset_top = 154.0
 offset_right = 213.0
 offset_bottom = 196.0
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/font_hover_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
-theme_override_colors/font_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme_override_colors/font_disabled_color = Color(0.40832943, 0.4083295, 0.40832937, 0.5019608)
 theme_override_font_sizes/font_size = 28
+disabled = true
 text = "Large Hitbox"
 
 [node name="Shader" type="CheckBox" parent="Settings" unique_id=1227032883]
@@ -322,10 +272,6 @@ offset_left = 267.0
 offset_top = 156.0
 offset_right = 451.0
 offset_bottom = 203.0
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/font_hover_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
-theme_override_colors/font_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
 theme_override_font_sizes/font_size = 28
 text = "Silly Shader"
 
@@ -335,10 +281,6 @@ offset_left = 29.0
 offset_top = 199.0
 offset_right = 330.0
 offset_bottom = 246.0
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/font_hover_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
-theme_override_colors/font_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
 theme_override_font_sizes/font_size = 28
 text = "Open Menu on Start"
 
@@ -349,12 +291,6 @@ offset_left = 29.0
 offset_top = 290.0
 offset_right = 470.0
 offset_bottom = 359.0
-theme_override_colors/font_color = Color(0, 0, 0, 1)
-theme_override_colors/font_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/font_hover_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
-theme_override_colors/font_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
-theme_override_colors/icon_disabled_color = Color(0, 0, 0, 0.4)
 theme_override_font_sizes/font_size = 28
 text = "Delete Data (turn off saving too)"
 icon_alignment = 1
@@ -363,7 +299,6 @@ expand_icon = true
 [node name="Handle" type="Button" parent="." unique_id=389058584]
 offset_right = 500.0
 offset_bottom = 50.0
-theme_override_font_sizes/font_size = 24
 flat = true
 
 [node name="Close" type="Button" parent="." unique_id=859355270]
@@ -371,12 +306,8 @@ texture_filter = 1
 offset_left = 425.0
 offset_right = 500.0
 offset_bottom = 50.0
-theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
-theme_override_colors/icon_pressed_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
-theme_override_colors/icon_hover_color = Color(0.30245918, 0.123391934, 0.35359913, 1)
-theme_override_colors/icon_hover_pressed_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
+theme = ExtResource("3_mj5lg")
 theme_override_constants/icon_max_width = 50
-theme_override_font_sizes/font_size = 24
 icon = ExtResource("3_i6lef")
 flat = true
 icon_alignment = 1
@@ -389,12 +320,8 @@ offset_left = 10.0
 offset_top = 50.0
 offset_right = 93.73134
 offset_bottom = 116.0
-theme_override_colors/icon_normal_color = Color(0, 0, 0, 1)
-theme_override_colors/icon_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
-theme_override_colors/icon_hover_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
-theme_override_colors/icon_hover_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+theme = ExtResource("3_mj5lg")
 theme_override_constants/icon_max_width = 90
-theme_override_font_sizes/font_size = 24
 icon = ExtResource("10_70i5f")
 flat = true
 icon_alignment = 1

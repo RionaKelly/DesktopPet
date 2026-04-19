@@ -39,6 +39,15 @@ void fragment() {
 	// Called for every pixel the material is visible on.
 	vec4 tex_color = texture(TEXTURE, UV);
 	
+	// Make white pixels transparent to hide pixels used for better hitboxes
+	if(make_transparent){
+		float transparent_distance = length(tex_color.rgb - transparent_color.rgb);
+		
+		if(transparent_distance < color_threshold){
+			tex_color = transparent_replace_color;
+		}
+	}
+	
 	// Changes set colours to given colours
 	if (change_color){	
 		float primary_distance = length(tex_color.rgb - primary_color.rgb);
@@ -53,15 +62,7 @@ void fragment() {
 			tex_color = line_replace_color;
 		}
 	}
-	
-	// Make white pixels transparent to hide pixels used for better hitboxes
-	if(make_transparent){
-		float transparent_distance = length(tex_color.rgb - transparent_color.rgb);
-		
-		if(transparent_distance < color_threshold){
-			tex_color = transparent_replace_color;
-		}
-	}
+
 	
 	COLOR = tex_color;
 	}

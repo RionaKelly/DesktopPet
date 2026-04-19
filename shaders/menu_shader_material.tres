@@ -1,12 +1,12 @@
-[gd_resource type="ShaderMaterial" format=3 uid="uid://c62o4n86nrarl"]
+[gd_resource type="ShaderMaterial" format=3 uid="uid://788sj76wkkue"]
 
-[ext_resource type="Shader" uid="uid://b5lcp5tx5g7pr" path="res://shaders/pet.gdshader" id="1_jcryy"]
+[ext_resource type="Shader" uid="uid://b5lcp5tx5g7pr" path="res://shaders/pet.gdshader" id="1_sijsg"]
 
 [resource]
-shader = ExtResource("1_jcryy")
+shader = ExtResource("1_sijsg")
 shader_parameter/progress = 0.0
 shader_parameter/meltiness = 2.000000095
-shader_parameter/change_color = true
+shader_parameter/change_color = false
 shader_parameter/make_transparent = false
 shader_parameter/primary_color = Color(0, 0, 0, 1)
 shader_parameter/primary_replace_color = Color(0, 0, 0, 1)
