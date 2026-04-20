@@ -3,15 +3,11 @@
 # https://youtube.com/playlist?list=PLVzjdZVCXNTyVHAtpgF_uFbsz8MA8uWKO&si=FOG2BfnqTqjJTduE
 
 ## TO DO - ASAP
-# Pet Info display
-# Game Info display
-# Game settings menu
 # Happiness and Fullness
 # Work Mode
 # Personality Traits affecting decisions
 # Shop
 # Games
-# Fix walking wrong direction cutout first frame
 ## TO DO - AFTER
 # Taking good care of your pet gives higher chance of rare patterns and personalities
 # Waving/Getting attention animation
@@ -48,12 +44,11 @@ var velocity = Vector2(0, 0) # Velocity of the pet while falling/being thrown
 enum Activities {EVOLVING, FALLING, GRABBED, GREETING, IDLE, SITTING, SLEEPING, STARING, STOPPED, WALKING, WORKING} # Possible states for Pet
 var activity:  Activities = Activities.IDLE # Current state of Pet (idle set as starting default)
 enum Types {BIRD, BUNNY, OCTOPUS} # Possible species that the pet can be
-#enum Patterns {NONE, UNCOMMON, RARE, ULTRA_RARE} # Old possible patterns the Pet can have
 enum Patterns {NONE, WARM, COLD, NATURAL, NEON, DARK, RETRO_A, RETRO_B, SPECIAL} # Possible patterns the Pet can have
 enum Personalities {NONE, AFFECTIONATE, ENERGETIC, SLEEPY} # Possible personalities the Pet can have
 var pet_scale: float = 1.0 # Ccale for the pet to resized with in set_size()
-var sad_count: int = 0 # Counter to keep track of how much happiness should be lost during update based on what has happened
-var hungry_count: int = 0 # Counter to keep track of how much fullness should be lost during update based on what has happened
+var sad_count: float = 0.0 # Counter to keep track of how much happiness should be lost during update based on what has happened
+var hungry_count: float = 0.0 # Counter to keep track of how much fullness should be lost during update based on what has happened
 var work_mode: bool = false # When work mode is on, pet will not disturb player at all
 var is_stopped: bool = false # bool to stop functions when pet is lifted
 var is_evolving: bool = false # bool to play evolution animation and stop functions if pet is evolving
@@ -62,6 +57,7 @@ var evolution_step: int = 1 # The current step of the evolution animation that t
 var sprite_material: ShaderMaterial = load("res://shaders/pet_shader_material.tres")# The sprite's Shader Material
 var menu_material: ShaderMaterial = load("res://shaders/menu_shader_material.tres")# The sprite's Shader Material
 var menu_theme: Theme= load("res://other/menu_theme.tres")
+var thinking: bool = false # Whether the pet is currently displaying a thought bubble or not
 
 # Bug-Testing 
 var debugMovement = false
@@ -90,27 +86,47 @@ var saveGame: bool = true # Whether the game should save
 
 # Check for inputs
 func _input(event):
-	# Check for Left Mouse Button Press and make pet stopped
+	var padding: int
+	# Check for Left Mouse Button Press and make pet stopped and start lifting
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		if not is_stopped:
 			start_stopping(true)
 	
-	# When LMB Press released un-stop pet and create a window if pet is on the taskbar
+	# Releasing left click unstops pet and evolves if they're on the ground and can
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed == false and is_stopped:
 		if is_stopped:
 			start_stopping(false)
 		if window.position.y == taskbar_level - window.size.y:
+			await get_tree().create_timer(0.3).timeout
+			if $Menu.is_visible() and (($Menu.position.x < window.position.x + window.size.x) and ($Menu.position.x + $Menu.size.x > window.position.x)) and $Menu.position.y + $Menu.size.y > window.position.x - window.size.x:
+				pass
+			else:
+				# Changes the current thought bubble based on pet stats
+				if fullness < 50 and fullness < happiness:
+					$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_hungry.png"))
+					print("hungry")
+				elif happiness < 50 and happiness < fullness:
+					$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_sad.png"))	
+					print("sad")
+				elif happiness > 90 and fullness > 90:
+					$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_love.png"))
+					print("very happy")
+				else:
+					$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_happy.png"))
+					print("happy")
+				$Thoughts.show()
+				$Thoughts.position = Vector2i(window.position.x, window.position.y - window.size.y)
 			# If ready to evolve, begin evolution when clicked
 			if ready_to_evolve and !in_air and !is_stopped:
 				evolution_manager()
 				return
 	
+	# Summons the window on a double left click
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.double_click:
-		
 		# Display Menu
 		$Menu.show()
+		$Thoughts.hide()
 		# The window will move over more to the left or right if the pet is too close to the edge to avoid being cut off
-		var padding: int
 		if window.position.x + window.size.x > ((usable_rect.size.x)*0.95) + usable_rect.position.x:
 			padding = $Menu.size.x - window.size.x
 		elif window.position.x < (usable_rect.size.x * 0.05) + usable_rect.position.x:
@@ -188,6 +204,9 @@ func _ready() -> void:
 		$Menu.position = Vector2i(window.position.x - $Menu.size.x/3, window.position.y - $Menu.size.y * 1.05)
 		$Menu.show()
 	
+	# Sets the Thought Window size
+	$Thoughts._update_click_polygon()
+	
 	# Start the timers for pet decision and saving
 	$DecisionTimer.start()
 	
@@ -213,6 +232,7 @@ func _ready() -> void:
 	# Finally, saves the game with the assigned data just in case
 	save() 
 
+
 var last_window_pos : Vector2 = Vector2.ZERO
 func _process(_delta):
 	# If Pet is Evolving then run evolution function and skip everything else
@@ -231,6 +251,8 @@ func _process(_delta):
 			print("Velocity: ", velocity)
 			print("")
 		last_window_pos = window.position
+		if window.position.y != (taskbar_level - window.size.y) and $Thoughts.is_visible():
+			$Thoughts.hide()
 		return
 	
 	# Vector2i used to tell Window to move to an exact pixel coordinate
@@ -381,6 +403,8 @@ func _update_click_polygon():
 # Moves the window around the screen depending on state and type, typically when walking
 func move(move_vector):
 	var current_frame = sprite.get_frame()
+	if $Thoughts.is_visible():
+		$Thoughts.hide()
 	
 	# Apply movement to OS Window depending on pet type
 	if type == Types.BUNNY: 	# Makes the Bunny move differently to look better
@@ -390,6 +414,9 @@ func move(move_vector):
 			pass
 	else:
 		window.position.x += move_vector.x
+		# Move thought bubble with pet if visible
+		if $Thoughts.visible:
+			$Thoughts.position.x += move_vector.x
 
 
 # Sets the Pet's size to fit on the window correctly, increasing at evolution
@@ -400,13 +427,16 @@ func set_size():
 	var window_size = (usable_rect.size.y / size_div) # size of the window in pixels
 	pet_scale = (window_size/16.0) # scale for the sprite to fit in the window
 	window.size = Vector2i(window_size, window_size)
-	sprite.scale = Vector2(pet_scale, pet_scale)
+	sprite.set_scale(Vector2(pet_scale, pet_scale))
 	
-	# Sets the Menu window and object sizes
+	# Sets the extra window sizes and positions
 	$Menu.size = Vector2i(window_size * 3.125, window_size * 2.375) # multiplied by the difference in size compared to the pet
 	if $Menu.visible:
 		$Menu.position = Vector2i(window.position.x - $Menu.size.x/3, window.position.y - $Menu.size.y * 1.05)
-	
+	$Thoughts.size = Vector2i(window_size, window_size*2)
+	$Thoughts/ThoughtSprite.set_scale(Vector2(pet_scale, pet_scale)) 
+	if $Thoughts.visible:
+		$Thoughts.position = Vector2i(window.position.x, window.position.y - window.size.y)
 	if debugScreen:
 		print("Window Size: ", window_size)
 		print("Pet Scale: ", pet_scale)
@@ -435,7 +465,7 @@ func set_sprite():
 				print("Direction [", direction.x, "] outside of given rage")
 			sprite.play("walk")
 		_:
-			print("Activity [", activity, "] not recognised")
+			#print("Activity [", activity, "] not recognised")
 			_update_click_polygon()
 			sprite.play("idle") # default animation for if there is none ready
 
@@ -655,7 +685,7 @@ func set_menu_theme():
 			hover_color = Color(0.0, 0.427, 0.016, 1.0)
 			press_color = Color(0.0, 0.512, 0.087, 1.0)
 		5: # Dark
-			first_color = Color(0.202, 0.202, 0.202, 1.0)
+			first_color = Color(0.316, 0.316, 0.316, 1.0)
 			second_color = Color(0.631, 0.11, 0.202, 1.0)
 			hover_color = Color(0.165, 0.0, 0.013, 1.0)
 			press_color = Color(0.352, 0.015, 0.032, 1.0)
@@ -744,6 +774,8 @@ func brain():
 				rand_wait = randi_range(1, 6) * 0.8
 			else: 
 				rand_wait = randi_range(1, 3) * 1.6
+			# Updates the count based on how long pet will be walking
+			hungry_count += rand_wait
 	
 	decision_time = false
 	
@@ -769,34 +801,39 @@ func update_stats():
 	# Increases the pet's age by 1 every 60 seconds
 	age += 1 
 	
+	# Updates the pet's happiness and fullness based on what they have done
+	fullness -= 1
+	happiness -= 1
+	hungry_count = 0.0
+	sad_count = 0.0
+	print ("Fullness: ", fullness, " - Happiness: ", happiness)
+	
+	# Check if happiness and fullness are 0 for pet to leave
+	if happiness < 0 or fullness < 0:
+		print("Dead")
+	
 	## Check if the pet is old enough to begin evolution (after 5, 15, and 30 hours)
 	#if (stage == 0 and age >= 300) or (stage == 1 and age >= 900) or (stage == 2 and age >= 1800):
 		#ready_to_evolve = true # Lets pet evolve when not busy
 		#evolution_step = 0 # Resets the evolution step for playing animation
 	#else:
 		#ready_to_evolve = false
+	
+	# Saves the game after every update
+	save()
 
 
 # Tells the Pet to stop
 func start_stopping(stop):
 	if stop: # stops events and s
 		is_stopped = true
-		#gravity = false
 		grab_offset = get_global_mouse_position()
 		activity = Activities.STOPPED
 		set_sprite()
-		#sprite.set_self_modulate(OS_accent_color)
-		#sprite.set_speed_scale(0.0)
 		$DecisionTimer.stop()
-		print("Pet Stopped")
-	
 	else:
-		print("Pet Continuing")
-		#gravity = true
 		grab_offset = Vector2.ZERO
 		is_stopped = false
-		#sprite.set_self_modulate(Color(1.0, 1.0, 1.0))
-		#sprite.set_speed_scale(1.0)
 		if window.position.y == taskbar_level - window.size.y:
 			if !ready_to_evolve: # Don't change animation when ready to evolve to let evolution animation play better
 				activity = Activities.SITTING

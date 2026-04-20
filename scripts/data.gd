@@ -26,8 +26,8 @@ func _ready() -> void:
 		print("No data found, using default")
 	# Set the variables to the found data, final argument is the default for if no Config File is found
 	nickname = config.get_value("pet", "nickname", "Pet")
-	fullness = config.get_value("pet", "fullness", 100)
-	happiness = config.get_value("pet", "happiness", 100)
+	fullness = config.get_value("pet", "fullness", 80)
+	happiness = config.get_value("pet", "happiness", 80)
 	age = config.get_value("pet", "age", 0)
 	stage = config.get_value("pet", "stage", 0)
 	money = config.get_value("pet", "money", 0)
