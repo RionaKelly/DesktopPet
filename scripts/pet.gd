@@ -257,8 +257,8 @@ func _process(_delta):
 		direction.x = 1 # Change Direction
 		if in_air and velocity.x < 0:
 			velocity.x = velocity.x * -1
-		_update_click_polygon(false)
 		sprite.flip_h = false # This is done in set_sprite() too but I set here for instant change
+		_update_click_polygon()
 		out_of_bounds += 1
 		if debugMovement:
 				print("Bounce off left")
@@ -266,8 +266,8 @@ func _process(_delta):
 		direction.x = -1 # Change Direction
 		if in_air and velocity.x > 0:
 			velocity.x = velocity.x * -1
-		_update_click_polygon(true)
 		sprite.flip_h = true # This is done in set_sprite() too but I set here for instant change
+		_update_click_polygon()
 		out_of_bounds += 1
 		if debugMovement:
 				print("Bounce off right")
@@ -327,12 +327,11 @@ func _process(_delta):
 
 # Creates area of the window that can be clicked through
 var last_activity = Activities.STOPPED # Random default that just needs to not be idle
-func _update_click_polygon(flip = null):
+func _update_click_polygon():
 	# 1. Stop function if it shouldn't be running
 	# function shouldnt run if player needs larger hitboxes
 	if large_hitbox:
 		window.mouse_passthrough_polygon = []
-
 		return
 	# List activities with no animation to save resources
 	if (activity == Activities.IDLE or activity == Activities.SITTING) and last_activity == activity:
@@ -362,7 +361,7 @@ func _update_click_polygon(flip = null):
 	var image = current_sprite.get_image()
 	image.resize((ceil(image.get_size().x * pet_scale) * 1.0), (ceil(image.get_size().y * pet_scale) * 1.0), 
 	Image.Interpolation.INTERPOLATE_NEAREST)
-	if flip == true or sprite.flip_h == true: # flips the polygon if the sprite is flipped
+	if sprite.flip_h == true: # flips the image if the sprite is flipped
 		image.flip_x()
 	
 	# 4. Create the Bitmap (map of solid pixels) from image
@@ -427,11 +426,11 @@ func set_sprite():
 			sprite.play("sit")
 		Activities.WALKING:
 			if direction.x == 1:
-				_update_click_polygon(false)
 				sprite.flip_h = false
+				_update_click_polygon()
 			elif direction.x == -1:
-				_update_click_polygon(true)
 				sprite.flip_h = true
+				_update_click_polygon()
 			else: # extra check just in case direction variable is doing something weird
 				print("Direction [", direction.x, "] outside of given rage")
 			sprite.play("walk")
