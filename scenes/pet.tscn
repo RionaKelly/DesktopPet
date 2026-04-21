@@ -8,6 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://b3celtqf84x6" path="res://sprites/thoughts/thought_happy.png" id="5_6nmc3"]
 [ext_resource type="Script" uid="uid://djlo18buidjse" path="res://scripts/thoughts.gd" id="5_axfbl"]
 [ext_resource type="Material" uid="uid://hmit7326715k" path="res://shaders/line_shader_material.tres" id="6_ekye6"]
+[ext_resource type="Texture2D" uid="uid://dl6trtwvmbolb" path="res://sprites/food/cookie.png" id="8_ekye6"]
 
 [node name="Pet" type="Node2D" unique_id=200465852]
 script = ExtResource("1_sugp2")
@@ -67,6 +68,23 @@ script = ExtResource("5_axfbl")
 texture_filter = 1
 material = ExtResource("6_ekye6")
 texture = ExtResource("5_6nmc3")
+centered = false
+
+[node name="Food" type="Window" parent="." unique_id=1919397393]
+transparent_bg = true
+oversampling_override = 1.0
+title = "Cookie"
+size = Vector2i(8, 8)
+visible = false
+unresizable = true
+borderless = true
+always_on_top = true
+transparent = true
+
+[node name="FoodSprite" type="Sprite2D" parent="Food" unique_id=2026327269]
+texture_filter = 1
+material = ExtResource("6_ekye6")
+texture = ExtResource("8_ekye6")
 centered = false
 
 [node name="Menu" parent="." unique_id=1008188484 instance=ExtResource("4_hmkkh")]

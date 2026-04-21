@@ -60,6 +60,7 @@ var other_material: ShaderMaterial = load("res://shaders/line_shader_material.tr
 var menu_theme: Theme = load("res://other/menu_theme.tres")
 var thinking: bool = false # Whether the pet is currently displaying a thought bubble or not
 var bounces: int = 0 # How many times the pet has bounced off of the wall while in the air
+var food_ready: bool = false # True if the food is on the floor and ready for the pet to eat
 
 # Bug-Testing 
 var debugMovement = false
@@ -96,9 +97,6 @@ func _input(event):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		if not is_stopped:
 			start_stopping(true)
-	
-	##if window.position.x < 0 + usable_rect.position.x:
-	##if window.position.x + window.size.x > usable_rect.size.x + usable_rect.position.x:
 	
 	# Releasing left click unstops pet and evolves if they're on the ground and can
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed == false and is_stopped:
@@ -254,6 +252,10 @@ func _process(_delta):
 	if is_evolving:
 		evolve()
 		return
+	# We should manage food whether pet is stopped or not, so function called here
+	if $Food.is_visible():
+		food_manager()
+	
 	# If Pet is Stopped then follow mouse position, track velocity, skip everything else
 	if is_stopped:
 		var mouse_pos = get_global_mouse_position()
@@ -338,8 +340,8 @@ func _process(_delta):
 		bounces = 0 # reset bounces
 		in_air = false
 		activity = Activities.SITTING
-		$DecisionTimer.start(2)
-		brain()
+		set_sprite()
+		$DecisionTimer.start(1)
 	# Check if pet is above taskbar to fall back down
 	elif in_air:
 		velocity.y += 0.3 # increase fall speed slowly while falling
@@ -461,6 +463,8 @@ func set_size():
 	$Thoughts/ThoughtSprite.set_scale(Vector2(pet_scale, pet_scale)) 
 	if $Thoughts.visible:
 		$Thoughts.position = Vector2i(window.position.x, window.position.y - window.size.y)
+	$Food.size = Vector2i(window_size/2, window_size/2)
+	$Food/FoodSprite.set_scale(Vector2(pet_scale, pet_scale)) 
 	if debugScreen:
 		print("Window Size: ", window_size)
 		print("Pet Scale: ", pet_scale)
@@ -855,6 +859,7 @@ func update_stats():
 		ready_to_evolve = true # Lets pet evolve when not busy
 		if activity == Activities.WALKING:
 			activity = Activities.IDLE
+			set_sprite()
 		$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_evolve.png"))
 		$Thoughts.show()
 		$Thoughts.position = Vector2i(window.position.x, window.position.y - window.size.y)
@@ -907,9 +912,9 @@ func evolution_manager():
 				# Randomise whether pet should gain a trait (new personality or pattern)
 				#var rand_trait = randf()
 				var rand_choice = randf()
-				## Code changed to boost odds on second rolls until i finish personalities
-				print("Num: ", rand_choice, " + Bonus: ", (pattern*(0.04*(stage-1))))
-				rand_choice = rand_choice + (pattern*(0.04*(stage-1)))
+				# Bonus based on current pattern rarity and multiplier based on how well you take care of your pet
+				print("Num: ", rand_choice, " + Bonus: ", (pattern*(0.04*(stage-1))), " x Mult: ", ((happiness + fullness)*0.005)+0.5)
+				rand_choice = (rand_choice + (pattern*(0.04*(stage-1)))) * ((happiness + fullness)*0.005)+0.5
 				#var new_trait = 0 # 0 means no new trait, 1 means pattern, 2 means personality
 				## For now you are guaranteed to gain a new pattern, chances will be changed in the future
 				#if rand_trait < 1.0: 
@@ -1020,7 +1025,7 @@ func save() -> void:
 	var error_code: = config.save("user://data.cfg")
 	# Print just to know that saving is complete with no issues
 	if error_code == OK:
-		print("Saved at ", age/60, ":" , age % 60, ":", str(snapped(60 - $UpdateTimer.get_time_left(), 1)).pad_zeros(2))
+		print("Saved at ", age/60, ":" , str(age % 60).pad_zeros(2), ":", str(snapped(60 - $UpdateTimer.get_time_left(), 1)).pad_zeros(2))
 	# Prints error code if there was an issue during saving
 	else:
 		print("Saving failed with Error: ", error_code)
@@ -1050,3 +1055,25 @@ func request_attention() -> void:
 	# Request attention if pet is ready to evolve
 	if ready_to_evolve:
 		DisplayServer.window_request_attention()
+
+
+# Handles everything for the food window	(gravity, movement, collision, etc.)
+var cookie_in_air: bool = false
+var cookie_velocity: float = 0
+#var cookie_held: bool = false
+func food_manager():
+	#if cookie_held:
+		#$Food.position = Vector2($Food.position) + $Food/FoodSprite.get_global_mouse_position()# - grab_offset
+	#else:
+	# Check if cookie has reached ground to stop falling
+	if cookie_in_air and ($Food.position.y >= (taskbar_level - $Food.size.y)):
+		$Food.position.y = (taskbar_level - $Food.size.y)
+		cookie_velocity = 0 # reset fall speed upon reaching ground
+		cookie_in_air = false
+		food_ready = true
+		print("ready")
+	# Check if cookie is above taskbar to fall back down
+	elif cookie_in_air:
+		cookie_velocity += 0.35 # increase fall speed slowly while falling
+		cookie_velocity = cookie_velocity * .99
+		$Food.position.y += cookie_velocity * move_speed

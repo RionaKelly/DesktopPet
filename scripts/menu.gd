@@ -115,6 +115,8 @@ func _on_back_pressed() -> void:
 	$Settings.hide()
 	$Back.hide()
 
+
+# Brings you to the shop page and hides default
 func _on_shop_pressed() -> void:
 	$Default.hide()
 	$Shop.show()
@@ -126,7 +128,7 @@ func _on_pet_pressed() -> void:
 	$"Pet/Pet Info".set_text(String("Name: " + $"..".nickname + 
 	"\nHappiness: " + str(int($"..".happiness)) + "%  |  " +
 	"Fullness: " + str(int($"..".fullness)) + "%" +
-	"\nAge: " + str($"..".age/60) + ":" + str($"..".age % 60) + ":" + str(snapped(60 - $"../UpdateTimer".get_time_left(), 1)).pad_zeros(2) + "  |  " +
+	"\nAge: " + str($"..".age/60) + ":" + str($"..".age % 60).pad_zeros(2) + ":" + str(snapped(60 - $"../UpdateTimer".get_time_left(), 1)).pad_zeros(2) + "  |  " +
 	"Money: " + str($"..".money) +
 	"\nType: " + ($"..".Types.keys()[$"..".type]).capitalize() +
 	"\nPattern: " + ($"..".Patterns.keys()[$"..".pattern]).capitalize() +
@@ -199,3 +201,10 @@ func _on_delete_pressed():
 	config.clear()
 	config.save("user://data.cfg")
 	print("Save Data Deleted")
+
+
+func _on_cookie_pressed() -> void:
+	if !$"../Food".is_visible():
+		$"../Food".show()
+		$"../Food".position = window.position + Vector2i($Default.get_global_mouse_position()) - $"../Food".size/2
+		$"..".cookie_in_air = true

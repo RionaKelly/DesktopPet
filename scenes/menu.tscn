@@ -12,6 +12,7 @@
 [ext_resource type="Texture2D" uid="uid://ca5yxsrk5uk6m" path="res://sprites/menu/menu_settings.png" id="7_70i5f"]
 [ext_resource type="Texture2D" uid="uid://cd4nffcf1eehd" path="res://sprites/menu/menu_info.png" id="8_mj5lg"]
 [ext_resource type="Texture2D" uid="uid://c4dmiu5bevuc3" path="res://sprites/menu/menu_back.png" id="10_70i5f"]
+[ext_resource type="Texture2D" uid="uid://dl6trtwvmbolb" path="res://sprites/food/cookie.png" id="11_6cdou"]
 
 [node name="Menu" type="Window" unique_id=1008188484]
 transparent_bg = true
@@ -176,11 +177,60 @@ offset_bottom = 380.0
 [node name="Shop" type="Label" parent="Shop" unique_id=700366310]
 layout_mode = 0
 offset_left = 200.0
-offset_top = 54.0
+offset_top = 55.0
 offset_right = 305.0
-offset_bottom = 112.0
+offset_bottom = 113.0
 theme_override_font_sizes/font_size = 48
 text = "Shop"
+
+[node name="Cookie" type="Button" parent="Shop" unique_id=1211049155]
+layout_mode = 0
+offset_left = 29.0
+offset_top = 119.0
+offset_right = 484.0
+offset_bottom = 287.0
+flat = true
+
+[node name="CookieLabel" type="Label" parent="Shop/Cookie" unique_id=1571448746]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 135.0
+offset_right = 112.0
+offset_bottom = 171.0
+theme_override_constants/line_spacing = -3
+theme_override_font_sizes/font_size = 32
+text = "Cookie"
+
+[node name="Cookie Image" type="TextureRect" parent="Shop/Cookie" unique_id=469799564]
+texture_filter = 1
+layout_mode = 0
+offset_left = 6.0
+offset_top = 7.0
+offset_right = 126.0
+offset_bottom = 127.0
+texture = ExtResource("11_6cdou")
+
+[node name="CookiePrice" type="Label" parent="Shop/Cookie" unique_id=1630285295]
+layout_mode = 0
+offset_left = 142.0
+offset_top = 25.0
+offset_right = 482.0
+offset_bottom = 112.0
+theme_override_constants/line_spacing = -3
+theme_override_font_sizes/font_size = 28
+text = "Regular Price: $10
+
+Beta Tester Price: FREE!!"
+
+[node name="BottomText" type="Label" parent="Shop" unique_id=372533150]
+layout_mode = 0
+offset_left = 95.0
+offset_top = 341.0
+offset_right = 395.0
+offset_bottom = 371.0
+theme_override_constants/line_spacing = -3
+theme_override_font_sizes/font_size = 22
+text = "More foods to be added later..."
 
 [node name="Game" type="Control" parent="." unique_id=702855869]
 visible = false
@@ -208,9 +258,9 @@ text = "Info"
 [node name="Controls" type="Label" parent="Info" unique_id=313926343]
 layout_mode = 0
 offset_left = 22.0
-offset_top = 103.0
+offset_top = 108.0
 offset_right = 600.0
-offset_bottom = 238.0
+offset_bottom = 243.0
 theme_override_constants/line_spacing = -3
 theme_override_font_sizes/font_size = 28
 text = "Click - Stop Pet
@@ -221,15 +271,15 @@ Right Click - Pet (not yet)"
 [node name="Explanation" type="Label" parent="Info" unique_id=444362888]
 layout_mode = 0
 offset_left = 21.0
-offset_top = 227.0
+offset_top = 233.0
 offset_right = 484.0
-offset_bottom = 358.0
+offset_bottom = 364.0
 theme_override_constants/line_spacing = -3
 theme_override_font_sizes/font_size = 28
 text = "Feed and play with your pet so they
 can grow up happy and healthy, pets
 will evolve and gain new traits as
-they grow  up :)"
+they grow  up ^u^"
 
 [node name="Settings" type="Control" parent="." unique_id=1265499458]
 visible = false
@@ -354,6 +404,7 @@ expand_icon = true
 [connection signal="pressed" from="Default/Settings" to="." method="_on_settings_pressed"]
 [connection signal="pressed" from="Default/Exit" to="." method="_on_exit_pressed"]
 [connection signal="text_submitted" from="Pet/Name Entry" to="." method="_on_name_entry_text_submitted"]
+[connection signal="pressed" from="Shop/Cookie" to="." method="_on_cookie_pressed"]
 [connection signal="toggled" from="Settings/Saving" to="." method="_on_saving_toggled"]
 [connection signal="toggled" from="Settings/Silent" to="." method="_on_silent_toggled"]
 [connection signal="toggled" from="Settings/Hitbox" to="." method="_on_hitbox_toggled"]
