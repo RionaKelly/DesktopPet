@@ -42,7 +42,7 @@ one_shot = true
 autostart = true
 
 [node name="UpdateTimer" type="Timer" parent="." unique_id=1728820249]
-wait_time = 60.0
+wait_time = 10.0
 autostart = true
 
 [node name="AttentionTimer" type="Timer" parent="." unique_id=1330001196]
@@ -83,7 +83,6 @@ transparent = true
 
 [node name="FoodSprite" type="Sprite2D" parent="Food" unique_id=2026327269]
 texture_filter = 1
-material = ExtResource("6_ekye6")
 texture = ExtResource("8_ekye6")
 centered = false
 

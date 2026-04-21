@@ -80,6 +80,7 @@ var type: Types = Types.BIRD # What species the pet is (default = Bird)
 var pattern: Patterns = Patterns.NONE# Current pattern of Pet (default = None)
 var personality: Personalities = Personalities.NONE # Current personality of Pet (default = None)
 var most_bounces: int # The most times the pet has bounced off of the wall without touching the ground
+var leave_count: int # How many updates the pet has been at 0 of a stat for, when too high they will leave
 
 # Game Settings
 var silent: bool = false # Whether the app should not send alerts as to bother less
@@ -113,11 +114,13 @@ func _input(event):
 				pass
 			else:
 				# Changes the current thought bubble based on pet stats
-				if happiness < 50 and happiness <= fullness: # Happiness below 50 and less than Fullness = Sad
+				if happiness < 5 and fullness < 5: # Happiness below 50 and less than Fullness = Very Sad
+					$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_very_sad.png"))
+				elif happiness < 50 and happiness <= fullness: # Happiness below 50 and less than Fullness = Sad
 					$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_sad.png"))
-				elif fullness < 50 and fullness <= happiness: # Fullness below 50 and less than Happiness = Sad
+				elif fullness < 50 and fullness <= happiness: # Fullness below 50 and less than Happiness = Hungry
 					$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_hungry.png"))	
-				elif happiness > 90 and fullness > 90: # Happiness and Fullness both over 90 = Really Happy
+				elif happiness > 90 and fullness > 90: # Happiness and Fullness both over 90 = Very Happy
 					$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_love.png"))
 				else: # Happiness and Fullness both between 50 and 90 = Happy
 					$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_happy.png"))
@@ -158,6 +161,7 @@ func _ready() -> void:
 	pattern = Data.pattern as Patterns
 	personality = Data.personality as Personalities
 	most_bounces = Data.most_bounces
+	leave_count = Data.leave_count
 	main_screen = Data.main_screen
 	shader_on = Data.shader_on
 	large_hitbox = Data.large_hitbox
@@ -216,9 +220,6 @@ func _ready() -> void:
 	if open_menu:
 		$Menu.position = Vector2i(window.position.x - $Menu.size.x/3, window.position.y - $Menu.size.y * 1.05)
 		$Menu.show()
-	
-	# Sets the Thought Window cutout
-	$Thoughts._update_click_polygon()
 	
 	# Start the timers for pet decision and saving
 	$DecisionTimer.start()
@@ -459,10 +460,13 @@ func set_size():
 	$Menu.size = Vector2i(window_size * 3.125, window_size * 2.375) # multiplied by the difference in size compared to the pet
 	if $Menu.visible:
 		$Menu.position = Vector2i(window.position.x - $Menu.size.x/3, window.position.y - $Menu.size.y * 1.05)
+	
 	$Thoughts.size = Vector2i(window_size, window_size*2)
 	$Thoughts/ThoughtSprite.set_scale(Vector2(pet_scale, pet_scale)) 
 	if $Thoughts.visible:
 		$Thoughts.position = Vector2i(window.position.x, window.position.y - window.size.y)
+	$Thoughts._update_click_polygon()
+	
 	$Food.size = Vector2i(window_size/2, window_size/2)
 	$Food/FoodSprite.set_scale(Vector2(pet_scale, pet_scale)) 
 	if debugScreen:
@@ -538,7 +542,9 @@ func set_pattern():
 		sprite_material.set_shader_parameter("change_color", false)
 		return
 	sprite_material.set_shader_parameter("change_color", true)
-	sprite_material.set_shader_parameter("change_line_color", false) # Reset for most cases where line colour isn't changed
+	# Reset for most cases where line colour isn't changed
+	sprite_material.set_shader_parameter("change_line_color", false) 
+	other_material.set_shader_parameter("change_line_color", false)
 	
 	var first_color: Color
 	var second_color: Color
@@ -762,45 +768,56 @@ func brain():
 	var rand_choice = randf()
 	var rand_wait = 1.2 # Temporary wait time while establishing variable
 	
-	# Decides the Pet's next action based on what they are currently doing and a random number
-	match activity:
-		Activities.IDLE: # 3 : 3.5 : 3.5
-			if rand_choice < 0.3:
-				activity = Activities.SITTING
-				direction.x = 0
-				if debugMovement:
-					print("Sit")
-			elif rand_choice < 0.65 and window.position.x + window.size.x < ((usable_rect.size.x)*0.9) + usable_rect.position.x:
-				activity = Activities.WALKING
-				direction.x = 1
-				if debugMovement:
-					print("Turn Right")
-			elif window.position.x > (usable_rect.size.x * 0.1) + usable_rect.position.x:
-				activity = Activities.WALKING
-				direction.x = -1
-				if debugMovement:
-					print("Turn Left")
-		Activities.SITTING: # 7 : 3
-			if rand_choice < 0.7:
-				activity = Activities.IDLE
-				direction.x = 0
-				if debugMovement:
-					print("Get Up")
-			else:
-				if debugMovement:
-					print("Continue Sitting")
-		Activities.WALKING: # 6 : 4
-			if rand_choice < 0.6:
-				activity = Activities.IDLE
-				direction.x = 0
-				if debugMovement:
-					print("Stop")
-			else:
-				if debugMovement:
-					print("Continue Walking")
-		_:
+	if food_ready and fullness < 100: # pet will find food if it is on the floor and they are not full
+		activity = Activities.WALKING
+		if $Food.position.x > window.position.x:
+			direction.x = 1
 			if debugMovement:
-					print("Activity ", activity, " Not Found")
+				print("Walking Right towards food")
+		else:
+			direction.x = -1
+			if debugMovement:
+				print("Walking Left towards food")
+	else:
+		# Decides the Pet's next action based on what they are currently doing and a random number
+		match activity:
+			Activities.IDLE: # 3 : 3.5 : 3.5
+				if rand_choice < 0.3:
+					activity = Activities.SITTING
+					direction.x = 0
+					if debugMovement:
+						print("Sit")
+				elif rand_choice < 0.65 and window.position.x + window.size.x < ((usable_rect.size.x)*0.9) + usable_rect.position.x:
+					activity = Activities.WALKING
+					direction.x = 1
+					if debugMovement:
+						print("Turn Right")
+				elif window.position.x > (usable_rect.size.x * 0.1) + usable_rect.position.x:
+					activity = Activities.WALKING
+					direction.x = -1
+					if debugMovement:
+						print("Turn Left")
+			Activities.SITTING: # 7 : 3
+				if rand_choice < 0.7:
+					activity = Activities.IDLE
+					direction.x = 0
+					if debugMovement:
+						print("Get Up")
+				else:
+					if debugMovement:
+						print("Continue Sitting")
+			Activities.WALKING: # 6 : 4
+				if rand_choice < 0.6:
+					activity = Activities.IDLE
+					direction.x = 0
+					if debugMovement:
+						print("Stop")
+				else:
+					if debugMovement:
+						print("Continue Walking")
+			_:
+				if debugMovement:
+						print("Activity ", activity, " Not Found")
 	
 	match activity:
 		Activities.IDLE: # wait time doesn't matter because no animation
@@ -838,6 +855,7 @@ func update_stats():
 	age += 1 
 	if debugStats:
 		print("HC: ", hungry_count, " - SC: ", sad_count)
+	
 	# Updates the pet's happiness and fullness based on what they have done
 	if fullness > 0 and hungry_count > 0:
 		fullness -= (hungry_count/60) + 0.05 # lose hunger equal to hunger count out of 60, + 0.05 as a small buffer
@@ -849,13 +867,33 @@ func update_stats():
 	sad_count = 1.0
 	if debugStats:
 		print ("Fullness: ", fullness, " - Happiness: ", happiness)
-		
-	# Check if happiness and fullness are 0 for pet to leave
-	if happiness < 0 or fullness < 0:
-		print("Dead")
 	
-	# Check if pet is old enough to evolve
-	if ((stage == 0 and age >= 300) or (stage == 1 and age >= 900) or (stage == 2 and age >= 1800)) and !ready_to_evolve:
+	# Check if happiness and fullness are 0 for pet to increase the leave counter and display a sad thought bubble
+	if happiness < 5 or fullness < 5:
+		leave_count += 1
+		if debugStats:
+			print("Leave Count Increased, Currently ", leave_count)
+		activity = Activities.SITTING
+		set_sprite()
+		$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_very_sad.png"))
+		$Thoughts.show()
+		$Thoughts.position = Vector2i(window.position.x, window.position.y - window.size.y)
+		DisplayServer.window_request_attention() # done here to only request attention once
+		$DecisionTimer.start(2)
+	# If leave count reaches 180 (4 hours). pet is ready to leave and will delete their data and close the game
+	if leave_count >= 240:
+		print(nickname, " left to find someone else to take care of them")
+		var config := ConfigFile.new()
+		if config.load("user://data.cfg") != OK: # Load file and check if it is loaded ok
+			print("No data found to delete")
+		config.save("user://" + nickname.replace(" ", "_") + ".cfg") # saves the data seperately 
+		config.clear()
+		config.save("user://data.cfg")
+		print("Save Data Deleted")
+		saveGame = false
+		exit()
+	# Check if pet is old enough to evolve, leaving takes priority so this wont happen if they are too sad
+	elif ((stage == 0 and age >= 300) or (stage == 1 and age >= 900) or (stage == 2 and age >= 1800)) and !ready_to_evolve:
 		ready_to_evolve = true # Lets pet evolve when not busy
 		if activity == Activities.WALKING:
 			activity = Activities.IDLE
@@ -1012,6 +1050,7 @@ func save() -> void:
 	config.set_value("pet", "pattern", pattern)
 	config.set_value("pet", "personality", personality)
 	config.set_value("pet", "most_bounces", most_bounces)
+	config.set_value("pet", "leave_count", leave_count)
 	# Writes the Settings data
 	config.set_value("settings", "silent", silent)
 	config.set_value("settings", "main_screen", main_screen)
@@ -1065,15 +1104,25 @@ func food_manager():
 	#if cookie_held:
 		#$Food.position = Vector2($Food.position) + $Food/FoodSprite.get_global_mouse_position()# - grab_offset
 	#else:
+	
 	# Check if cookie has reached ground to stop falling
 	if cookie_in_air and ($Food.position.y >= (taskbar_level - $Food.size.y)):
 		$Food.position.y = (taskbar_level - $Food.size.y)
 		cookie_velocity = 0 # reset fall speed upon reaching ground
 		cookie_in_air = false
 		food_ready = true
-		print("ready")
 	# Check if cookie is above taskbar to fall back down
 	elif cookie_in_air:
 		cookie_velocity += 0.35 # increase fall speed slowly while falling
 		cookie_velocity = cookie_velocity * .99
 		$Food.position.y += cookie_velocity * move_speed
+	
+	# Check if Pet is colliding with cookie to "eat it", hiding it and restoring hunger
+	if window.position.x + window.size.x > $Food.position.x and window.position.x < $Food.position.x + $Food.size.x and fullness < 100:
+		print("Food Eaten!")
+		food_ready = false
+		$Food.hide()
+		if fullness < 100:
+			fullness += 5
+			if fullness > 100:
+				fullness = 100 # fix in case it goes over 100
