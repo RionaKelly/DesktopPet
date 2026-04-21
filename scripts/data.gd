@@ -31,7 +31,7 @@ func _ready() -> void:
 	age = config.get_value("pet", "age", 0)
 	stage = config.get_value("pet", "stage", 0)
 	money = config.get_value("pet", "money", 0)
-	type = config.get_value("pet", "type", randi_range(0, 2))
+	type = config.get_value("pet", "type", -1) # default value isn't a valid type, so that it is randomised in pet.gd later
 	pattern = config.get_value("pet", "pattern", 0)
 	personality = config.get_value("pet", "personality", 0)
 	silent = config.get_value("settings", "silent", false)

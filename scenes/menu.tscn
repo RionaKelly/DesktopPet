@@ -5,6 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://dec1g4apoieb4" path="res://sprites/menu/menu_egg.png" id="3_con2f"]
 [ext_resource type="Texture2D" uid="uid://bomhdlwkbd57k" path="res://sprites/menu/menu_close.png" id="3_i6lef"]
 [ext_resource type="Theme" uid="uid://dviv1t3hlh01p" path="res://other/menu_theme.tres" id="3_mj5lg"]
+[ext_resource type="Material" uid="uid://chp53t3mp6haa" path="res://shaders/menu_shader_material.tres" id="3_ufwb2"]
 [ext_resource type="Texture2D" uid="uid://b251u8ht4cncj" path="res://sprites/menu/menu_exit.png" id="4_mhnvy"]
 [ext_resource type="Texture2D" uid="uid://dyo7wfo68pwui" path="res://sprites/menu/menu_shop.png" id="5_13sgg"]
 [ext_resource type="Texture2D" uid="uid://dsxm7tmwmquqk" path="res://sprites/menu/menu_games.png" id="6_i6lef"]
@@ -29,6 +30,7 @@ script = ExtResource("1_yqeox")
 
 [node name="TextureRect" type="TextureRect" parent="." unique_id=183108371]
 texture_filter = 1
+material = ExtResource("3_ufwb2")
 offset_right = 500.0
 offset_bottom = 380.0
 texture = ExtResource("2_vjb58")

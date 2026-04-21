@@ -1,0 +1,10 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://hmit7326715k"]
+
+[ext_resource type="Shader" uid="uid://dir7ghcte35me" path="res://shaders/line.gdshader" id="1_nxyr5"]
+
+[resource]
+shader = ExtResource("1_nxyr5")
+shader_parameter/change_line_color = false
+shader_parameter/line_color = Color(0, 0, 0, 1)
+shader_parameter/line_replace_color = Color(0, 0, 0, 1)
+shader_parameter/color_threshold = 0.10000000475

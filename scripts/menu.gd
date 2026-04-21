@@ -41,7 +41,6 @@ func _ready() -> void:
 		windows10 = true
 		print("Windows 10 Dragging set up")
 	
-	$TextureRect.set_material(menu_material)
 	menu_material.set_shader_parameter("primary_color", Color(0.98, 0.878, 0.898, 1.0))
 	menu_material.set_shader_parameter("secondary_color", Color(0.835, 0.651, 0.902, 1.0))
 	menu_material.set_shader_parameter("line_color", Color(0.0, 0.0, 0.0, 1.0))

@@ -55,14 +55,16 @@ var is_evolving: bool = false # bool to play evolution animation and stop functi
 var ready_to_evolve: bool = false # Whether the pet is ready to evolve and should alert the player
 var evolution_step: int = 1 # The current step of the evolution animation that the pet is on for tracking
 var sprite_material: ShaderMaterial = load("res://shaders/pet_shader_material.tres")# The sprite's Shader Material
-var menu_material: ShaderMaterial = load("res://shaders/menu_shader_material.tres")# The sprite's Shader Material
-var menu_theme: Theme= load("res://other/menu_theme.tres")
+var menu_material: ShaderMaterial = load("res://shaders/menu_shader_material.tres")# The menu's Shader Material
+var other_material: ShaderMaterial = load("res://shaders/line_shader_material.tres")# The generic Shader Material
+var menu_theme: Theme = load("res://other/menu_theme.tres")
 var thinking: bool = false # Whether the pet is currently displaying a thought bubble or not
 
 # Bug-Testing 
 var debugMovement = false
 var debugScreen = false
 var debugInput = false
+var debugStats = true
 
 ## Variables from here are loaded from save data (or set to default) using data.gd
 # Pet Data
@@ -92,28 +94,33 @@ func _input(event):
 		if not is_stopped:
 			start_stopping(true)
 	
+	##if window.position.x < 0 + usable_rect.position.x:
+	##if window.position.x + window.size.x > usable_rect.size.x + usable_rect.position.x:
+	
 	# Releasing left click unstops pet and evolves if they're on the ground and can
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed == false and is_stopped:
 		if is_stopped:
 			start_stopping(false)
 		if window.position.y == taskbar_level - window.size.y:
 			await get_tree().create_timer(0.3).timeout
-			if $Menu.is_visible() and (($Menu.position.x < window.position.x + window.size.x) and ($Menu.position.x + $Menu.size.x > window.position.x)) and $Menu.position.y + $Menu.size.y > window.position.x - window.size.x:
+			if ($Menu.is_visible() and # If menu is visible and would overlap with thought bubble, don't display
+			(($Menu.position.x < window.position.x + window.size.x) and
+			($Menu.position.x + $Menu.size.x > window.position.x)) and 
+			$Menu.position.y + $Menu.size.y > window.position.y - window.size.y):
 				pass
 			else:
 				# Changes the current thought bubble based on pet stats
-				if fullness < 50 and fullness < happiness:
-					$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_hungry.png"))
-					print("hungry")
-				elif happiness < 50 and happiness < fullness:
-					$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_sad.png"))	
-					print("sad")
-				elif happiness > 90 and fullness > 90:
+				if happiness < 50 and happiness <= fullness: # Happiness below 50 and less than Fullness = Sad
+					$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_sad.png"))
+				elif fullness < 50 and fullness <= happiness: # Fullness below 50 and less than Happiness = Sad
+					$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_hungry.png"))	
+				elif happiness > 90 and fullness > 90: # Happiness and Fullness both over 90 = Really Happy
 					$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_love.png"))
-					print("very happy")
-				else:
+				else: # Happiness and Fullness both between 50 and 90 = Happy
 					$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_happy.png"))
-					print("happy")
+				if debugStats:
+					print("Fullness: ", fullness, " - Happiness: ", happiness)
+					print("Hungry Count: ", hungry_count, " - Sad Count: ", sad_count)
 				$Thoughts.show()
 				$Thoughts.position = Vector2i(window.position.x, window.position.y - window.size.y)
 			# If ready to evolve, begin evolution when clicked
@@ -164,15 +171,13 @@ func _ready() -> void:
 		print("Operating System: ", DisplayServer.get_name())
 		print("")
 	
-	# Apply Shader, done here so that set_type() can modify variables
-	sprite.set_material(sprite_material)
 	# Enable/disable wobbly shader based on saved data
 	if shader_on:
 		sprite_material.set_shader_parameter("baba_shader_on", true)
 	elif !shader_on:
 		sprite_material.set_shader_parameter("baba_shader_on", false)
 	
-	# Sets the window and pet's size
+	# Sets the windows' sizes
 	set_size()
 	# Sets the pet's appearance to match their type, either from save data or randomised in data.gd
 	set_type() 
@@ -192,6 +197,7 @@ func _ready() -> void:
 	get_tree().set_auto_accept_quit(false)
 	
 	# Move the sprite to centre of the last screen at above the taskbar
+	##	elif window.position.y > (taskbar_level - window.size.y):
 	window.position = Vector2i(DisplayServer.screen_get_size(main_screen).x/2 - (window.size.x/2) + 
 	DisplayServer.screen_get_position(main_screen).x, taskbar_level - window.size.y)
 	if debugMovement:
@@ -199,12 +205,14 @@ func _ready() -> void:
 	# Resets the usable rect if the pet is not starting on the default screen
 	if main_screen != DisplayServer.get_primary_screen():
 		change_screen()
+		# Fix Y level so that pet starts on taskbar if second screen is a different pixel height
+		window.position.y = taskbar_level - window.size.y
 	# Places the Menu if told to open on start
 	if open_menu:
 		$Menu.position = Vector2i(window.position.x - $Menu.size.x/3, window.position.y - $Menu.size.y * 1.05)
 		$Menu.show()
 	
-	# Sets the Thought Window size
+	# Sets the Thought Window cutout
 	$Thoughts._update_click_polygon()
 	
 	# Start the timers for pet decision and saving
@@ -486,7 +494,7 @@ func set_type():
 			sprite.set_sprite_frames(load("res://sprite_frames/octopus.tres"))
 			sprite_material.set_shader_parameter("primary_color", Color(0.447, 0.576, 0.749, 1.0))
 			sprite_material.set_shader_parameter("secondary_color", Color(0.604, 0.482, 0.769, 1.0))
-		# Backup to choos a random pet and run function again if no valid type is found
+		# Backup to choose a random pet and run function again if no valid type is found
 		_:
 			print("Type Invalid, Sprite Randomised")
 			match randi_range(0, 2):
@@ -510,7 +518,7 @@ func set_pattern():
 		sprite_material.set_shader_parameter("change_color", false)
 		return
 	sprite_material.set_shader_parameter("change_color", true)
-	sprite_material.set_shader_parameter("line_replace_color", Color(0.0, 0.0, 0.0, 1.0))
+	sprite_material.set_shader_parameter("change_line_color", false) # Reset for most cases where line colour isn't changed
 	
 	var first_color: Color
 	var second_color: Color
@@ -581,7 +589,10 @@ func set_pattern():
 				2: # Octopus
 					first_color = Color(0.333, 0.761, 0.937, 1.0)
 					second_color = Color(0.91, 0.431, 0.639, 1.0)
+			sprite_material.set_shader_parameter("change_line_color", true)
 			sprite_material.set_shader_parameter("line_replace_color", Color(0.0, 0.29, 0.565, 1.0))
+			other_material.set_shader_parameter("change_line_color", true)
+			other_material.set_shader_parameter("line_replace_color", Color(0.0, 0.29, 0.565, 1.0))
 		7: # Retro B
 			match type:
 				0: # Bird
@@ -593,12 +604,16 @@ func set_pattern():
 				2: # Octopus
 					first_color = Color(0.925, 0.427, 0.424, 1.0)
 					second_color = Color(1.0, 0.859, 0.239, 1.0)
+			sprite_material.set_shader_parameter("change_line_color", true)
 			sprite_material.set_shader_parameter("line_replace_color", Color(0.0, 0.29, 0.565, 1.0))
+			other_material.set_shader_parameter("change_line_color", true)
+			other_material.set_shader_parameter("line_replace_color", Color(0.0, 0.29, 0.565, 1.0))
 		8: # Special
 			match type:
 				0: # Bird
 					first_color = Color(0.353, 0.749, 0.753, 1.0)
 					second_color = Color(0.122, 0.102, 0.647, 1.0)
+					sprite_material.set_shader_parameter("change_line_color", true)
 					sprite_material.set_shader_parameter("line_replace_color", Color(0.94, 0.94, 0.94, 1.0))
 				1: # Bunny
 					first_color = Color(0.427, 0.737, 0.427, 0.8)
@@ -632,17 +647,20 @@ func set_menu_theme():
 			
 	# Changes outline and text/icon colour accordingly
 	if pattern == 8: # Special
+		menu_material.set_shader_parameter("change_line_color", true)
 		line_color = Color(1.0, 1.0, 1.0, 1.0)
 		$Menu/Close.add_theme_color_override("icon_normal_color", Color())
 		$Menu/Close.add_theme_color_override("icon_hover_color", Color(0.202, 0.202, 0.202, 1.0))
 		$Menu/Close.add_theme_color_override("icon_pressed_color", Color(0.37, 0.37, 0.37, 1.0))
-	elif pattern >= 6: # Retro
+	elif pattern >= 6: # Retro A and Retro B
+		menu_material.set_shader_parameter("change_line_color", true)
 		line_color =  Color(0.0, 0.29, 0.565, 1.0)
 		menu_material.set_shader_parameter("line_replace_color", line_color)
 		$Menu/Close.remove_theme_color_override("icon_normal_color")
 		$Menu/Close.remove_theme_color_override("icon_hover_color")
 		$Menu/Close.remove_theme_color_override("icon_pressed_color")
 	else:
+		menu_material.set_shader_parameter("change_line_color", false)
 		line_color =  Color(0.0, 0.0, 0.0, 1.0)
 		$Menu/Close.remove_theme_color_override("icon_normal_color")
 		$Menu/Close.remove_theme_color_override("icon_hover_color")
@@ -802,10 +820,12 @@ func update_stats():
 	age += 1 
 	
 	# Updates the pet's happiness and fullness based on what they have done
-	fullness -= 1
-	happiness -= 1
-	hungry_count = 0.0
-	sad_count = 0.0
+	if fullness > 0:
+		fullness -= 1
+		hungry_count = 0.0
+	if happiness > 0:
+		happiness -= 1
+		sad_count = 0.0
 	print ("Fullness: ", fullness, " - Happiness: ", happiness)
 	
 	# Check if happiness and fullness are 0 for pet to leave
