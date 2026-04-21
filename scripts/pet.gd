@@ -3,10 +3,8 @@
 # https://youtube.com/playlist?list=PLVzjdZVCXNTyVHAtpgF_uFbsz8MA8uWKO&si=FOG2BfnqTqjJTduE
 
 ## TO DO - ASAP
-# Happiness and Fullness
 # Work Mode
 # Personality Traits affecting decisions
-# Shop
 # Games
 ## TO DO - AFTER
 # Taking good care of your pet gives higher chance of rare patterns and personalities
@@ -296,9 +294,11 @@ func _process(_delta):
 		direction.x = 1 # Change Direction
 		if in_air and velocity.x < 0:
 			velocity.x = velocity.x * -1
-			if happiness <= 95: # bouncing off of walls increases happiness a little if below 95 happines
-				happiness += 0.2 
 			bounces += 1
+			if happiness <= 100: # bouncing off of walls increases happiness for each bounce theyve made without landing
+				happiness += bounces*0.1
+				if happiness > 100:
+					happiness = 100
 			if bounces > most_bounces:
 				most_bounces = bounces			
 		sprite.flip_h = false # This is done in set_sprite() too but I set here for instant change
@@ -310,9 +310,11 @@ func _process(_delta):
 		direction.x = -1 # Change Direction
 		if in_air and velocity.x > 0:
 			velocity.x = velocity.x * -1
-			if happiness <= 95: # bouncing off of walls increases happiness a little if below 95 happines
-				happiness += 0.2 
 			bounces += 1
+			if happiness <= 100: # bouncing off of walls increases happiness for each bounce theyve made without landing
+				happiness += bounces*0.1
+				if happiness > 100:
+					happiness = 100
 			if bounces > most_bounces:
 				most_bounces = bounces
 		sprite.flip_h = true # This is done in set_sprite() too but I set here for instant change
@@ -325,9 +327,11 @@ func _process(_delta):
 			direction.y = 0
 		if velocity.y < 0:
 			velocity.y = velocity.y * -1
-		if happiness <= 95: # bouncing off of walls increases happiness a little if below 95 happines
-			happiness += 0.2 
-			bounces += 1
+		bounces += 1
+		if happiness <= 100: # bouncing off of walls increases happiness for each bounce theyve made without landing
+			happiness += bounces*0.1
+			if happiness > 100:
+				happiness = 100
 		if bounces > most_bounces:
 			most_bounces = bounces
 		if debugMovement:

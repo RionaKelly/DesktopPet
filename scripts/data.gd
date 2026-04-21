@@ -20,7 +20,7 @@ var shader_on: bool # Whether the pet should use the distortion shade or not, ch
 var large_hitbox: bool # Whether the pet should keep the default window-size hitbox for accesibility
 var open_menu: bool # Whether the menu should open automatically on start
 var keep_pattern: bool # When enabled, pet won't change pattern when evolving
-var save_game: bool = true # Whether the game should save
+var save_game: bool # Whether the game should save
 
 
 func _ready() -> void:
