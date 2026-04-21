@@ -120,8 +120,8 @@ func _on_pet_pressed() -> void:
 	# Update information about pet
 	$"Pet/Pet Info".set_text(String("Name: " + $"..".nickname + 
 	"\nAge: " + str($"..".age) + 
-	"\nHappiness: " + str($"..".happiness) + "%" +
-	"\nFullness: " + str($"..".fullness) + "%" +
+	"\nHappiness: " + str(int($"..".happiness)) + "%" +
+	"\nFullness: " + str(int($"..".fullness)) + "%" +
 	"\nMoney: " + str($"..".money) +
 	"\nType: " + ($"..".Types.keys()[$"..".type]).capitalize() +
 	"\nPattern: " + ($"..".Patterns.keys()[$"..".pattern]).capitalize() +

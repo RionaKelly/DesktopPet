@@ -59,6 +59,7 @@ var menu_material: ShaderMaterial = load("res://shaders/menu_shader_material.tre
 var other_material: ShaderMaterial = load("res://shaders/line_shader_material.tres")# The generic Shader Material
 var menu_theme: Theme = load("res://other/menu_theme.tres")
 var thinking: bool = false # Whether the pet is currently displaying a thought bubble or not
+var bounces: int = 0 # How many times the pet has bounced off of the wall while in the air
 
 # Bug-Testing 
 var debugMovement = false
@@ -69,14 +70,15 @@ var debugStats = true
 ## Variables from here are loaded from save data (or set to default) using data.gd
 # Pet Data
 var nickname: String # Pet's name, shows in UI and as Window title
-var fullness: int # Pet's hunger, 100 = full
-var happiness: int # Pet's happiness, 100 = happy
+var fullness: float # Pet's hunger, 100 = full
+var happiness: float # Pet's happiness, 100 = happy
 var age: int # How old the pet is in minutes
 var stage: int # How many evolution's the pet has undergone
 var money: int # How much money the player/pet has
 var type: Types = Types.BIRD # What species the pet is (default = Bird)
 var pattern: Patterns = Patterns.NONE# Current pattern of Pet (default = None)
 var personality: Personalities = Personalities.NONE # Current personality of Pet (default = None)
+var most_bounces: int # The most times the pet has bounced off of the wall without touching the ground
 
 # Game Settings
 var silent: bool = false # Whether the app should not send alerts as to bother less
@@ -101,6 +103,8 @@ func _input(event):
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed == false and is_stopped:
 		if is_stopped:
 			start_stopping(false)
+			if happiness < 80: # increase happiness a little when it is less than 80
+				happiness += 0.1
 		if window.position.y == taskbar_level - window.size.y:
 			await get_tree().create_timer(0.3).timeout
 			if ($Menu.is_visible() and # If menu is visible and would overlap with thought bubble, don't display
@@ -154,6 +158,7 @@ func _ready() -> void:
 	type = Data.type as Types
 	pattern = Data.pattern as Patterns
 	personality = Data.personality as Personalities
+	most_bounces = Data.most_bounces
 	main_screen = Data.main_screen
 	shader_on = Data.shader_on
 	large_hitbox = Data.large_hitbox
@@ -269,8 +274,7 @@ func _process(_delta):
 	# Checks if pet is in the air for throwing physics
 	if window.position.y < (taskbar_level - window.size.y):
 		in_air = true
-	else:
-		in_air = false
+
 	# Checks to make sure the pet is not out of bounds
 	if window.position.x > 0 + usable_rect.position.x and window.position.x + window.size.x < usable_rect.size.x + usable_rect.position.x:
 		out_of_bounds = 0
@@ -287,6 +291,11 @@ func _process(_delta):
 		direction.x = 1 # Change Direction
 		if in_air and velocity.x < 0:
 			velocity.x = velocity.x * -1
+			if happiness <= 98.8: # bouncing off of walls increases happiness a little
+				happiness += 0.2 
+			bounces += 1
+			if bounces > most_bounces:
+				most_bounces = bounces			
 		sprite.flip_h = false # This is done in set_sprite() too but I set here for instant change
 		_update_click_polygon()
 		out_of_bounds += 1
@@ -296,6 +305,11 @@ func _process(_delta):
 		direction.x = -1 # Change Direction
 		if in_air and velocity.x > 0:
 			velocity.x = velocity.x * -1
+			if happiness <= 98.8: # bouncing off of walls increases happiness a little
+				happiness += 0.2 
+			bounces += 1
+			if bounces > most_bounces:
+				most_bounces = bounces
 		sprite.flip_h = true # This is done in set_sprite() too but I set here for instant change
 		_update_click_polygon()
 		out_of_bounds += 1
@@ -306,11 +320,27 @@ func _process(_delta):
 			direction.y = 0
 		if velocity.y < 0:
 			velocity.y = velocity.y * -1
+		if happiness <= 98.8: # bouncing off of walls increases happiness a little
+			happiness += 0.2 
+			bounces += 1
+		if bounces > most_bounces:
+			most_bounces = bounces
 		if debugMovement:
 				print("Bounce off top")
 	
+	if in_air and (window.position.y >= (taskbar_level - window.size.y)):
+		if debugMovement:
+			print("Reached Floor with velocity ", velocity)
+		window.position.y = (taskbar_level - window.size.y)
+		velocity = Vector2.ZERO # reset fall speed upon reaching ground
+		bounces = 0 # reset bounces
+		print(most_bounces)
+		in_air = false
+		activity = Activities.SITTING
+		$DecisionTimer.start(2)
+		brain()
 	# Check if pet is above taskbar to fall back down
-	if in_air:
+	elif in_air:
 		velocity.y += 0.3 # increase fall speed slowly while falling
 		velocity = velocity * .99
 		if velocity.x > 0:
@@ -321,21 +351,21 @@ func _process(_delta):
 		window.position += Vector2i(velocity * move_speed)
 		if debugMovement:
 			print("Falling with velocity ", velocity)
-	elif window.position.y > (taskbar_level - window.size.y):
-		if debugMovement:
-			print("Reached Floor with velocity ", velocity)
-		window.position.y = (taskbar_level - window.size.y)
-		velocity = Vector2.ZERO # reset fall speed upon reaching ground
-	else:
-		velocity = Vector2.ZERO # reset fall speed upon reaching ground
-		if activity == Activities.FALLING:
-			activity = Activities.SITTING
-			brain()
+	#else:
+		#velocity = Vector2.ZERO # reset fall speed upon reaching ground
+		##bounces = 0 # reset bounces
+		#print(most_bounces)
+		#in_air = false
+		#if activity == Activities.FALLING:
+			#activity = Activities.SITTING
+			#$DecisionTimer.start(2)
+			#brain()
 	
 	# If pet is out of bounds for 60 frames, reset position
 	if out_of_bounds >= 60:
 		out_of_bounds = 0
 		if main_screen == window.current_screen:
+			print("Pet Found at ", window.position)
 			window.position = Vector2i(DisplayServer.screen_get_size(main_screen).x/2 - (window.size.x/2) + 
 			DisplayServer.screen_get_position(main_screen).x, taskbar_level - window.size.y)
 			print("Pet Position Reset to ", window.position)
@@ -780,7 +810,7 @@ func brain():
 					print("Continue Walking")
 		_:
 			if debugMovement:
-					print("Activity Not Found")
+					print("Activity ", activity, " Not Found")
 	
 	match activity:
 		Activities.IDLE: # wait time doesn't matter because no animation
@@ -792,15 +822,13 @@ func brain():
 				rand_wait = randi_range(1, 6) * 0.8
 			else: 
 				rand_wait = randi_range(1, 3) * 1.6
-			# Updates the count based on how long pet will be walking
-			hungry_count += rand_wait
+			hungry_count += rand_wait # Increases count based on how long pet will walk
 	
 	decision_time = false
 	
 	if debugMovement:
 		print("Wait ", rand_wait)
-	$DecisionTimer.wait_time = rand_wait
-	$DecisionTimer.start()
+	$DecisionTimer.start(rand_wait)
 	
 	set_sprite() # changes the Pet's sprite to match what they're doing
 
@@ -818,16 +846,18 @@ func change_screen():
 func update_stats():
 	# Increases the pet's age by 1 every 60 seconds
 	age += 1 
-	
+	if debugStats:
+		print("HC: ", hungry_count, " - SC: ", sad_count)
 	# Updates the pet's happiness and fullness based on what they have done
-	if fullness > 0:
-		fullness -= 1
-		hungry_count = 0.0
-	if happiness > 0:
-		happiness -= 1
-		sad_count = 0.0
-	print ("Fullness: ", fullness, " - Happiness: ", happiness)
-	
+	if fullness > 0 and hungry_count > 0:
+		fullness -= (hungry_count/60) + 0.1 # lose hunger equal to hunger count out of 60, + 0.1 as a small buffer
+	if happiness > 0 and sad_count > 0:
+		happiness -= snappedf(randf_range(0.1, sad_count), 0.1) # lose happiness between 0.1 and sad_count
+	hungry_count = 0.0
+	sad_count = 1.0
+	if debugStats:
+		print ("Fullness: ", fullness, " - Happiness: ", happiness)
+		
 	# Check if happiness and fullness are 0 for pet to leave
 	if happiness < 0 or fullness < 0:
 		print("Dead")
@@ -850,6 +880,7 @@ func start_stopping(stop):
 		grab_offset = get_global_mouse_position()
 		activity = Activities.STOPPED
 		set_sprite()
+		bounces = 0 # reset bounces
 		$DecisionTimer.stop()
 	else:
 		grab_offset = Vector2.ZERO
@@ -980,6 +1011,7 @@ func save() -> void:
 	config.set_value("pet", "type", type)
 	config.set_value("pet", "pattern", pattern)
 	config.set_value("pet", "personality", personality)
+	config.set_value("pet", "most_bounces", most_bounces)
 	# Writes the Settings data
 	config.set_value("settings", "silent", silent)
 	config.set_value("settings", "main_screen", main_screen)
