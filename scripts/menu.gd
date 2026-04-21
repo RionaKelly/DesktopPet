@@ -55,11 +55,9 @@ func _process(_delta):
 		if windows10:
 				new_pos = Vector2i($"..".get_global_mouse_position()) + Vector2i($"..".window.position) - Vector2i(grab_offset)
 				window.position = new_pos
-				print("M: ", Vector2i($"..".get_global_mouse_position()), "W: ", Vector2i($"..".window.position), "G: ", grab_offset, "S: ", window.size.x)
-				## look into window_start_drag()
+				## note to self: look into window_start_drag(), i don't know if it'll work for this though
 		else: # Regular dragging setup for otherwise
 				new_pos = Vector2(window.position) + $Default.get_global_mouse_position() - grab_offset
-				print("M: ", Vector2i($Default.get_global_mouse_position()), "W: ", Vector2i(window.position), "G: ", grab_offset, "S: ", window.size.x)
 		window.position = new_pos
 
 # Hides the Window when the top left Close is pressed
@@ -121,7 +119,7 @@ func _on_pet_pressed() -> void:
 	$"Pet/Pet Info".set_text(String("Name: " + $"..".nickname + 
 	"\nHappiness: " + str(int($"..".happiness)) + "%  |  " +
 	"Fullness: " + str(int($"..".fullness)) + "%" +
-	"\nAge: " + str($"..".age) + "  |  " +
+	"\nAge: " + str($"..".age/60) + ":" + str($"..".age % 60) + ":" + str(snapped(60 - $"../UpdateTimer".get_time_left(), 1)).pad_zeros(2) + "  |  " +
 	"Money: " + str($"..".money) +
 	"\nType: " + ($"..".Types.keys()[$"..".type]).capitalize() +
 	"\nPattern: " + ($"..".Patterns.keys()[$"..".pattern]).capitalize() +

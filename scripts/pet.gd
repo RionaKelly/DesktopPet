@@ -334,7 +334,6 @@ func _process(_delta):
 		window.position.y = (taskbar_level - window.size.y)
 		velocity = Vector2.ZERO # reset fall speed upon reaching ground
 		bounces = 0 # reset bounces
-		print(most_bounces)
 		in_air = false
 		activity = Activities.SITTING
 		$DecisionTimer.start(2)
@@ -364,13 +363,6 @@ func _process(_delta):
 		else:
 			print("Pet Found on Screen ", window.current_screen)
 			change_screen()
-	
-	# This is normally in update_stats() but is here for now for immediate testing
-	if ((stage == 0 and age >= 300) or (stage == 1 and age >= 900) or (stage == 2 and age >= 1800)) and !ready_to_evolve:
-		ready_to_evolve = true # Lets pet evolve when not busy
-		request_attention()
-		evolution_step = 1 # Resets the evolution step for playing animation
-		print("Ready to evolve")
 	
 	# Check if the window's name is correct and set it if not
 	if 	window.get_title() != nickname:
@@ -842,9 +834,9 @@ func update_stats():
 		print("HC: ", hungry_count, " - SC: ", sad_count)
 	# Updates the pet's happiness and fullness based on what they have done
 	if fullness > 0 and hungry_count > 0:
-		fullness -= (hungry_count/60) + 0.1 # lose hunger equal to hunger count out of 60, + 0.1 as a small buffer
+		fullness -= (hungry_count/60) + 0.05 # lose hunger equal to hunger count out of 60, + 0.05 as a small buffer
 	if happiness > 0 and sad_count > 0:
-		happiness -= snappedf(randf_range(0.1, sad_count), 0.1) # lose happiness between 0.1 and sad_count
+		happiness -= snappedf(randf_range(0.05, sad_count), 0.1) # lose happiness between 0.05 and sad_count
 	hungry_count = 0.0
 	sad_count = 1.0
 	if debugStats:
@@ -854,13 +846,18 @@ func update_stats():
 	if happiness < 0 or fullness < 0:
 		print("Dead")
 	
-	## Check if the pet is old enough to begin evolution (after 5, 15, and 30 hours)
-	#if (stage == 0 and age >= 300) or (stage == 1 and age >= 900) or (stage == 2 and age >= 1800):
-		#ready_to_evolve = true # Lets pet evolve when not busy
-		#evolution_step = 0 # Resets the evolution step for playing animation
-	#else:
-		#ready_to_evolve = false
-	
+	# Check if pet is old enough to evolve
+	if ((stage == 0 and age >= 300) or (stage == 1 and age >= 900) or (stage == 2 and age >= 1800)) and !ready_to_evolve:
+		ready_to_evolve = true # Lets pet evolve when not busy
+		if activity == Activities.WALKING:
+			activity = Activities.IDLE
+		$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_evolve.png"))
+		$Thoughts.show()
+		$Thoughts.position = Vector2i(window.position.x, window.position.y - window.size.y)
+		request_attention()
+		$DecisionTimer.start(2)
+		evolution_step = 1 # Resets the evolution step for playing animation
+		print("Ready to evolve")
 	# Saves the game after every update
 	save()
 
@@ -892,6 +889,7 @@ func evolution_manager():
 		1:
 			print("Evolving from Stage ", stage, " to ", stage + 1, "...")
 			is_evolving = true
+			$Thoughts.hide()
 			$DecisionTimer.stop()
 			activity = Activities.EVOLVING
 		2: 
