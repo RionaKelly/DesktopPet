@@ -17,7 +17,8 @@ var silent: bool # Whether the app should not send alerts as to bother less
 var main_screen: int # Screen for pet to be confined to, will be changed later
 var shader_on: bool # Whether the pet should use the distortion shade or not, changed in settings
 var large_hitbox: bool # Whether the pet should keep the default window-size hitbox for accesibility
-var open_menu: bool = true # Whether the menu should open automatically on start
+var open_menu: bool # Whether the menu should open automatically on start
+var keep_pattern: bool # When enabled, pet won't change pattern when evolving
 var save_game: bool = true # Whether the game should save
 
 
@@ -41,4 +42,5 @@ func _ready() -> void:
 	shader_on = config.get_value("settings", "shader_on", false)
 	large_hitbox = config.get_value("settings", "large_hitbox", false)
 	open_menu = config.get_value("settings", "open_menu", true)
+	keep_pattern = config.get_value("settings", "keep_pattern", false)
 	save_game = config.get_value("settings", "save_game", true)

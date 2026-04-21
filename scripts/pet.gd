@@ -86,6 +86,7 @@ var main_screen: int = DisplayServer.get_primary_screen() # Screen for pet to be
 var shader_on: bool = false # Whether the pet should use the distortion shade or not, changed in settings
 var large_hitbox: bool = false # Whether the pet should keep the default window-size hitbox for accesibility
 var open_menu: bool = true # Whether the menu should open automatically on start
+var keep_pattern: bool # When enabled, pet won't change pattern when evolving
 var saveGame: bool = true # Whether the game should save
 
 # Check for inputs
@@ -163,6 +164,7 @@ func _ready() -> void:
 	shader_on = Data.shader_on
 	large_hitbox = Data.large_hitbox
 	open_menu = Data.open_menu
+	keep_pattern = Data.keep_pattern
 	saveGame = Data.save_game
 	
 	# Prints to test issues with getting screen data
@@ -291,7 +293,7 @@ func _process(_delta):
 		direction.x = 1 # Change Direction
 		if in_air and velocity.x < 0:
 			velocity.x = velocity.x * -1
-			if happiness <= 98.8: # bouncing off of walls increases happiness a little
+			if happiness <= 95: # bouncing off of walls increases happiness a little if below 95 happines
 				happiness += 0.2 
 			bounces += 1
 			if bounces > most_bounces:
@@ -305,7 +307,7 @@ func _process(_delta):
 		direction.x = -1 # Change Direction
 		if in_air and velocity.x > 0:
 			velocity.x = velocity.x * -1
-			if happiness <= 98.8: # bouncing off of walls increases happiness a little
+			if happiness <= 95: # bouncing off of walls increases happiness a little if below 95 happines
 				happiness += 0.2 
 			bounces += 1
 			if bounces > most_bounces:
@@ -320,7 +322,7 @@ func _process(_delta):
 			direction.y = 0
 		if velocity.y < 0:
 			velocity.y = velocity.y * -1
-		if happiness <= 98.8: # bouncing off of walls increases happiness a little
+		if happiness <= 95: # bouncing off of walls increases happiness a little if below 95 happines
 			happiness += 0.2 
 			bounces += 1
 		if bounces > most_bounces:
@@ -835,8 +837,10 @@ func update_stats():
 	# Updates the pet's happiness and fullness based on what they have done
 	if fullness > 0 and hungry_count > 0:
 		fullness -= (hungry_count/60) + 0.05 # lose hunger equal to hunger count out of 60, + 0.05 as a small buffer
+		fullness = snappedf(fullness, 0.001)
 	if happiness > 0 and sad_count > 0:
 		happiness -= snappedf(randf_range(0.05, sad_count), 0.1) # lose happiness between 0.05 and sad_count
+		happiness = snappedf(happiness, 0.001)
 	hungry_count = 0.0
 	sad_count = 1.0
 	if debugStats:
@@ -899,56 +903,57 @@ func evolution_manager():
 			_update_click_polygon()
 			window.position = Vector2i(window.position.x, taskbar_level - window.size.y)
 			
-			# Randomise whether pet should gain a trait (new personality or pattern)
-			#var rand_trait = randf()
-			var rand_choice = randf()
-			## Code changed to boost odds on second rolls until i finish personalities
-			print("Num: ", rand_choice, " + Bonus: ", (pattern*(0.04*(stage-1))))
-			rand_choice = rand_choice + (pattern*(0.04*(stage-1)))
-			#var new_trait = 0 # 0 means no new trait, 1 means pattern, 2 means personality
-			## For now you are guaranteed to gain a new pattern, chances will be changed in the future
-			#if rand_trait < 1.0: 
-				#if pattern == Patterns.NONE: # These checks make sure player doesnt already have a trait of this type
-					#new_trait = 1
-				#elif personality == Personalities.NONE:
-					#new_trait = 2
-			#elif rand_trait < 1.0:
-				#if personality == Personalities.NONE:
-					#new_trait = 2
-				#elif pattern == Patterns.NONE:
-					#new_trait = 1
-			#match new_trait:
-				#1: # 25 : 25 : 20 : 15 : 10 : 4 : 1
-			if rand_choice < 0.25:
-				pattern = Patterns.WARM
-			elif rand_choice < 0.5:
-				pattern = Patterns.COLD
-			elif rand_choice < 0.70:
-				pattern = Patterns.NATURAL
-			elif rand_choice < 0.85:
-				pattern = Patterns.NEON
-			elif rand_choice < 0.95:
-				pattern = Patterns.DARK
-			elif rand_choice < 0.99:
-				pattern = Patterns.RETRO_A
-			elif rand_choice < 1.0:
-				pattern = Patterns.RETRO_B
-			else: # This pattern is only obtainable with a bonus to the random number
-				pattern = Patterns.SPECIAL
-			print ("New Pattern: ", (Patterns.keys()[pattern]).capitalize())
-			set_pattern()
-				#2: # 4 : 3 : 3
-					#if rand_choice < 0.4:
-						#personality = Personalities.AFFECTIONATE
-					#elif rand_choice < 0.7:
-						#personality = Personalities.ENERGETIC
-					#else:
-						#personality = Personalities.SLEEPY
-					#print ("New Personality: ", (Personalities.keys()[personality]).capitalize())
-				#_:
-					#print ("No New Traits, Code: ", new_trait)
-					#print ("Current Traits: ",(Patterns.keys()[pattern]).capitalize(), 
-					#" & ", (Personalities.keys()[personality]).capitalize())
+			if !keep_pattern:
+				# Randomise whether pet should gain a trait (new personality or pattern)
+				#var rand_trait = randf()
+				var rand_choice = randf()
+				## Code changed to boost odds on second rolls until i finish personalities
+				print("Num: ", rand_choice, " + Bonus: ", (pattern*(0.04*(stage-1))))
+				rand_choice = rand_choice + (pattern*(0.04*(stage-1)))
+				#var new_trait = 0 # 0 means no new trait, 1 means pattern, 2 means personality
+				## For now you are guaranteed to gain a new pattern, chances will be changed in the future
+				#if rand_trait < 1.0: 
+					#if pattern == Patterns.NONE: # These checks make sure player doesnt already have a trait of this type
+						#new_trait = 1
+					#elif personality == Personalities.NONE:
+						#new_trait = 2
+				#elif rand_trait < 1.0:
+					#if personality == Personalities.NONE:
+						#new_trait = 2
+					#elif pattern == Patterns.NONE:
+						#new_trait = 1
+				#match new_trait:
+					#1: # 25 : 25 : 20 : 15 : 10 : 4 : 1
+				if rand_choice < 0.25:
+					pattern = Patterns.WARM
+				elif rand_choice < 0.5:
+					pattern = Patterns.COLD
+				elif rand_choice < 0.70:
+					pattern = Patterns.NATURAL
+				elif rand_choice < 0.85:
+					pattern = Patterns.NEON
+				elif rand_choice < 0.95:
+					pattern = Patterns.DARK
+				elif rand_choice < 0.99:
+					pattern = Patterns.RETRO_A
+				elif rand_choice < 1.0:
+					pattern = Patterns.RETRO_B
+				else: # This pattern is only obtainable with a bonus to the random number
+					pattern = Patterns.SPECIAL
+				print ("New Pattern: ", (Patterns.keys()[pattern]).capitalize())
+				set_pattern()
+					#2: # 4 : 3 : 3
+						#if rand_choice < 0.4:
+							#personality = Personalities.AFFECTIONATE
+						#elif rand_choice < 0.7:
+							#personality = Personalities.ENERGETIC
+						#else:
+							#personality = Personalities.SLEEPY
+						#print ("New Personality: ", (Personalities.keys()[personality]).capitalize())
+					#_:
+						#print ("No New Traits, Code: ", new_trait)
+						#print ("Current Traits: ",(Patterns.keys()[pattern]).capitalize(), 
+						#" & ", (Personalities.keys()[personality]).capitalize())
 		3:
 			# Reset pet and continue decision-making after 3 seconds
 			ready_to_evolve = false
@@ -1008,6 +1013,7 @@ func save() -> void:
 	config.set_value("settings", "shader_on", shader_on)
 	config.set_value("settings", "large_hitbox", large_hitbox)
 	config.set_value("settings", "open_menu", open_menu)
+	config.set_value("settings", "keep_pattern", keep_pattern)
 	config.set_value("settings", "save_game", saveGame)
 	
 	# Saves the data as a config file

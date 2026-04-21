@@ -36,6 +36,8 @@ func _ready() -> void:
 		$Settings/Shader.button_pressed = true
 	if Data.open_menu:
 		$Settings/Menu.button_pressed = true
+	if Data.keep_pattern:
+		$Settings/Pattern.button_pressed = true
 	print(system, " version ", version)
 	if system == "Windows" and version[1] == "0" :
 		windows10 = true
@@ -113,6 +115,11 @@ func _on_back_pressed() -> void:
 	$Settings.hide()
 	$Back.hide()
 
+func _on_shop_pressed() -> void:
+	$Default.hide()
+	$Shop.show()
+	$Back.show()
+
 
 func _on_pet_pressed() -> void:
 	# Update information about pet
@@ -175,6 +182,13 @@ func _on_menu_toggled(toggled_on: bool) -> void:
 	else:
 		$"..".open_menu = false
 		print("Open Menu Off")
+func _on_pattern_toggled(toggled_on: bool) -> void:
+	if toggled_on:
+		$"..".keep_pattern = true
+		print("Keep Pattern On")
+	else:
+		$"..".keep_pattern = false
+		print("Keep Pattern Off")
 
 
 # Deletes the current data for the pet, saving must also be turned off if player wants to restart next boot

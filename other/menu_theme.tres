@@ -1,12 +1,17 @@
 [gd_resource type="Theme" format=3 uid="uid://dviv1t3hlh01p"]
 
+[ext_resource type="FontFile" uid="uid://3pblb830rmx3" path="res://other/myawesomefont.otf" id="1_oj03v"]
+
 [resource]
 Button/colors/icon_disabled_color = Color(0, 0, 0, 0.4)
 Button/colors/icon_hover_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
 Button/colors/icon_normal_color = Color(0, 0, 0, 1)
 Button/colors/icon_pressed_color = Color(0.8352941, 0.6509804, 0.9019608, 1)
+Button/fonts/font = ExtResource("1_oj03v")
 CheckBox/colors/font_color = Color(0, 0, 0, 1)
 CheckBox/colors/font_hover_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
 CheckBox/colors/font_hover_pressed_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
 CheckBox/colors/font_pressed_color = Color(0.42352942, 0.19607843, 0.49803922, 1)
+CheckBox/fonts/font = ExtResource("1_oj03v")
 Label/colors/font_color = Color(0, 0, 0, 1)
+Label/fonts/font = ExtResource("1_oj03v")
