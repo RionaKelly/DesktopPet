@@ -119,13 +119,14 @@ func _on_back_pressed() -> void:
 func _on_pet_pressed() -> void:
 	# Update information about pet
 	$"Pet/Pet Info".set_text(String("Name: " + $"..".nickname + 
-	"\nAge: " + str($"..".age) + 
-	"\nHappiness: " + str(int($"..".happiness)) + "%" +
-	"\nFullness: " + str(int($"..".fullness)) + "%" +
-	"\nMoney: " + str($"..".money) +
+	"\nHappiness: " + str(int($"..".happiness)) + "%  |  " +
+	"Fullness: " + str(int($"..".fullness)) + "%" +
+	"\nAge: " + str($"..".age) + "  |  " +
+	"Money: " + str($"..".money) +
 	"\nType: " + ($"..".Types.keys()[$"..".type]).capitalize() +
 	"\nPattern: " + ($"..".Patterns.keys()[$"..".pattern]).capitalize() +
-	"\nPersonality: " + ($"..".Personalities.keys()[$"..".personality]).capitalize()
+	"\nPersonality: " + ($"..".Personalities.keys()[$"..".personality]).capitalize() +
+	"\nMost Bounces: " +str($"..".most_bounces)
 	))
 	
 	$Default.hide()

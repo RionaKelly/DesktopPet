@@ -351,15 +351,7 @@ func _process(_delta):
 		window.position += Vector2i(velocity * move_speed)
 		if debugMovement:
 			print("Falling with velocity ", velocity)
-	#else:
-		#velocity = Vector2.ZERO # reset fall speed upon reaching ground
-		##bounces = 0 # reset bounces
-		#print(most_bounces)
-		#in_air = false
-		#if activity == Activities.FALLING:
-			#activity = Activities.SITTING
-			#$DecisionTimer.start(2)
-			#brain()
+	
 	
 	# If pet is out of bounds for 60 frames, reset position
 	if out_of_bounds >= 60:

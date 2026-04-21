@@ -71,7 +71,6 @@ centered = false
 
 [node name="Menu" parent="." unique_id=1008188484 instance=ExtResource("4_hmkkh")]
 visible = false
-always_on_top = false
 
 [connection signal="timeout" from="DecisionTimer" to="." method="brain"]
 [connection signal="timeout" from="UpdateTimer" to="." method="update_stats"]
