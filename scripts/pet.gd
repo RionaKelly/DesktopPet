@@ -5,14 +5,15 @@
 ## TO DO - ASAP
 # Personality Traits affecting decisions
 # Games
+# Fix Fullness UI cutting off
+# Add picking up cookie
 ## TO DO - AFTER
-# Taking good care of your pet gives higher chance of rare patterns and personalities
 # Waving/Getting attention animation
-# Right click to pet Pet
 # More actions for pet to do
-# More complicated decionmaking with cooldowns and stuff
+# More complicated desicionmaking with cooldowns and stuff
 # Better Evolution Animation
 # New game start with rarity boost
+# Better info page with clickable sections to fit more information
 
 extends Node2D
 
@@ -58,7 +59,7 @@ var menu_theme: Theme = load("res://other/menu_theme.tres")
 var thinking: bool = false # Whether the pet is currently displaying a thought bubble or not
 var bounces: int = 0 # How many times the pet has bounced off of the wall while in the air
 var food_ready: bool = false # True if the food is on the floor and ready for the pet to eat
-var attention_cooldown: float = 5.0 # Cooldown so that pet's stop gaining happiness after getting enough attention
+var attention_cooldown: float = 10.0 # Cooldown so that pet's stop gaining happiness after getting enough attention
 
 # Bug-Testing 
 var debugMovement = false
@@ -900,17 +901,17 @@ func update_stats():
 	age += 1 # Increases the pet's age by 1
 	
 	if !work_mode: # Don't change or check stats when in Work Mode
-		attention_cooldown = 5.0 # Reset the pet's attention cooldown so they can gain happiness again
+		attention_cooldown = 10.0 # Reset the pet's attention cooldown so they can gain happiness again
 	
 		if debugStats:
 			print("HC: ", hungry_count, " - SC: ", sad_count)
 	
 		# Updates the pet's happiness and fullness based on what they have done
 		if fullness > 0 and hungry_count > 0:
-			fullness -= (hungry_count/60) + 0.05 # lose hunger equal to hunger count out of 60, + 0.05 as a small buffer
+			fullness -= (hungry_count/60) # lose hunger equal to hunger count out of 60
 			fullness = snappedf(fullness, 0.001)
 		if happiness > 0 and sad_count > 0:
-			happiness -= snappedf(randf_range(0.05, sad_count), 0.1) # lose happiness between 0.05 and sad_count
+			happiness -= randf_range(0.0, sad_count) # lose happiness between 0.0 and sad_count
 			happiness = snappedf(happiness, 0.001)
 		hungry_count = 0.0
 		sad_count = 1.0
@@ -927,7 +928,8 @@ func update_stats():
 			$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_very_sad.png"))
 			$Thoughts.show()
 			$Thoughts.position = Vector2i(window.position.x, window.position.y - window.size.y)
-			DisplayServer.window_request_attention() # done here to only request attention once
+			if !silent:
+				DisplayServer.window_request_attention() # done here to only request attention once
 			$DecisionTimer.start(2)
 		# If leave count reaches 180 (4 hours). pet is ready to leave and will delete their data and close the game
 		if leave_count >= 240:
@@ -970,6 +972,8 @@ func start_stopping(stop):
 	else:
 		grab_offset = Vector2.ZERO
 		is_stopped = false
+		if window.position.y >= (taskbar_level - window.size.y):
+			window.position.y = taskbar_level - window.size.y
 		if window.position.y == taskbar_level - window.size.y:
 			if !ready_to_evolve: # Don't change animation when ready to evolve to let evolution animation play better
 				activity = Activities.SITTING
@@ -1172,6 +1176,6 @@ func food_manager():
 		food_ready = false
 		$Food.hide()
 		if fullness < 100:
-			fullness += 5
+			fullness += 10
 			if fullness > 100:
 				fullness = 100 # fix in case it goes over 100
