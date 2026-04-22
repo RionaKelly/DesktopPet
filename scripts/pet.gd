@@ -3,6 +3,8 @@
 # https://youtube.com/playlist?list=PLVzjdZVCXNTyVHAtpgF_uFbsz8MA8uWKO&si=FOG2BfnqTqjJTduE
 
 ## TO DO - ASAP
+# Attention cooldown
+# Right clicking pet
 # Work Mode
 # Personality Traits affecting decisions
 # Games
@@ -39,7 +41,7 @@ var out_of_bounds: int = 0 # counter for how long pet has been out of bounds
 var move_speed = usable_rect.size.x * 0.0008 # Pet speed based on the size of the screen
 var direction = Vector2(0, 0) # Direction that the pet will move in and is facing
 var velocity = Vector2(0, 0) # Velocity of the pet while falling/being thrown
-enum Activities {EVOLVING, FALLING, GRABBED, GREETING, IDLE, SITTING, SLEEPING, STARING, STOPPED, WALKING, WORKING} # Possible states for Pet
+enum Activities {EVOLVING, FALLING, GRABBED, GREETING, HAPPY, IDLE, SITTING, SLEEPING, STARING, STOPPED, WALKING, WORKING} # Possible states for Pet
 var activity:  Activities = Activities.IDLE # Current state of Pet (idle set as starting default)
 enum Types {BIRD, BUNNY, OCTOPUS} # Possible species that the pet can be
 enum Patterns {NONE, WARM, COLD, NATURAL, NEON, DARK, RETRO_A, RETRO_B, SPECIAL} # Possible patterns the Pet can have
@@ -59,12 +61,13 @@ var menu_theme: Theme = load("res://other/menu_theme.tres")
 var thinking: bool = false # Whether the pet is currently displaying a thought bubble or not
 var bounces: int = 0 # How many times the pet has bounced off of the wall while in the air
 var food_ready: bool = false # True if the food is on the floor and ready for the pet to eat
+var attention_cooldown: float = 5.0 # Cooldown so that pet's stop gaining happiness after getting enough attention
 
 # Bug-Testing 
 var debugMovement = false
 var debugScreen = false
 var debugInput = false
-var debugStats = true
+var debugStats = false
 
 ## Variables from here are loaded from save data (or set to default) using data.gd
 # Pet Data
@@ -101,8 +104,11 @@ func _input(event):
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed == false and is_stopped:
 		if is_stopped:
 			start_stopping(false)
-			if happiness < 80: # increase happiness a little when it is less than 80
-				happiness += 0.1
+			if happiness < 70: # increase happiness a little when it is less than 70
+				var gain: float = attention_cooldown*0.02
+				gain = snapped(gain, 0.01)
+				happiness += gain
+				attention_cooldown -= gain
 		if window.position.y == taskbar_level - window.size.y:
 			await get_tree().create_timer(0.3).timeout
 			if ($Menu.is_visible() and # If menu is visible and would overlap with thought bubble, don't display
@@ -145,6 +151,20 @@ func _input(event):
 		else:
 			padding = $Menu.size.x/3
 		$Menu.position = Vector2i(window.position.x - padding, window.position.y - $Menu.size.y * 1.05)
+		
+	# Right clicking on Pet will pet them, increasing happiness and displaying a happy sprite (if pet is not already happy
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed == false and activity != Activities.HAPPY:
+		await get_tree().create_timer(0.2).timeout # buffer to add pet reaction time, feels better
+		activity = Activities.HAPPY
+		set_sprite()
+		var gain: float = attention_cooldown*0.1 # Happiness to gain based on how much attention pet has already recieved
+		gain = snapped(gain, 0.001)
+		happiness += gain
+		attention_cooldown -= gain
+		await get_tree().create_timer(1.5).timeout
+		activity = Activities.IDLE
+		set_sprite()
+		$DecisionTimer.start(1)
 
 
 func _ready() -> void:
@@ -404,6 +424,8 @@ func _update_click_polygon():
 			current_frame = sprite.frame
 		Activities.EVOLVING:
 			current_animation = "idle"
+		Activities.HAPPY:
+			current_animation = "happy"
 		_:
 			current_animation = "idle" # default to match sprite if no animation is found
 	if current_frame >= sprite.sprite_frames.get_frame_count(current_animation):
@@ -500,6 +522,9 @@ func set_sprite():
 			else: # extra check just in case direction variable is doing something weird
 				print("Direction [", direction.x, "] outside of given rage")
 			sprite.play("walk")
+		Activities.HAPPY:
+			_update_click_polygon()
+			sprite.play("happy")
 		_:
 			#print("Activity [", activity, "] not recognised")
 			_update_click_polygon()
@@ -513,7 +538,6 @@ func set_type():
 			sprite.set_sprite_frames(load("res://sprite_frames/bird.tres"))
 			sprite_material.set_shader_parameter("primary_color", Color(0.729, 0.243, 0.243, 1.0))
 			sprite_material.set_shader_parameter("secondary_color", Color(0.984, 0.882, 0.345, 1.0))
-			sprite_material.set_shader_parameter("make_transparent", true) # Hides white pixels used for hitbox
 		1: # Bunny
 			sprite.set_sprite_frames(load("res://sprite_frames/bunny.tres"))
 			sprite_material.set_shader_parameter("primary_color", Color(0.831, 0.616, 0.765, 1.0))
@@ -855,8 +879,9 @@ func change_screen():
 
 # Called every minute to update the Pet's stats (age, fullness, happiness, etc.), also calls save()
 func update_stats():
-	# Increases the pet's age by 1 every 60 seconds
-	age += 1 
+	age += 1 # Increases the pet's age by 1
+	attention_cooldown = 5.0 # Reset the pet's attention cooldown so they can gain happiness again
+	
 	if debugStats:
 		print("HC: ", hungry_count, " - SC: ", sad_count)
 	

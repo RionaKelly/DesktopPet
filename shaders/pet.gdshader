@@ -21,7 +21,7 @@ uniform float meltiness: hint_range(0.0, 16.0) = 1.0;
 // Colour Changing
 uniform bool change_color = false;
 uniform bool change_line_color = false;
-uniform bool make_transparent = false;
+uniform bool make_transparent = true;
 uniform vec4 primary_color : source_color;
 uniform vec4 primary_replace_color : source_color;
 uniform vec4 secondary_color : source_color;

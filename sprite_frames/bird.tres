@@ -1,6 +1,7 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://dsnpgrv06xm2m"]
 
 [ext_resource type="Texture2D" uid="uid://dlyyy56xvm2m" path="res://sprites/bird/bird.png" id="1_66iqc"]
+[ext_resource type="Texture2D" uid="uid://c14j1js7jfre0" path="res://sprites/bird/bird_happy.png" id="1_bghfo"]
 [ext_resource type="Texture2D" uid="uid://d1fafp8k2y87r" path="res://sprites/bird/bird_walk.png" id="2_806ye"]
 [ext_resource type="Texture2D" uid="uid://c1e6c612nenuv" path="res://sprites/bird/bird_sit.png" id="2_bghfo"]
 
@@ -44,6 +45,14 @@ region = Rect2(112, 0, 16, 16)
 resource_local_to_scene = true
 resource_name = "bird"
 animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_bghfo")
+}],
+"loop": true,
+"name": &"happy",
+"speed": 5.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_806ye")

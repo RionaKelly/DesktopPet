@@ -1,6 +1,7 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://dnrxibm8ldbms"]
 
 [ext_resource type="Texture2D" uid="uid://c1j0ojtyulc8b" path="res://sprites/bunny/bunny.png" id="1_cklqd"]
+[ext_resource type="Texture2D" uid="uid://dj5fb8n174ynx" path="res://sprites/bunny/bunny_happy.png" id="1_hicxq"]
 [ext_resource type="Texture2D" uid="uid://ogy6ik8xduor" path="res://sprites/bunny/bunny_walk.png" id="2_47aln"]
 [ext_resource type="Texture2D" uid="uid://dinhqekkksbln" path="res://sprites/bunny/bunny_sit.png" id="2_hicxq"]
 
@@ -40,6 +41,14 @@ region = Rect2(112, 0, 16, 16)
 resource_local_to_scene = true
 resource_name = "bunny"
 animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_hicxq")
+}],
+"loop": true,
+"name": &"happy",
+"speed": 5.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": ExtResource("1_cklqd")

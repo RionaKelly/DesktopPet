@@ -1,5 +1,6 @@
 [gd_resource type="SpriteFrames" format=3 uid="uid://brlr3apmdhssq"]
 
+[ext_resource type="Texture2D" uid="uid://bp4qjkra2w6eo" path="res://sprites/octopus/octopus_happy.png" id="1_pnssu"]
 [ext_resource type="Texture2D" uid="uid://bcqnw5eaas1o5" path="res://sprites/octopus/octopus.png" id="1_rnogp"]
 [ext_resource type="Texture2D" uid="uid://bx4io7fyj08k0" path="res://sprites/octopus/octopus_sit.png" id="2_pnssu"]
 [ext_resource type="Texture2D" uid="uid://cbh2mrx86vywg" path="res://sprites/octopus/octopus_walk.png" id="3_frb1v"]
@@ -24,6 +25,14 @@ region = Rect2(48, 0, 16, 16)
 resource_local_to_scene = true
 resource_name = "bunny"
 animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_pnssu")
+}],
+"loop": true,
+"name": &"happy",
+"speed": 5.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": ExtResource("1_rnogp")
