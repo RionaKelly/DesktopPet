@@ -191,6 +191,13 @@ func _on_pattern_toggled(toggled_on: bool) -> void:
 	else:
 		$"..".keep_pattern = false
 		print("Keep Pattern Off")
+func _on_work_toggled(toggled_on: bool) -> void:
+	if toggled_on:
+		$"..".work_mode = true
+		print("Work Mode On")
+	else:
+		$"..".work_mode = false
+		print("Work Mode Off")
 
 
 # Deletes the current data for the pet, saving must also be turned off if player wants to restart next boot

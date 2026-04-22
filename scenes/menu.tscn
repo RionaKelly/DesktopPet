@@ -258,28 +258,30 @@ text = "Info"
 [node name="Controls" type="Label" parent="Info" unique_id=313926343]
 layout_mode = 0
 offset_left = 22.0
-offset_top = 108.0
-offset_right = 600.0
-offset_bottom = 243.0
+offset_top = 103.0
+offset_right = 478.0
+offset_bottom = 190.0
 theme_override_constants/line_spacing = -3
-theme_override_font_sizes/font_size = 28
-text = "Click - Stop Pet
-Hold - Grab Pet
-Double Click - Open Menu
-Right Click - Pet (not yet)"
+theme_override_font_sizes/font_size = 27
+text = "Left Click - Stop Pet,  Hold to Grab Pet
+Right Click - Pet Pet :D
+Double Click - Open Menu"
 
 [node name="Explanation" type="Label" parent="Info" unique_id=444362888]
 layout_mode = 0
 offset_left = 21.0
-offset_top = 233.0
-offset_right = 484.0
-offset_bottom = 364.0
+offset_top = 170.0
+offset_right = 481.0
+offset_bottom = 362.0
 theme_override_constants/line_spacing = -3
-theme_override_font_sizes/font_size = 28
-text = "Feed and play with your pet so they
-can grow up happy and healthy, pets
-will evolve and gain new traits as
-they grow  up ^u^"
+theme_override_font_sizes/font_size = 27
+text = "______________________________
+Feed and play with your Pet so they
+can grow up happy and healthy, 
+Pets will evolve and gain a new pattern
+after enough time ^u^.
+'Work Mode' tells your pet to rest while 
+you're busy, they won't lose any stats."
 
 [node name="Settings" type="Control" parent="." unique_id=1265499458]
 visible = false
@@ -353,6 +355,15 @@ offset_bottom = 236.0
 theme_override_font_sizes/font_size = 32
 text = "Keep Pattern"
 
+[node name="Work" type="CheckBox" parent="Settings" unique_id=1489668760]
+layout_mode = 0
+offset_left = 267.0
+offset_top = 189.0
+offset_right = 484.0
+offset_bottom = 236.0
+theme_override_font_sizes/font_size = 32
+text = "Work Mode"
+
 [node name="Delete" type="Button" parent="Settings" unique_id=250538259]
 texture_filter = 1
 layout_mode = 0
@@ -411,6 +422,7 @@ expand_icon = true
 [connection signal="toggled" from="Settings/Shader" to="." method="_on_shader_toggled"]
 [connection signal="toggled" from="Settings/Menu" to="." method="_on_menu_toggled"]
 [connection signal="toggled" from="Settings/Pattern" to="." method="_on_pattern_toggled"]
+[connection signal="toggled" from="Settings/Work" to="." method="_on_work_toggled"]
 [connection signal="pressed" from="Settings/Delete" to="." method="_on_delete_pressed"]
 [connection signal="button_down" from="Handle" to="." method="_on_handle_button_down"]
 [connection signal="button_up" from="Handle" to="." method="_on_handle_button_up"]

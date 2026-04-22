@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://dj5fb8n174ynx" path="res://sprites/bunny/bunny_happy.png" id="1_hicxq"]
 [ext_resource type="Texture2D" uid="uid://ogy6ik8xduor" path="res://sprites/bunny/bunny_walk.png" id="2_47aln"]
 [ext_resource type="Texture2D" uid="uid://dinhqekkksbln" path="res://sprites/bunny/bunny_sit.png" id="2_hicxq"]
+[ext_resource type="Texture2D" uid="uid://otqynxij2ed8" path="res://sprites/bunny/bunny_sleep.png" id="4_hxje7"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_cklqd"]
 atlas = ExtResource("2_47aln")
@@ -63,6 +64,14 @@ animations = [{
 }],
 "loop": true,
 "name": &"sit",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_hxje7")
+}],
+"loop": true,
+"name": &"sleep",
 "speed": 5.0
 }, {
 "frames": [{

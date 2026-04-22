@@ -3,8 +3,6 @@
 # https://youtube.com/playlist?list=PLVzjdZVCXNTyVHAtpgF_uFbsz8MA8uWKO&si=FOG2BfnqTqjJTduE
 
 ## TO DO - ASAP
-# Attention cooldown
-# Right clicking pet
 # Work Mode
 # Personality Traits affecting decisions
 # Games
@@ -41,7 +39,7 @@ var out_of_bounds: int = 0 # counter for how long pet has been out of bounds
 var move_speed = usable_rect.size.x * 0.0008 # Pet speed based on the size of the screen
 var direction = Vector2(0, 0) # Direction that the pet will move in and is facing
 var velocity = Vector2(0, 0) # Velocity of the pet while falling/being thrown
-enum Activities {EVOLVING, FALLING, GRABBED, GREETING, HAPPY, IDLE, SITTING, SLEEPING, STARING, STOPPED, WALKING, WORKING} # Possible states for Pet
+enum Activities {EVOLVING, FALLING, GRABBED, GREETING, HAPPY, IDLE, SITTING, SLEEPING, STARING, STOPPED, WALKING} # Possible states for Pet
 var activity:  Activities = Activities.IDLE # Current state of Pet (idle set as starting default)
 enum Types {BIRD, BUNNY, OCTOPUS} # Possible species that the pet can be
 enum Patterns {NONE, WARM, COLD, NATURAL, NEON, DARK, RETRO_A, RETRO_B, SPECIAL} # Possible patterns the Pet can have
@@ -94,51 +92,66 @@ var saveGame: bool = true # Whether the game should save
 
 # Check for inputs
 func _input(event):
+	if !work_mode: # Only check for Left Click, Hold Left Click, and Right Click if not in Work Mode
+		# Check for Left Mouse Button Press and make pet stopped and start lifting
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			if not is_stopped:
+				start_stopping(true)
+		
+		# Releasing left click unstops pet and evolves if they're on the ground and can
+		elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed == false and is_stopped:
+			if is_stopped:
+				start_stopping(false)
+				if happiness < 70: # increase happiness a little when it is less than 70
+					var gain: float = attention_cooldown*0.02
+					gain = snapped(gain, 0.01)
+					happiness += gain
+					attention_cooldown -= gain
+			if window.position.y == taskbar_level - window.size.y:
+				await get_tree().create_timer(0.3).timeout
+				if ($Menu.is_visible() and # If menu is visible and would overlap with thought bubble, don't display
+				(($Menu.position.x < window.position.x + window.size.x) and
+				($Menu.position.x + $Menu.size.x > window.position.x)) and 
+				$Menu.position.y + $Menu.size.y > window.position.y - window.size.y):
+					pass
+				else:
+					# Changes the current thought bubble based on pet stats
+					if happiness < 5 and fullness < 5: # Happiness below 50 and less than Fullness = Very Sad
+						$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_very_sad.png"))
+					elif happiness < 50 and happiness <= fullness: # Happiness below 50 and less than Fullness = Sad
+						$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_sad.png"))
+					elif fullness < 50 and fullness <= happiness: # Fullness below 50 and less than Happiness = Hungry
+						$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_hungry.png"))	
+					elif happiness > 90 and fullness > 90: # Happiness and Fullness both over 90 = Very Happy
+						$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_love.png"))
+					else: # Happiness and Fullness both between 50 and 90 = Happy
+						$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_happy.png"))
+					if debugStats:
+						print("Fullness: ", fullness, " - Happiness: ", happiness)
+						print("Hungry Count: ", hungry_count, " - Sad Count: ", sad_count)
+					$Thoughts.show()
+					$Thoughts.position = Vector2i(window.position.x, window.position.y - window.size.y)
+				# If ready to evolve, begin evolution when clicked
+				if ready_to_evolve and !in_air and !is_stopped:
+					evolution_manager()
+					return
+			
+		# Right clicking on Pet will pet them, increasing happiness and displaying a happy sprite (if pet is not already happy
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed == false and activity != Activities.HAPPY:
+			await get_tree().create_timer(0.2).timeout # buffer to add pet reaction time, feels better
+			activity = Activities.HAPPY
+			set_sprite()
+			var gain: float = attention_cooldown*0.1 # Happiness to gain based on how much attention pet has already recieved
+			gain = snapped(gain, 0.001)
+			happiness += gain
+			attention_cooldown -= gain
+			await get_tree().create_timer(1.5).timeout
+			activity = Activities.IDLE
+			set_sprite()
+			$DecisionTimer.start(1)
+	
 	var padding: int
-	# Check for Left Mouse Button Press and make pet stopped and start lifting
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		if not is_stopped:
-			start_stopping(true)
-	
-	# Releasing left click unstops pet and evolves if they're on the ground and can
-	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed == false and is_stopped:
-		if is_stopped:
-			start_stopping(false)
-			if happiness < 70: # increase happiness a little when it is less than 70
-				var gain: float = attention_cooldown*0.02
-				gain = snapped(gain, 0.01)
-				happiness += gain
-				attention_cooldown -= gain
-		if window.position.y == taskbar_level - window.size.y:
-			await get_tree().create_timer(0.3).timeout
-			if ($Menu.is_visible() and # If menu is visible and would overlap with thought bubble, don't display
-			(($Menu.position.x < window.position.x + window.size.x) and
-			($Menu.position.x + $Menu.size.x > window.position.x)) and 
-			$Menu.position.y + $Menu.size.y > window.position.y - window.size.y):
-				pass
-			else:
-				# Changes the current thought bubble based on pet stats
-				if happiness < 5 and fullness < 5: # Happiness below 50 and less than Fullness = Very Sad
-					$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_very_sad.png"))
-				elif happiness < 50 and happiness <= fullness: # Happiness below 50 and less than Fullness = Sad
-					$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_sad.png"))
-				elif fullness < 50 and fullness <= happiness: # Fullness below 50 and less than Happiness = Hungry
-					$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_hungry.png"))	
-				elif happiness > 90 and fullness > 90: # Happiness and Fullness both over 90 = Very Happy
-					$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_love.png"))
-				else: # Happiness and Fullness both between 50 and 90 = Happy
-					$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_happy.png"))
-				if debugStats:
-					print("Fullness: ", fullness, " - Happiness: ", happiness)
-					print("Hungry Count: ", hungry_count, " - Sad Count: ", sad_count)
-				$Thoughts.show()
-				$Thoughts.position = Vector2i(window.position.x, window.position.y - window.size.y)
-			# If ready to evolve, begin evolution when clicked
-			if ready_to_evolve and !in_air and !is_stopped:
-				evolution_manager()
-				return
-	
-	# Summons the window on a double left click
+	# Summons the window on a double left click, this still works in Work Mode
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.double_click:
 		# Display Menu
 		$Menu.show()
@@ -151,20 +164,6 @@ func _input(event):
 		else:
 			padding = $Menu.size.x/3
 		$Menu.position = Vector2i(window.position.x - padding, window.position.y - $Menu.size.y * 1.05)
-		
-	# Right clicking on Pet will pet them, increasing happiness and displaying a happy sprite (if pet is not already happy
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed == false and activity != Activities.HAPPY:
-		await get_tree().create_timer(0.2).timeout # buffer to add pet reaction time, feels better
-		activity = Activities.HAPPY
-		set_sprite()
-		var gain: float = attention_cooldown*0.1 # Happiness to gain based on how much attention pet has already recieved
-		gain = snapped(gain, 0.001)
-		happiness += gain
-		attention_cooldown -= gain
-		await get_tree().create_timer(1.5).timeout
-		activity = Activities.IDLE
-		set_sprite()
-		$DecisionTimer.start(1)
 
 
 func _ready() -> void:
@@ -291,45 +290,63 @@ func _process(_delta):
 			$Thoughts.hide()
 		return
 	
-	# Vector2i used to tell Window to move to an exact pixel coordinate
-	var move_vector = Vector2i(direction * move_speed) # How Pet will move around screen
-	
-	# Checks if pet is in the air for throwing physics
-	if window.position.y < (taskbar_level - window.size.y):
-		in_air = true
+	if !work_mode and activity != Activities.SLEEPING: # Don't do any movement or collision while in Work Mode, not necessary as pet cannot move
+		# Vector2i used to tell Window to move to an exact pixel coordinate
+		var move_vector = Vector2i(direction * move_speed) # How Pet will move around screen
+		
+		# Checks if pet is in the air for throwing physics
+		if window.position.y < (taskbar_level - window.size.y):
+			in_air = true
 
-	# Checks to make sure the pet is not out of bounds
-	if window.position.x > 0 + usable_rect.position.x and window.position.x + window.size.x < usable_rect.size.x + usable_rect.position.x:
-		out_of_bounds = 0
-	
-	# Make decision about movement every timer end
-	if decision_time == true:
-		brain() # tells the brain to make a decision
-	
-	if activity == Activities.WALKING: # only if pet is moving
-		move(move_vector) # moves the pet depending on the activity and type of the pet
-	
-	# Check edges to flip and change direction if touching, sprite flip done in set_sprite()
-	if window.position.x < 0 + usable_rect.position.x:
-		direction.x = 1 # Change Direction
-		if in_air and velocity.x < 0:
-			velocity.x = velocity.x * -1
-			bounces += 1
-			if happiness <= 100: # bouncing off of walls increases happiness for each bounce theyve made without landing
-				happiness += bounces*0.1
-				if happiness > 100:
-					happiness = 100
-			if bounces > most_bounces:
-				most_bounces = bounces			
-		sprite.flip_h = false # This is done in set_sprite() too but I set here for instant change
-		_update_click_polygon()
-		out_of_bounds += 1
-		if debugMovement:
-				print("Bounce off left")
-	if window.position.x + window.size.x > usable_rect.size.x + usable_rect.position.x:
-		direction.x = -1 # Change Direction
-		if in_air and velocity.x > 0:
-			velocity.x = velocity.x * -1
+		# Checks to make sure the pet is not out of bounds
+		if window.position.x > 0 + usable_rect.position.x and window.position.x + window.size.x < usable_rect.size.x + usable_rect.position.x:
+			out_of_bounds = 0
+		
+		# Make decision about movement every timer end
+		if decision_time == true:
+			brain() # tells the brain to make a decision
+		
+		if activity == Activities.WALKING: # only if pet is moving
+			move(move_vector) # moves the pet depending on the activity and type of the pet
+		
+		# Check edges to flip and change direction if touching, sprite flip done in set_sprite()
+		if window.position.x < 0 + usable_rect.position.x:
+			direction.x = 1 # Change Direction
+			if in_air and velocity.x < 0:
+				velocity.x = velocity.x * -1
+				bounces += 1
+				if happiness <= 100: # bouncing off of walls increases happiness for each bounce theyve made without landing
+					happiness += bounces*0.1
+					if happiness > 100:
+						happiness = 100
+				if bounces > most_bounces:
+					most_bounces = bounces			
+			sprite.flip_h = false # This is done in set_sprite() too but I set here for instant change
+			_update_click_polygon()
+			out_of_bounds += 1
+			if debugMovement:
+					print("Bounce off left")
+		if window.position.x + window.size.x > usable_rect.size.x + usable_rect.position.x:
+			direction.x = -1 # Change Direction
+			if in_air and velocity.x > 0:
+				velocity.x = velocity.x * -1
+				bounces += 1
+				if happiness <= 100: # bouncing off of walls increases happiness for each bounce theyve made without landing
+					happiness += bounces*0.1
+					if happiness > 100:
+						happiness = 100
+				if bounces > most_bounces:
+					most_bounces = bounces
+			sprite.flip_h = true # This is done in set_sprite() too but I set here for instant change
+			_update_click_polygon()
+			out_of_bounds += 1
+			if debugMovement:
+					print("Bounce off right")
+		if window.position.y < 0 + usable_rect.position.y: # Mainly to check if pet is thrown agains the top
+			if direction.y < 0:
+				direction.y = 0
+			if velocity.y < 0:
+				velocity.y = velocity.y * -1
 			bounces += 1
 			if happiness <= 100: # bouncing off of walls increases happiness for each bounce theyve made without landing
 				happiness += bounces*0.1
@@ -337,65 +354,62 @@ func _process(_delta):
 					happiness = 100
 			if bounces > most_bounces:
 				most_bounces = bounces
-		sprite.flip_h = true # This is done in set_sprite() too but I set here for instant change
-		_update_click_polygon()
-		out_of_bounds += 1
-		if debugMovement:
-				print("Bounce off right")
-	if window.position.y < 0 + usable_rect.position.y: # Mainly to check if pet is thrown agains the top
-		if direction.y < 0:
-			direction.y = 0
-		if velocity.y < 0:
-			velocity.y = velocity.y * -1
-		bounces += 1
-		if happiness <= 100: # bouncing off of walls increases happiness for each bounce theyve made without landing
-			happiness += bounces*0.1
-			if happiness > 100:
-				happiness = 100
-		if bounces > most_bounces:
-			most_bounces = bounces
-		if debugMovement:
-				print("Bounce off top")
+			if debugMovement:
+					print("Bounce off top")
+		
+		# Check if pet was in the air and now has reached ground to stop falling
+		if in_air and (window.position.y >= (taskbar_level - window.size.y)):
+			if debugMovement:
+				print("Reached Floor with velocity ", velocity)
+			window.position.y = (taskbar_level - window.size.y)
+			velocity = Vector2.ZERO # reset fall speed upon reaching ground
+			bounces = 0 # reset bounces
+			in_air = false
+			activity = Activities.SITTING
+			set_sprite()
+			$DecisionTimer.start(1)
+		# Check if pet is above taskbar to fall back down
+		elif in_air:
+			velocity.y += 0.3 # increase fall speed slowly while falling
+			velocity = velocity * .99
+			if velocity.x > 0:
+				velocity.x -= 0.2
+			elif velocity.x < 0:
+				velocity.x += 0.2
+			velocity = Vector2(snapped(velocity.x, 0.001), snapped(velocity.y, 0.001))
+			window.position += Vector2i(velocity * move_speed)
+			if debugMovement:
+				print("Falling with velocity ", velocity)
+		
+		
+		# If pet is out of bounds for 60 frames, reset position
+		if out_of_bounds >= 60:
+			out_of_bounds = 0
+			if main_screen == window.current_screen:
+				print("Pet Found at ", window.position)
+				window.position = Vector2i(DisplayServer.screen_get_size(main_screen).x/2 - (window.size.x/2) + 
+				DisplayServer.screen_get_position(main_screen).x, taskbar_level - window.size.y)
+				print("Pet Position Reset to ", window.position)
+			else:
+				print("Pet Found on Screen ", window.current_screen)
+				change_screen()
+		
+		# Check if the window's name is correct and set it if not
+		if 	window.get_title() != nickname:
+			window.set_title(nickname)
 	
-	if in_air and (window.position.y >= (taskbar_level - window.size.y)):
-		if debugMovement:
-			print("Reached Floor with velocity ", velocity)
-		window.position.y = (taskbar_level - window.size.y)
-		velocity = Vector2.ZERO # reset fall speed upon reaching ground
-		bounces = 0 # reset bounces
-		in_air = false
+	# Runs once when Pet enters Work Mode to set sprite and stop decisionmaking
+	elif activity != Activities.SLEEPING: 
+		$DecisionTimer.stop()
+		await get_tree().create_timer(0.5).timeout # buffer to add pet reaction time, feels better
+		activity = Activities.SLEEPING
+		set_sprite()
+	# Run once when Pet exits Work Mode to begin decisionmaking again
+	elif !work_mode and activity == Activities.SLEEPING:
+		await get_tree().create_timer(0.5).timeout # buffer to add pet reaction time, feels better
 		activity = Activities.SITTING
 		set_sprite()
-		$DecisionTimer.start(1)
-	# Check if pet is above taskbar to fall back down
-	elif in_air:
-		velocity.y += 0.3 # increase fall speed slowly while falling
-		velocity = velocity * .99
-		if velocity.x > 0:
-			velocity.x -= 0.2
-		elif velocity.x < 0:
-			velocity.x += 0.2
-		velocity = Vector2(snapped(velocity.x, 0.001), snapped(velocity.y, 0.001))
-		window.position += Vector2i(velocity * move_speed)
-		if debugMovement:
-			print("Falling with velocity ", velocity)
-	
-	
-	# If pet is out of bounds for 60 frames, reset position
-	if out_of_bounds >= 60:
-		out_of_bounds = 0
-		if main_screen == window.current_screen:
-			print("Pet Found at ", window.position)
-			window.position = Vector2i(DisplayServer.screen_get_size(main_screen).x/2 - (window.size.x/2) + 
-			DisplayServer.screen_get_position(main_screen).x, taskbar_level - window.size.y)
-			print("Pet Position Reset to ", window.position)
-		else:
-			print("Pet Found on Screen ", window.current_screen)
-			change_screen()
-	
-	# Check if the window's name is correct and set it if not
-	if 	window.get_title() != nickname:
-		window.set_title(nickname)
+		$DecisionTimer.start()
 
 
 # Creates area of the window that can be clicked through
@@ -426,6 +440,8 @@ func _update_click_polygon():
 			current_animation = "idle"
 		Activities.HAPPY:
 			current_animation = "happy"
+		Activities.SLEEPING:
+			current_animation = "sleep"
 		_:
 			current_animation = "idle" # default to match sprite if no animation is found
 	if current_frame >= sprite.sprite_frames.get_frame_count(current_animation):
@@ -525,6 +541,9 @@ func set_sprite():
 		Activities.HAPPY:
 			_update_click_polygon()
 			sprite.play("happy")
+		Activities. SLEEPING:
+			_update_click_polygon()
+			sprite.play("sleep")
 		_:
 			#print("Activity [", activity, "] not recognised")
 			_update_click_polygon()
@@ -880,61 +899,63 @@ func change_screen():
 # Called every minute to update the Pet's stats (age, fullness, happiness, etc.), also calls save()
 func update_stats():
 	age += 1 # Increases the pet's age by 1
-	attention_cooldown = 5.0 # Reset the pet's attention cooldown so they can gain happiness again
 	
-	if debugStats:
-		print("HC: ", hungry_count, " - SC: ", sad_count)
+	if !work_mode: # Don't change or check stats when in Work Mode
+		attention_cooldown = 5.0 # Reset the pet's attention cooldown so they can gain happiness again
 	
-	# Updates the pet's happiness and fullness based on what they have done
-	if fullness > 0 and hungry_count > 0:
-		fullness -= (hungry_count/60) + 0.05 # lose hunger equal to hunger count out of 60, + 0.05 as a small buffer
-		fullness = snappedf(fullness, 0.001)
-	if happiness > 0 and sad_count > 0:
-		happiness -= snappedf(randf_range(0.05, sad_count), 0.1) # lose happiness between 0.05 and sad_count
-		happiness = snappedf(happiness, 0.001)
-	hungry_count = 0.0
-	sad_count = 1.0
-	if debugStats:
-		print ("Fullness: ", fullness, " - Happiness: ", happiness)
-	
-	# Check if happiness and fullness are 0 for pet to increase the leave counter and display a sad thought bubble
-	if happiness < 5 or fullness < 5:
-		leave_count += 1
 		if debugStats:
-			print("Leave Count Increased, Currently ", leave_count)
-		activity = Activities.SITTING
-		set_sprite()
-		$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_very_sad.png"))
-		$Thoughts.show()
-		$Thoughts.position = Vector2i(window.position.x, window.position.y - window.size.y)
-		DisplayServer.window_request_attention() # done here to only request attention once
-		$DecisionTimer.start(2)
-	# If leave count reaches 180 (4 hours). pet is ready to leave and will delete their data and close the game
-	if leave_count >= 240:
-		print(nickname, " left to find someone else to take care of them")
-		var config := ConfigFile.new()
-		if config.load("user://data.cfg") != OK: # Load file and check if it is loaded ok
-			print("No data found to delete")
-		config.save("user://" + nickname.replace(" ", "_") + ".cfg") # saves the data seperately 
-		config.clear()
-		config.save("user://data.cfg")
-		print("Save Data Deleted")
-		saveGame = false
-		exit()
-	# Check if pet is old enough to evolve, leaving takes priority so this wont happen if they are too sad
-	elif ((stage == 0 and age >= 300) or (stage == 1 and age >= 900) or (stage == 2 and age >= 1800)) and !ready_to_evolve:
-		ready_to_evolve = true # Lets pet evolve when not busy
-		if activity == Activities.WALKING:
-			activity = Activities.IDLE
+			print("HC: ", hungry_count, " - SC: ", sad_count)
+	
+		# Updates the pet's happiness and fullness based on what they have done
+		if fullness > 0 and hungry_count > 0:
+			fullness -= (hungry_count/60) + 0.05 # lose hunger equal to hunger count out of 60, + 0.05 as a small buffer
+			fullness = snappedf(fullness, 0.001)
+		if happiness > 0 and sad_count > 0:
+			happiness -= snappedf(randf_range(0.05, sad_count), 0.1) # lose happiness between 0.05 and sad_count
+			happiness = snappedf(happiness, 0.001)
+		hungry_count = 0.0
+		sad_count = 1.0
+		if debugStats:
+			print ("Fullness: ", fullness, " - Happiness: ", happiness)
+	
+		# Check if happiness and fullness are 0 for pet to increase the leave counter and display a sad thought bubble
+		if happiness < 5 or fullness < 5:
+			leave_count += 1
+			if debugStats:
+				print("Leave Count Increased, Currently ", leave_count)
+			activity = Activities.SITTING
 			set_sprite()
-		$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_evolve.png"))
-		$Thoughts.show()
-		$Thoughts.position = Vector2i(window.position.x, window.position.y - window.size.y)
-		request_attention()
-		$DecisionTimer.start(2)
-		evolution_step = 1 # Resets the evolution step for playing animation
-		print("Ready to evolve")
-	# Saves the game after every update
+			$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_very_sad.png"))
+			$Thoughts.show()
+			$Thoughts.position = Vector2i(window.position.x, window.position.y - window.size.y)
+			DisplayServer.window_request_attention() # done here to only request attention once
+			$DecisionTimer.start(2)
+		# If leave count reaches 180 (4 hours). pet is ready to leave and will delete their data and close the game
+		if leave_count >= 240:
+			print(nickname, " left to find someone else to take care of them")
+			var config := ConfigFile.new()
+			if config.load("user://data.cfg") != OK: # Load file and check if it is loaded ok
+				print("No data found to delete")
+			config.save("user://" + nickname.replace(" ", "_") + ".cfg") # saves the data seperately 
+			config.clear()
+			config.save("user://data.cfg")
+			print("Save Data Deleted")
+			saveGame = false
+			exit()
+		# Check if pet is old enough to evolve, leaving takes priority so this wont happen if they are too sad
+		elif ((stage == 0 and age >= 300) or (stage == 1 and age >= 900) or (stage == 2 and age >= 1800)) and !ready_to_evolve:
+			ready_to_evolve = true # Lets pet evolve when not busy
+			if activity == Activities.WALKING:
+				activity = Activities.IDLE
+				set_sprite()
+			$Thoughts/ThoughtSprite.set_texture(load("res://sprites/thoughts/thought_evolve.png"))
+			$Thoughts.show()
+			$Thoughts.position = Vector2i(window.position.x, window.position.y - window.size.y)
+			request_attention()
+			$DecisionTimer.start(2)
+			evolution_step = 1 # Resets the evolution step for playing animation
+			print("Ready to evolve")
+	# Saves the game after every update, even in Work Mode
 	save()
 
 

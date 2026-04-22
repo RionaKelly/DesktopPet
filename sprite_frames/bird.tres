@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://c14j1js7jfre0" path="res://sprites/bird/bird_happy.png" id="1_bghfo"]
 [ext_resource type="Texture2D" uid="uid://d1fafp8k2y87r" path="res://sprites/bird/bird_walk.png" id="2_806ye"]
 [ext_resource type="Texture2D" uid="uid://c1e6c612nenuv" path="res://sprites/bird/bird_sit.png" id="2_bghfo"]
+[ext_resource type="Texture2D" uid="uid://bhaphcn7k4iso" path="res://sprites/bird/bird_sleep.png" id="4_ksd27"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_806ye"]
 atlas = ExtResource("1_66iqc")
@@ -67,6 +68,14 @@ animations = [{
 }],
 "loop": true,
 "name": &"sit",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_ksd27")
+}],
+"loop": true,
+"name": &"sleep",
 "speed": 5.0
 }, {
 "frames": [{
