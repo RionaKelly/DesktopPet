@@ -3,7 +3,6 @@
 # https://youtube.com/playlist?list=PLVzjdZVCXNTyVHAtpgF_uFbsz8MA8uWKO&si=FOG2BfnqTqjJTduE
 
 ## TO DO - ASAP
-# Work Mode
 # Personality Traits affecting decisions
 # Games
 ## TO DO - AFTER
@@ -401,12 +400,12 @@ func _process(_delta):
 	# Runs once when Pet enters Work Mode to set sprite and stop decisionmaking
 	elif activity != Activities.SLEEPING: 
 		$DecisionTimer.stop()
-		await get_tree().create_timer(0.5).timeout # buffer to add pet reaction time, feels better
+		await get_tree().create_timer(0.3).timeout # buffer to add pet reaction time, feels better
 		activity = Activities.SLEEPING
 		set_sprite()
 	# Run once when Pet exits Work Mode to begin decisionmaking again
 	elif !work_mode and activity == Activities.SLEEPING:
-		await get_tree().create_timer(0.5).timeout # buffer to add pet reaction time, feels better
+		await get_tree().create_timer(0.3).timeout # buffer to add pet reaction time, feels better
 		activity = Activities.SITTING
 		set_sprite()
 		$DecisionTimer.start()
